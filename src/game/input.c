@@ -14,15 +14,16 @@ static float input_touch_max_speed(const pong_game_t *g)
     if (d > 3) d = 3;
     switch (d)
     {
-        case 1: return 2.1f;
-        case 2: return 2.4f;
-        default: return 2.8f;
+        case 1: return 3.2f;
+        case 2: return 3.8f;
+        default: return 4.4f;
     }
 }
 
 static void input_move_paddle(pong_paddle_t *p, float dt, float max_speed, float alpha)
 {
     if (!p) return;
+    if (dt <= 0.0f) return;
 
     float prev_y = p->y;
     float prev_z = p->z;
@@ -56,7 +57,7 @@ void input_apply(pong_game_t *g, const platform_input_t *in, float dt)
     if (in && in->touch_active)
     {
         max_speed = input_touch_max_speed(g);
-        alpha = 0.85f;
+        alpha = 1.0f;
     }
 
     bool p1_active = in && in->p1_active;
@@ -67,14 +68,21 @@ void input_apply(pong_game_t *g, const platform_input_t *in, float dt)
     float p2_y = in ? in->p2_y : 0.5f;
     float p2_z = in ? in->p2_z : 0.5f;
 
-    /* Two-player: allow a single touch on the right half to drive the right paddle. */
-    if (g->mode == kGameModeTwoPlayer && in && in->touch_active &&
-        p1_active && !p2_active && (in->touch_x >= 0.5f))
+    /* Two-player: allow a single touch to drive the touched side. */
+    if (g->mode == kGameModeTwoPlayer && in && in->touch_active && p1_active && !p2_active)
     {
-        p2_active = true;
-        p2_y = p1_y;
-        p2_z = p1_z;
-        p1_active = false;
+        float tx = clampf(in->touch_x, 0.0f, 1.0f);
+        if (tx < 0.5f)
+        {
+            p1_z = clampf(tx * 2.0f, 0.0f, 1.0f);
+        }
+        else
+        {
+            p2_active = true;
+            p2_y = p1_y;
+            p2_z = clampf((tx - 0.5f) * 2.0f, 0.0f, 1.0f);
+            p1_active = false;
+        }
     }
 
     if (g->mode != kGameModeZeroPlayer)
@@ -85,19 +93,13 @@ void input_apply(pong_game_t *g, const platform_input_t *in, float dt)
             g->paddle_l.target_z = clampf(p1_z, 0.0f, 1.0f);
             input_move_paddle(&g->paddle_l, dt, max_speed, alpha);
         }
-        else if (g->mode == kGameModeTwoPlayer)
+        else
         {
-            /* No input: keep position, clear velocity to avoid stale paddle influence. */
+            /* No input: hold position and clear velocity to avoid stale paddle influence. */
             g->paddle_l.vy = 0.0f;
             g->paddle_l.vz = 0.0f;
             g->paddle_l.target_y = g->paddle_l.y;
             g->paddle_l.target_z = g->paddle_l.z;
-        }
-        else
-        {
-            g->paddle_l.target_y = 0.5f;
-            g->paddle_l.target_z = 0.5f;
-            input_move_paddle(&g->paddle_l, dt, max_speed, alpha);
         }
     }
 
