@@ -272,3 +272,7 @@ void touch_hal_poll(edgeai_touch_state_t *out)
     s_lastDown = (out_n > 0);
 }
 
+bool touch_hal_is_ok(void)
+{
+    return s_touchOk;
+}

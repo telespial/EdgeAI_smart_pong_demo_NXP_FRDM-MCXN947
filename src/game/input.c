@@ -80,7 +80,7 @@ void input_apply(pong_game_t *g, const platform_input_t *in, float dt)
         {
             p2_active = true;
             p2_y = p1_y;
-            p2_z = clampf((tx - 0.5f) * 2.0f, 0.0f, 1.0f);
+            p2_z = 1.0f - clampf((tx - 0.5f) * 2.0f, 0.0f, 1.0f);
             p1_active = false;
         }
     }

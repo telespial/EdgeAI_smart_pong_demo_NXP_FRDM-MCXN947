@@ -215,7 +215,8 @@ void input_hal_poll(input_hal_t *s, platform_input_t *out)
                 {
                     z = remap_touch_z_from_right_edge(tx);
                 }
-                out->p2_z = z;
+                /* Right paddle: flip z sign for intuitive depth control. */
+                out->p2_z = 1.0f - clamp01f(z);
             }
         }
         if (s) s->prev_touch_active = out->touch_active;
@@ -223,6 +224,15 @@ void input_hal_poll(input_hal_t *s, platform_input_t *out)
     }
 
     if (s) s->prev_touch_active = false;
+
+    /* Touch controller present: do not fall back to accelerometer paddle driving.
+     * This avoids unintentional recenters when touch is released.
+     */
+    if (touch_hal_is_ok())
+    {
+        return;
+    }
+
     if (!s || !s->accel_ok) return;
 
     fxls8974_sample_t raw = {0};

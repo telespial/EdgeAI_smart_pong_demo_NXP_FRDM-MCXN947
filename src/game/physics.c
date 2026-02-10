@@ -42,9 +42,9 @@ static float physics_ball_speed_scale(const pong_game_t *g)
     if (d > 3) d = 3;
     switch (d)
     {
-        case 1: return 1.20f;
-        case 2: return 1.30f;
-        default: return 1.40f;
+        case 1: return 1.68f;
+        case 2: return 1.82f;
+        default: return 1.96f;
     }
 }
 
@@ -77,7 +77,7 @@ static void physics_get_tuning(const pong_game_t *g, float *serve_speed, float *
             break;
     }
 
-    /* Make overall ball speeds 20%-40% faster across difficulty presets. */
+    /* Scale overall ball speeds per difficulty preset. */
     float s = physics_ball_speed_scale(g);
     if (serve_speed) *serve_speed *= s;
     if (vlim) *vlim *= s;
