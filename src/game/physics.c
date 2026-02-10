@@ -189,8 +189,6 @@ static bool physics_step_sub(pong_game_t *g, float dt)
     float prev_x = g->ball.x;
     float prev_y = g->ball.y;
     float prev_z = g->ball.z;
-    float prev_vy = g->ball.vy;
-    float prev_vz = g->ball.vz;
 
     g->ball.x += g->ball.vx * dt;
     g->ball.y += g->ball.vy * dt;
@@ -201,7 +199,7 @@ static bool physics_step_sub(pong_game_t *g, float dt)
     physics_wall_bounce(&g->ball.z, &g->ball.vz, g->ball.r);
 
     /* Paddle collisions. */
-    const float slop = g->ball.r * 0.25f;
+    const float slop = g->ball.r * 0.10f;
 
     const float x_hit_l = g->paddle_l.x_plane + g->ball.r;
     if (g->ball.vx < 0.0f && prev_x > x_hit_l && g->ball.x <= x_hit_l)
@@ -215,11 +213,9 @@ static bool physics_step_sub(pong_game_t *g, float dt)
 
         float hy = g->paddle_l.size_y * 0.5f;
         float hz = g->paddle_l.size_z * 0.5f;
-        float y_slop = absf(prev_vy) * dt;
-        float z_slop = absf(prev_vz) * dt;
         bool hit =
-            (absf(y_at - g->paddle_l.y) <= (hy + g->ball.r + y_slop + slop)) &&
-            (absf(z_at - g->paddle_l.z) <= (hz + g->ball.r + z_slop + slop));
+            (absf(y_at - g->paddle_l.y) <= (hy + g->ball.r + slop)) &&
+            (absf(z_at - g->paddle_l.z) <= (hz + g->ball.r + slop));
         if (hit)
         {
             g->ball.x = x_hit_l;
@@ -241,11 +237,9 @@ static bool physics_step_sub(pong_game_t *g, float dt)
 
         float hy = g->paddle_r.size_y * 0.5f;
         float hz = g->paddle_r.size_z * 0.5f;
-        float y_slop = absf(prev_vy) * dt;
-        float z_slop = absf(prev_vz) * dt;
         bool hit =
-            (absf(y_at - g->paddle_r.y) <= (hy + g->ball.r + y_slop + slop)) &&
-            (absf(z_at - g->paddle_r.z) <= (hz + g->ball.r + z_slop + slop));
+            (absf(y_at - g->paddle_r.y) <= (hy + g->ball.r + slop)) &&
+            (absf(z_at - g->paddle_r.z) <= (hz + g->ball.r + slop));
         if (hit)
         {
             g->ball.x = x_hit_r;

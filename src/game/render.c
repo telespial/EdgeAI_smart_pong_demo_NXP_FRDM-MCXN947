@@ -167,6 +167,22 @@ static void render_bg_tile(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, in
     render_draw_floor_grid(dst, w, h, x0, y0, rs);
     render_draw_center_dashes(dst, w, h, x0, y0, rs);
 
+    /* Box edges: increase wall readability while keeping the monochrome style. */
+    const uint16_t c_box_edge = sw_pack_rgb565_u8(18, 19, 22);
+    const uint16_t c_box_far = sw_pack_rgb565_u8(26, 27, 31);
+
+    /* Far frame outline. */
+    sw_render_line(dst, w, h, x0, y0, rs->far_corners[0].x, rs->far_corners[0].y, rs->far_corners[1].x, rs->far_corners[1].y, c_box_far);
+    sw_render_line(dst, w, h, x0, y0, rs->far_corners[1].x, rs->far_corners[1].y, rs->far_corners[2].x, rs->far_corners[2].y, c_box_far);
+    sw_render_line(dst, w, h, x0, y0, rs->far_corners[2].x, rs->far_corners[2].y, rs->far_corners[3].x, rs->far_corners[3].y, c_box_far);
+    sw_render_line(dst, w, h, x0, y0, rs->far_corners[3].x, rs->far_corners[3].y, rs->far_corners[0].x, rs->far_corners[0].y, c_box_far);
+
+    /* Connecting edges from near to far. */
+    sw_render_line(dst, w, h, x0, y0, rs->near_corners[0].x, rs->near_corners[0].y, rs->far_corners[0].x, rs->far_corners[0].y, c_box_edge);
+    sw_render_line(dst, w, h, x0, y0, rs->near_corners[1].x, rs->near_corners[1].y, rs->far_corners[1].x, rs->far_corners[1].y, c_box_edge);
+    sw_render_line(dst, w, h, x0, y0, rs->near_corners[2].x, rs->near_corners[2].y, rs->far_corners[2].x, rs->far_corners[2].y, c_box_edge);
+    sw_render_line(dst, w, h, x0, y0, rs->near_corners[3].x, rs->near_corners[3].y, rs->far_corners[3].x, rs->far_corners[3].y, c_box_edge);
+
     /* Near frame outline. */
     const uint16_t c_frame = sw_pack_rgb565_u8(10, 10, 12);
     sw_render_line(dst, w, h, x0, y0, rs->near_corners[0].x, rs->near_corners[0].y, rs->near_corners[1].x, rs->near_corners[1].y, c_frame);
@@ -398,19 +414,18 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
     int32_t ty = pill_y0 + (EDGEAI_UI_PILL_H - 7 * scale) / 2;
     edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx, ty, scale, s, c_text);
 
-    /* Help button. */
+    /* Help icon: right-aligned inside the pill. */
     {
-        const uint16_t c_help_bg = sw_pack_rgb565_u8(g->help_open ? 34 : 24, g->help_open ? 35 : 25, g->help_open ? 39 : 29);
+        const uint16_t c_help_bg = sw_pack_rgb565_u8(g->help_open ? 36 : 20, g->help_open ? 37 : 21, g->help_open ? 41 : 25);
 
         const int32_t hx0 = EDGEAI_UI_HELP_BTN_X;
         const int32_t hy0 = EDGEAI_UI_HELP_BTN_Y;
         const int32_t hx1 = hx0 + EDGEAI_UI_HELP_BTN_W - 1;
         const int32_t hy1 = hy0 + EDGEAI_UI_HELP_BTN_H - 1;
-        const int32_t hr = EDGEAI_UI_HELP_BTN_H / 2;
 
-        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, hx0, hy0, hx1, hy1, hr, c_help_bg);
-        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, hx0, hy0, hx1, hy0 + 1, 0, c_pill_border);
-        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, hx0, hy1 - 1, hx1, hy1, 0, c_pill_border);
+        /* Segment background + divider. */
+        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, hx0, hy0, hx1, hy1, EDGEAI_UI_PILL_H / 2, c_help_bg);
+        sw_render_line(dst, w, h, tile_x0, tile_y0, hx0, hy0 + 3, hx0, hy1 - 3, c_pill_border);
 
         const int32_t qscale = 2;
         const char *q = "?";
@@ -534,35 +549,33 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         y += 18;
 
         const int32_t s1 = 1;
-        const int32_t lh = 9;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Touch y -> paddle y", c_body);
+        const int32_t lh = 10;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TOUCH Y = PADDLE Y", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Touch x -> paddle z", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TOUCH X = PADDLE Z", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P0: AI vs AI", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P0 AI VS AI", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P1: left paddle touch", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P1 TOUCH LEFT", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P2: two touches (L/R)", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P2 TWO TOUCHES L/R", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Score: ball past paddle", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "SCORE WHEN BALL PASSES PADDLE", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Ball: red -> green speed", c_body);
-        y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Menu: pill (P/D/N)", c_body);
-        y += lh + 4;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "BALL COLOR SHOWS SPEED", c_body);
+        y += lh + 6;
 
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "INSPIRED BY", c_dim);
         y += 18;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Pong (Atari, Inc., 1972)", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "PONG IS A 1972 SPORTS VIDEO GAME", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Arcade sports video game", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "DEVELOPED AND PUBLISHED BY ATARI INC", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Created by Allan Alcorn", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "CREATED BY ALLAN ALCORN", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Training exercise", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TRAINING EXERCISE ASSIGNED BY", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Assigned by Nolan Bushnell", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "ATARI COFOUNDER NOLAN BUSHNELL", c_body);
     }
 }
 
