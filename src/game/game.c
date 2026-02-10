@@ -34,9 +34,36 @@ static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
     const int32_t pill_w = EDGEAI_UI_PILL_W;
     const int32_t pill_h = EDGEAI_UI_PILL_H;
 
+    const int32_t help_x = EDGEAI_UI_HELP_BTN_X;
+    const int32_t help_y = EDGEAI_UI_HELP_BTN_Y;
+    const int32_t help_w = EDGEAI_UI_HELP_BTN_W;
+    const int32_t help_h = EDGEAI_UI_HELP_BTN_H;
+
+    if (hit_rect(px, py, help_x, help_y, help_w, help_h))
+    {
+        g->help_open = !g->help_open;
+        if (g->help_open) g->menu_open = false;
+        return;
+    }
+
     if (hit_rect(px, py, pill_x, pill_y, pill_w, pill_h))
     {
         g->menu_open = !g->menu_open;
+        if (g->menu_open) g->help_open = false;
+        return;
+    }
+
+    if (g->help_open)
+    {
+        const int32_t panel_x = EDGEAI_UI_HELP_PANEL_X;
+        const int32_t panel_y = EDGEAI_UI_HELP_PANEL_Y;
+        const int32_t panel_w = EDGEAI_UI_HELP_PANEL_W;
+        const int32_t panel_h = EDGEAI_UI_HELP_PANEL_H;
+
+        if (!hit_rect(px, py, panel_x, panel_y, panel_w, panel_h))
+        {
+            g->help_open = false;
+        }
         return;
     }
 
@@ -113,6 +140,7 @@ void game_init(pong_game_t *g)
     g->mode = kGameModeSinglePlayer;
     g->difficulty = 2;
     g->menu_open = false;
+    g->help_open = false;
 
     g->rng = 1u;
     g->frame = 0;
@@ -179,9 +207,9 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
         ui_handle_press(g, in->touch_x, in->touch_y);
     }
 
-    if (g->menu_open)
+    if (g->menu_open || g->help_open)
     {
-        /* Pause simulation while the settings menu is open. */
+        /* Pause simulation while an overlay UI panel is open. */
         return;
     }
 

@@ -12,6 +12,9 @@ Targets:
 Visual target:
 - Match `docs/pong_3D.png`: monochrome box arena, perspective depth cue, center dashed line, segmented digits, soft ball shadow.
 
+Inspiration:
+- Pong is a 1972 sports video game developed and published by Atari, Inc. for arcades. It was created by Allan Alcorn as a training exercise assigned to him by Atari co-founder Nolan Bushnell.
+
 ## 3D-Look Rendering Model (MCU-Friendly)
 This demo does not require a full 3D engine. It uses:
 - 3D game state (x, y, z)

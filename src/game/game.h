@@ -42,6 +42,7 @@ typedef struct
     game_mode_t mode;
     uint8_t difficulty; /* 1..3 */
     bool menu_open;
+    bool help_open;
 
     pong_ball_t ball;
     pong_paddle_t paddle_l;

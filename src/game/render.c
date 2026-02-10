@@ -398,87 +398,171 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
     int32_t ty = pill_y0 + (EDGEAI_UI_PILL_H - 7 * scale) / 2;
     edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx, ty, scale, s, c_text);
 
-    if (!g->menu_open) return;
-
-    const uint16_t c_panel = sw_pack_rgb565_u8(18, 19, 22);
-    const uint16_t c_panel_border = sw_pack_rgb565_u8(52, 54, 58);
-    const uint16_t c_opt = sw_pack_rgb565_u8(26, 27, 31);
-    const uint16_t c_opt_sel = sw_pack_rgb565_u8(214, 215, 217);
-    const uint16_t c_opt_text = sw_pack_rgb565_u8(214, 215, 217);
-    const uint16_t c_opt_text_sel = sw_pack_rgb565_u8(10, 10, 12);
-
-    const int32_t panel_x0 = EDGEAI_UI_PANEL_X;
-    const int32_t panel_y0 = EDGEAI_UI_PANEL_Y;
-    const int32_t panel_x1 = panel_x0 + EDGEAI_UI_PANEL_W - 1;
-    const int32_t panel_y1 = panel_y0 + EDGEAI_UI_PANEL_H - 1;
-
-    render_fill_round_rect(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y0, panel_x1, panel_y1, 10, c_panel);
-    sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y0, panel_x1, panel_y0, c_panel_border);
-    sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y1, panel_x1, panel_y1, c_panel_border);
-    sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y0, panel_x0, panel_y1, c_panel_border);
-    sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x1, panel_y0, panel_x1, panel_y1, c_panel_border);
-
-    const int32_t label_scale = 2;
-    const int32_t label_yoff = (EDGEAI_UI_ROW_H - 7 * label_scale) / 2;
-    const int32_t opt_yoff = (EDGEAI_UI_ROW_H - EDGEAI_UI_OPT_H) / 2;
-    const int32_t new_yoff = (EDGEAI_UI_ROW_H - EDGEAI_UI_NEW_H) / 2;
-
-    /* Row labels. */
-    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW0_Y + label_yoff, label_scale, "P", c_opt_text);
-    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW1_Y + label_yoff, label_scale, "D", c_opt_text);
-    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW2_Y + label_yoff, label_scale, "N", c_opt_text);
-
-    /* Players: 0/1/2 */
-    for (int i = 0; i < 3; i++)
+    /* Help button. */
     {
-        int32_t bx0 = EDGEAI_UI_OPT_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
-        int32_t by0 = EDGEAI_UI_ROW0_Y + opt_yoff;
-        int32_t bx1 = bx0 + EDGEAI_UI_OPT_W - 1;
-        int32_t by1 = by0 + EDGEAI_UI_OPT_H - 1;
+        const uint16_t c_help_bg = sw_pack_rgb565_u8(g->help_open ? 34 : 24, g->help_open ? 35 : 25, g->help_open ? 39 : 29);
 
-        bool sel = (g->mode == (i == 0 ? kGameModeZeroPlayer : i == 1 ? kGameModeSinglePlayer : kGameModeTwoPlayer));
-        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
+        const int32_t hx0 = EDGEAI_UI_HELP_BTN_X;
+        const int32_t hy0 = EDGEAI_UI_HELP_BTN_Y;
+        const int32_t hx1 = hx0 + EDGEAI_UI_HELP_BTN_W - 1;
+        const int32_t hy1 = hy0 + EDGEAI_UI_HELP_BTN_H - 1;
+        const int32_t hr = EDGEAI_UI_HELP_BTN_H / 2;
 
-        char t[2] = {(char)('0' + i), 0};
-        int32_t tw = edgeai_text5x7_width(label_scale, t);
-        int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
-        int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * label_scale) / 2;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, label_scale, t, sel ? c_opt_text_sel : c_opt_text);
+        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, hx0, hy0, hx1, hy1, hr, c_help_bg);
+        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, hx0, hy0, hx1, hy0 + 1, 0, c_pill_border);
+        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, hx0, hy1 - 1, hx1, hy1, 0, c_pill_border);
+
+        const int32_t qscale = 2;
+        const char *q = "?";
+        int32_t qw = edgeai_text5x7_width(qscale, q);
+        int32_t qx = hx0 + (EDGEAI_UI_HELP_BTN_W - qw) / 2;
+        int32_t qy = hy0 + (EDGEAI_UI_HELP_BTN_H - 7 * qscale) / 2;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, qx, qy, qscale, q, c_text);
     }
 
-    /* Difficulty: 1/2/3 */
-    for (int i = 0; i < 3; i++)
+    if (!g->menu_open && !g->help_open) return;
+
+    if (g->menu_open)
     {
-        int32_t bx0 = EDGEAI_UI_OPT_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
-        int32_t by0 = EDGEAI_UI_ROW1_Y + opt_yoff;
-        int32_t bx1 = bx0 + EDGEAI_UI_OPT_W - 1;
-        int32_t by1 = by0 + EDGEAI_UI_OPT_H - 1;
+        const uint16_t c_panel = sw_pack_rgb565_u8(18, 19, 22);
+        const uint16_t c_panel_border = sw_pack_rgb565_u8(52, 54, 58);
+        const uint16_t c_opt = sw_pack_rgb565_u8(26, 27, 31);
+        const uint16_t c_opt_sel = sw_pack_rgb565_u8(214, 215, 217);
+        const uint16_t c_opt_text = sw_pack_rgb565_u8(214, 215, 217);
+        const uint16_t c_opt_text_sel = sw_pack_rgb565_u8(10, 10, 12);
 
-        uint8_t d = (uint8_t)(i + 1);
-        bool sel = (g->difficulty == d);
-        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
+        const int32_t panel_x0 = EDGEAI_UI_PANEL_X;
+        const int32_t panel_y0 = EDGEAI_UI_PANEL_Y;
+        const int32_t panel_x1 = panel_x0 + EDGEAI_UI_PANEL_W - 1;
+        const int32_t panel_y1 = panel_y0 + EDGEAI_UI_PANEL_H - 1;
 
-        char t[2] = {(char)('0' + (i + 1)), 0};
-        int32_t tw = edgeai_text5x7_width(label_scale, t);
-        int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
-        int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * label_scale) / 2;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, label_scale, t, sel ? c_opt_text_sel : c_opt_text);
+        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y0, panel_x1, panel_y1, 10, c_panel);
+        sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y0, panel_x1, panel_y0, c_panel_border);
+        sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y1, panel_x1, panel_y1, c_panel_border);
+        sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y0, panel_x0, panel_y1, c_panel_border);
+        sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x1, panel_y0, panel_x1, panel_y1, c_panel_border);
+
+        const int32_t label_scale = 2;
+        const int32_t label_yoff = (EDGEAI_UI_ROW_H - 7 * label_scale) / 2;
+        const int32_t opt_yoff = (EDGEAI_UI_ROW_H - EDGEAI_UI_OPT_H) / 2;
+        const int32_t new_yoff = (EDGEAI_UI_ROW_H - EDGEAI_UI_NEW_H) / 2;
+
+        /* Row labels. */
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW0_Y + label_yoff, label_scale, "P", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW1_Y + label_yoff, label_scale, "D", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW2_Y + label_yoff, label_scale, "N", c_opt_text);
+
+        /* Players: 0/1/2 */
+        for (int i = 0; i < 3; i++)
+        {
+            int32_t bx0 = EDGEAI_UI_OPT_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+            int32_t by0 = EDGEAI_UI_ROW0_Y + opt_yoff;
+            int32_t bx1 = bx0 + EDGEAI_UI_OPT_W - 1;
+            int32_t by1 = by0 + EDGEAI_UI_OPT_H - 1;
+
+            bool sel = (g->mode == (i == 0 ? kGameModeZeroPlayer : i == 1 ? kGameModeSinglePlayer : kGameModeTwoPlayer));
+            render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
+
+            char t[2] = {(char)('0' + i), 0};
+            int32_t tw = edgeai_text5x7_width(label_scale, t);
+            int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
+            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * label_scale) / 2;
+            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, label_scale, t, sel ? c_opt_text_sel : c_opt_text);
+        }
+
+        /* Difficulty: 1/2/3 */
+        for (int i = 0; i < 3; i++)
+        {
+            int32_t bx0 = EDGEAI_UI_OPT_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+            int32_t by0 = EDGEAI_UI_ROW1_Y + opt_yoff;
+            int32_t bx1 = bx0 + EDGEAI_UI_OPT_W - 1;
+            int32_t by1 = by0 + EDGEAI_UI_OPT_H - 1;
+
+            uint8_t d = (uint8_t)(i + 1);
+            bool sel = (g->difficulty == d);
+            render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
+
+            char t[2] = {(char)('0' + (i + 1)), 0};
+            int32_t tw = edgeai_text5x7_width(label_scale, t);
+            int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
+            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * label_scale) / 2;
+            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, label_scale, t, sel ? c_opt_text_sel : c_opt_text);
+        }
+
+        /* New game. */
+        {
+            int32_t bx0 = EDGEAI_UI_NEW_X;
+            int32_t by0 = EDGEAI_UI_ROW2_Y + new_yoff;
+            int32_t bx1 = bx0 + EDGEAI_UI_NEW_W - 1;
+            int32_t by1 = by0 + EDGEAI_UI_NEW_H - 1;
+
+            render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_NEW_H / 2, c_opt);
+            const int32_t tscale = 2;
+            const char *t = "0:0";
+            int32_t tw = edgeai_text5x7_width(tscale, t);
+            int32_t tx0 = bx0 + (EDGEAI_UI_NEW_W - tw) / 2;
+            int32_t ty0 = by0 + (EDGEAI_UI_NEW_H - 7 * tscale) / 2;
+            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, tscale, t, c_opt_text);
+        }
+        return;
     }
 
-    /* New game. */
+    /* Help panel. */
     {
-        int32_t bx0 = EDGEAI_UI_NEW_X;
-        int32_t by0 = EDGEAI_UI_ROW2_Y + new_yoff;
-        int32_t bx1 = bx0 + EDGEAI_UI_NEW_W - 1;
-        int32_t by1 = by0 + EDGEAI_UI_NEW_H - 1;
+        const uint16_t c_panel = sw_pack_rgb565_u8(18, 19, 22);
+        const uint16_t c_panel_border = sw_pack_rgb565_u8(52, 54, 58);
+        const uint16_t c_body = sw_pack_rgb565_u8(214, 215, 217);
+        const uint16_t c_dim = sw_pack_rgb565_u8(150, 152, 156);
 
-        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_NEW_H / 2, c_opt);
-        const int32_t tscale = 2;
-        const char *t = "0:0";
-        int32_t tw = edgeai_text5x7_width(tscale, t);
-        int32_t tx0 = bx0 + (EDGEAI_UI_NEW_W - tw) / 2;
-        int32_t ty0 = by0 + (EDGEAI_UI_NEW_H - 7 * tscale) / 2;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, tscale, t, c_opt_text);
+        const int32_t panel_x0 = EDGEAI_UI_HELP_PANEL_X;
+        const int32_t panel_y0 = EDGEAI_UI_HELP_PANEL_Y;
+        const int32_t panel_x1 = panel_x0 + EDGEAI_UI_HELP_PANEL_W - 1;
+        const int32_t panel_y1 = panel_y0 + EDGEAI_UI_HELP_PANEL_H - 1;
+
+        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y0, panel_x1, panel_y1, 12, c_panel);
+        sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y0, panel_x1, panel_y0, c_panel_border);
+        sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y1, panel_x1, panel_y1, c_panel_border);
+        sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y0, panel_x0, panel_y1, c_panel_border);
+        sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x1, panel_y0, panel_x1, panel_y1, c_panel_border);
+
+        const int32_t xpad = 14;
+        const int32_t ypad = 10;
+        int32_t x = panel_x0 + xpad;
+        int32_t y = panel_y0 + ypad;
+
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "RULES", c_body);
+        y += 18;
+
+        const int32_t s1 = 1;
+        const int32_t lh = 9;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Touch y -> paddle y", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Touch x -> paddle z", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P0: AI vs AI", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P1: left paddle touch", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P2: two touches (L/R)", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Score: ball past paddle", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Ball: red -> green speed", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Menu: pill (P/D/N)", c_body);
+        y += lh + 4;
+
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "INSPIRED BY", c_dim);
+        y += 18;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Pong (Atari, Inc., 1972)", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Arcade sports video game", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Created by Allan Alcorn", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Training exercise", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "Assigned by Nolan Bushnell", c_body);
     }
 }
 
