@@ -103,6 +103,35 @@ static void render_draw_center_dashes(uint16_t *dst, uint32_t w, uint32_t h, int
     }
 }
 
+static void render_draw_floor_grid(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int32_t y0, const render_state_t *rs)
+{
+    const uint16_t c_grid = sw_pack_rgb565_u8(24, 25, 28);
+
+    const float y = 1.0f;
+
+    /* Depth cross-lines. */
+    static const float z_lines[] = {0.12f, 0.24f, 0.36f, 0.48f, 0.60f, 0.72f, 0.84f, 0.96f};
+    for (size_t i = 0; i < (sizeof(z_lines) / sizeof(z_lines[0])); i++)
+    {
+        float z = z_lines[i];
+        int32_t ax = 0, ay = 0, bx = 0, by = 0;
+        render_project(rs, 0.0f, y, z, &ax, &ay, NULL);
+        render_project(rs, 1.0f, y, z, &bx, &by, NULL);
+        sw_render_line(dst, w, h, x0, y0, ax, ay, bx, by, c_grid);
+    }
+
+    /* Perspective rails. */
+    static const float x_lines[] = {0.25f, 0.75f};
+    for (size_t i = 0; i < (sizeof(x_lines) / sizeof(x_lines[0])); i++)
+    {
+        float x = x_lines[i];
+        int32_t ax = 0, ay = 0, bx = 0, by = 0;
+        render_project(rs, x, y, 0.05f, &ax, &ay, NULL);
+        render_project(rs, x, y, 0.98f, &bx, &by, NULL);
+        sw_render_line(dst, w, h, x0, y0, ax, ay, bx, by, c_grid);
+    }
+}
+
 static void render_bg_tile(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int32_t y0, const render_state_t *rs)
 {
     const uint16_t c_bg = sw_pack_rgb565_u8(14, 15, 16);
@@ -135,6 +164,7 @@ static void render_bg_tile(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, in
                         rs->near_corners[3], rs->near_corners[2], rs->far_corners[2], rs->far_corners[3],
                         c_wall_mid);
 
+    render_draw_floor_grid(dst, w, h, x0, y0, rs);
     render_draw_center_dashes(dst, w, h, x0, y0, rs);
 
     /* Near frame outline. */
@@ -150,6 +180,9 @@ static void render_draw_paddle(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0
 {
     const uint16_t c_shadow = sw_pack_rgb565_u8(8, 8, 10);
     const uint16_t c_pad = sw_pack_rgb565_u8(214, 215, 217);
+    const uint16_t c_edge_near = sw_pack_rgb565_u8(246, 247, 249);
+    const uint16_t c_edge_far = sw_pack_rgb565_u8(156, 157, 160);
+    const uint16_t c_edge_side = sw_pack_rgb565_u8(206, 207, 209);
 
     float hy = p->size_y * 0.5f;
     float hz = p->size_z * 0.5f;
@@ -174,6 +207,13 @@ static void render_draw_paddle(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0
     }
     sw_render_fill_quad(dst, w, h, x0, y0, qs[0], qs[1], qs[2], qs[3], c_shadow);
     sw_render_fill_quad(dst, w, h, x0, y0, q[0], q[1], q[2], q[3], c_pad);
+
+    /* Depth edges: make z extent readable at a glance. */
+    sw_render_line(dst, w, h, x0, y0, q[0].x, q[0].y, q[1].x, q[1].y, c_edge_near);
+    sw_render_line(dst, w, h, x0, y0, q[0].x + 1, q[0].y, q[1].x + 1, q[1].y, c_edge_near);
+    sw_render_line(dst, w, h, x0, y0, q[3].x, q[3].y, q[2].x, q[2].y, c_edge_far);
+    sw_render_line(dst, w, h, x0, y0, q[0].x, q[0].y, q[3].x, q[3].y, c_edge_side);
+    sw_render_line(dst, w, h, x0, y0, q[1].x, q[1].y, q[2].x, q[2].y, c_edge_side);
 }
 
 static void render_draw_ball(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int32_t y0,
@@ -219,7 +259,8 @@ static void render_draw_ball(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, 
     float s = 1.0f;
     render_project(rs, b->x, b->y, b->z, &sx, &sy, &s);
 
-    int32_t r_px = (int32_t)(b->r * (float)rs->world_scale_y * s);
+    /* Use x scale so the visible radius matches paddle-plane collision distance in screen space. */
+    int32_t r_px = (int32_t)(b->r * (float)rs->world_scale_x * s);
     if (r_px < 2) r_px = 2;
     if (r_px > 40) r_px = 40;
 
