@@ -181,6 +181,12 @@ static bool physics_step_sub(pong_game_t *g, float dt)
     if (!g) return false;
     if (dt <= 0.0f) return false;
 
+    float prev_x = g->ball.x;
+    float prev_y = g->ball.y;
+    float prev_z = g->ball.z;
+    float prev_vy = g->ball.vy;
+    float prev_vz = g->ball.vz;
+
     g->ball.x += g->ball.vx * dt;
     g->ball.y += g->ball.vy * dt;
     g->ball.z += g->ball.vz * dt;
@@ -190,30 +196,56 @@ static bool physics_step_sub(pong_game_t *g, float dt)
     physics_wall_bounce(&g->ball.z, &g->ball.vz, g->ball.r);
 
     /* Paddle collisions. */
-    if (g->ball.vx < 0.0f && (g->ball.x - g->ball.r) <= g->paddle_l.x_plane)
+    const float slop = g->ball.r * 0.25f;
+
+    const float x_hit_l = g->paddle_l.x_plane + g->ball.r;
+    if (g->ball.vx < 0.0f && prev_x > x_hit_l && g->ball.x <= x_hit_l)
     {
+        float denom = (prev_x - g->ball.x);
+        float t = (denom != 0.0f) ? ((prev_x - x_hit_l) / denom) : 0.0f;
+        t = clampf(t, 0.0f, 1.0f);
+
+        float y_at = prev_y + (g->ball.y - prev_y) * t;
+        float z_at = prev_z + (g->ball.z - prev_z) * t;
+
         float hy = g->paddle_l.size_y * 0.5f;
         float hz = g->paddle_l.size_z * 0.5f;
+        float y_slop = absf(prev_vy) * dt;
+        float z_slop = absf(prev_vz) * dt;
         bool hit =
-            (absf(g->ball.y - g->paddle_l.y) <= (hy + g->ball.r)) &&
-            (absf(g->ball.z - g->paddle_l.z) <= (hz + g->ball.r));
+            (absf(y_at - g->paddle_l.y) <= (hy + g->ball.r + y_slop + slop)) &&
+            (absf(z_at - g->paddle_l.z) <= (hz + g->ball.r + z_slop + slop));
         if (hit)
         {
-            g->ball.x = g->paddle_l.x_plane + g->ball.r;
+            g->ball.x = x_hit_l;
+            g->ball.y = y_at;
+            g->ball.z = z_at;
             physics_paddle_hit(g, &g->paddle_l, true);
         }
     }
 
-    if (g->ball.vx > 0.0f && (g->ball.x + g->ball.r) >= g->paddle_r.x_plane)
+    const float x_hit_r = g->paddle_r.x_plane - g->ball.r;
+    if (g->ball.vx > 0.0f && prev_x < x_hit_r && g->ball.x >= x_hit_r)
     {
+        float denom = (g->ball.x - prev_x);
+        float t = (denom != 0.0f) ? ((x_hit_r - prev_x) / denom) : 0.0f;
+        t = clampf(t, 0.0f, 1.0f);
+
+        float y_at = prev_y + (g->ball.y - prev_y) * t;
+        float z_at = prev_z + (g->ball.z - prev_z) * t;
+
         float hy = g->paddle_r.size_y * 0.5f;
         float hz = g->paddle_r.size_z * 0.5f;
+        float y_slop = absf(prev_vy) * dt;
+        float z_slop = absf(prev_vz) * dt;
         bool hit =
-            (absf(g->ball.y - g->paddle_r.y) <= (hy + g->ball.r)) &&
-            (absf(g->ball.z - g->paddle_r.z) <= (hz + g->ball.r));
+            (absf(y_at - g->paddle_r.y) <= (hy + g->ball.r + y_slop + slop)) &&
+            (absf(z_at - g->paddle_r.z) <= (hz + g->ball.r + z_slop + slop));
         if (hit)
         {
-            g->ball.x = g->paddle_r.x_plane - g->ball.r;
+            g->ball.x = x_hit_r;
+            g->ball.y = y_at;
+            g->ball.z = z_at;
             physics_paddle_hit(g, &g->paddle_r, false);
         }
     }
