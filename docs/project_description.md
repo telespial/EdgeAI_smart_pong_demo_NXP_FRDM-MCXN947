@@ -69,8 +69,8 @@ Touch mapping (when available):
 - Touch x -> paddle z
 - Apply smoothing and speed limits in the controller layer.
 - Y is remapped to full paddle range below the reserved UI bar.
-- Z is controlled from an edge strip so the controlling finger does not occlude the paddle.
-- Single-touch (1P): map control to the opposite-side edge strip to avoid blocking the left paddle.
+- Z uses full-region mapping by default; an optional edge-strip remap supports non-occluding control.
+- Single-touch (1P): opposite-side edge-strip remap is supported to keep the finger off the left paddle region.
 
 UI interaction:
 - Reserve a top bar region for the settings pill.
@@ -78,8 +78,8 @@ UI interaction:
 
 Two-player:
 - Split-touch mapping: left half controls left paddle, right half controls right paddle.
-- Each side uses an edge strip for z control to keep fingers off the arena interior.
-- Multi-touch support is required for simultaneous independent control.
+- Each side supports full-range z mapping; optional edge strips remap z to full range near screen edges.
+- Single-touch drives the touched side; multi-touch supports simultaneous independent control.
 
 Accel fallback (optional):
 - Accel 4 Click (FXLS8974CF) can drive paddle targets in y/z via tilt mapping.

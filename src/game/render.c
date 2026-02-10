@@ -1,6 +1,7 @@
 #include "game/render.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <stddef.h>
 
 #include "edgeai_config.h"
@@ -11,6 +12,25 @@
 #include "game/ui_layout.h"
 
 static uint16_t s_tile[EDGEAI_TILE_MAX_W * EDGEAI_TILE_MAX_H];
+
+static inline float clampf(float v, float lo, float hi)
+{
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
+}
+
+static inline float clamp01f(float v)
+{
+    return clampf(v, 0.0f, 1.0f);
+}
+
+static inline uint8_t clamp_u8(int32_t v)
+{
+    if (v < 0) return 0u;
+    if (v > 255) return 255u;
+    return (uint8_t)v;
+}
 
 static void render_project(const render_state_t *rs, float x, float y, float z, int32_t *sx, int32_t *sy, float *out_scale)
 {
@@ -161,8 +181,39 @@ static void render_draw_ball(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, 
 {
     const uint16_t c_shadow0 = sw_pack_rgb565_u8(10, 10, 12);
     const uint16_t c_shadow1 = sw_pack_rgb565_u8(16, 16, 18);
-    const uint16_t c_ball = sw_pack_rgb565_u8(226, 227, 230);
-    const uint16_t c_hi = sw_pack_rgb565_u8(245, 246, 248);
+
+    /* Ball color ramp (speed): red -> green. */
+    float v2 = (b->vx * b->vx) + (b->vy * b->vy) + (b->vz * b->vz);
+    const float vmin = 0.90f;
+    const float vmax = 4.00f;
+    float t = clamp01f((v2 - (vmin * vmin)) / ((vmax * vmax) - (vmin * vmin)));
+    float hue = t * 120.0f;
+
+    /* HSV (S=1,V=0.92) for h in [0,120]. */
+    float v = 0.92f;
+    float rf = 0.0f, gf = 0.0f, bf = 0.0f;
+    if (hue < 60.0f)
+    {
+        rf = v;
+        gf = v * (hue * (1.0f / 60.0f));
+        bf = 0.0f;
+    }
+    else
+    {
+        rf = v * ((120.0f - hue) * (1.0f / 60.0f));
+        gf = v;
+        bf = 0.0f;
+    }
+
+    uint8_t r = clamp_u8((int32_t)(rf * 255.0f + 0.5f));
+    uint8_t g = clamp_u8((int32_t)(gf * 255.0f + 0.5f));
+    uint8_t b8 = clamp_u8((int32_t)(bf * 255.0f + 0.5f));
+
+    const uint16_t c_ball = sw_pack_rgb565_u8(r, g, b8);
+    const uint16_t c_hi = sw_pack_rgb565_u8(
+        clamp_u8((int32_t)r + 40),
+        clamp_u8((int32_t)g + 40),
+        clamp_u8((int32_t)b8 + 40));
 
     int32_t sx = 0, sy = 0;
     float s = 1.0f;

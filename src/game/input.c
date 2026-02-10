@@ -59,25 +59,52 @@ void input_apply(pong_game_t *g, const platform_input_t *in, float dt)
         alpha = 0.85f;
     }
 
+    bool p1_active = in && in->p1_active;
+    float p1_y = in ? in->p1_y : 0.5f;
+    float p1_z = in ? in->p1_z : 0.5f;
+
+    bool p2_active = in && in->p2_active;
+    float p2_y = in ? in->p2_y : 0.5f;
+    float p2_z = in ? in->p2_z : 0.5f;
+
+    /* Two-player: allow a single touch on the right half to drive the right paddle. */
+    if (g->mode == kGameModeTwoPlayer && in && in->touch_active &&
+        p1_active && !p2_active && (in->touch_x >= 0.5f))
+    {
+        p2_active = true;
+        p2_y = p1_y;
+        p2_z = p1_z;
+        p1_active = false;
+    }
+
     if (g->mode != kGameModeZeroPlayer)
     {
-        if (in && in->p1_active)
+        if (p1_active)
         {
-            g->paddle_l.target_y = clampf(in->p1_y, 0.0f, 1.0f);
-            g->paddle_l.target_z = clampf(in->p1_z, 0.0f, 1.0f);
+            g->paddle_l.target_y = clampf(p1_y, 0.0f, 1.0f);
+            g->paddle_l.target_z = clampf(p1_z, 0.0f, 1.0f);
+            input_move_paddle(&g->paddle_l, dt, max_speed, alpha);
+        }
+        else if (g->mode == kGameModeTwoPlayer)
+        {
+            /* No input: keep position, clear velocity to avoid stale paddle influence. */
+            g->paddle_l.vy = 0.0f;
+            g->paddle_l.vz = 0.0f;
+            g->paddle_l.target_y = g->paddle_l.y;
+            g->paddle_l.target_z = g->paddle_l.z;
         }
         else
         {
             g->paddle_l.target_y = 0.5f;
             g->paddle_l.target_z = 0.5f;
+            input_move_paddle(&g->paddle_l, dt, max_speed, alpha);
         }
-        input_move_paddle(&g->paddle_l, dt, max_speed, alpha);
     }
 
-    if (g->mode == kGameModeTwoPlayer && in && in->p2_active)
+    if (g->mode == kGameModeTwoPlayer && p2_active)
     {
-        g->paddle_r.target_y = clampf(in->p2_y, 0.0f, 1.0f);
-        g->paddle_r.target_z = clampf(in->p2_z, 0.0f, 1.0f);
+        g->paddle_r.target_y = clampf(p2_y, 0.0f, 1.0f);
+        g->paddle_r.target_z = clampf(p2_z, 0.0f, 1.0f);
         input_move_paddle(&g->paddle_r, dt, max_speed, alpha);
     }
     else if (g->mode == kGameModeTwoPlayer)
@@ -85,5 +112,7 @@ void input_apply(pong_game_t *g, const platform_input_t *in, float dt)
         /* No input: keep position, clear velocity to avoid stale paddle influence. */
         g->paddle_r.vy = 0.0f;
         g->paddle_r.vz = 0.0f;
+        g->paddle_r.target_y = g->paddle_r.y;
+        g->paddle_r.target_z = g->paddle_r.z;
     }
 }
