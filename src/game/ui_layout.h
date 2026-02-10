@@ -1,0 +1,36 @@
+#pragma once
+
+#include "edgeai_config.h"
+
+/* Minimal fixed layout for the in-game settings UI.
+ * Coordinates are in screen pixels (LCD space).
+ */
+
+#define EDGEAI_UI_PILL_W 128
+#define EDGEAI_UI_PILL_H 22
+#define EDGEAI_UI_PILL_X ((EDGEAI_LCD_W - EDGEAI_UI_PILL_W) / 2)
+#define EDGEAI_UI_PILL_Y 6
+
+#define EDGEAI_UI_PANEL_W 260
+#define EDGEAI_UI_PANEL_H 120
+#define EDGEAI_UI_PANEL_X ((EDGEAI_LCD_W - EDGEAI_UI_PANEL_W) / 2)
+#define EDGEAI_UI_PANEL_Y (EDGEAI_UI_PILL_Y + EDGEAI_UI_PILL_H + 6)
+
+#define EDGEAI_UI_ROW_H 34
+
+#define EDGEAI_UI_ROW0_Y (EDGEAI_UI_PANEL_Y + 10)
+#define EDGEAI_UI_ROW1_Y (EDGEAI_UI_PANEL_Y + 10 + EDGEAI_UI_ROW_H)
+#define EDGEAI_UI_ROW2_Y (EDGEAI_UI_PANEL_Y + 10 + 2 * EDGEAI_UI_ROW_H)
+
+#define EDGEAI_UI_LABEL_X (EDGEAI_UI_PANEL_X + 14)
+
+#define EDGEAI_UI_OPT_W 44
+#define EDGEAI_UI_OPT_H 22
+#define EDGEAI_UI_OPT_GAP 10
+
+#define EDGEAI_UI_OPT_BLOCK_W (3 * EDGEAI_UI_OPT_W + 2 * EDGEAI_UI_OPT_GAP)
+#define EDGEAI_UI_OPT_BLOCK_X (EDGEAI_UI_PANEL_X + EDGEAI_UI_PANEL_W - 12 - EDGEAI_UI_OPT_BLOCK_W)
+
+#define EDGEAI_UI_NEW_W 104
+#define EDGEAI_UI_NEW_H 22
+#define EDGEAI_UI_NEW_X (EDGEAI_UI_PANEL_X + EDGEAI_UI_PANEL_W - 12 - EDGEAI_UI_NEW_W)
