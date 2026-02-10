@@ -143,6 +143,10 @@ static void physics_paddle_hit(pong_game_t *g, pong_paddle_t *p, bool left_side)
 {
     if (!g || !p) return;
 
+    float speed_up = 1.02f;
+    float vlim = 1.6f;
+    physics_get_tuning(g, NULL, &speed_up, &vlim);
+
     float dy = (g->ball.y - p->y) / (p->size_y * 0.5f);
     float dz = (g->ball.z - p->z) / (p->size_z * 0.5f);
     dy = clampf(dy, -1.0f, 1.0f);
@@ -156,12 +160,13 @@ static void physics_paddle_hit(pong_game_t *g, pong_paddle_t *p, bool left_side)
 
     g->ball.vy += dy * english;
     g->ball.vz += dz * english;
-    g->ball.vy += p->vy * p_influence;
-    g->ball.vz += p->vz * p_influence;
 
-    float speed_up = 1.02f;
-    float vlim = 1.6f;
-    physics_get_tuning(g, NULL, &speed_up, &vlim);
+    /* Touch control can produce very large paddle velocities; clamp to keep hits stable. */
+    float pvy = clampf(p->vy, -vlim, vlim);
+    float pvz = clampf(p->vz, -vlim, vlim);
+    g->ball.vy += pvy * p_influence;
+    g->ball.vz += pvz * p_influence;
+
     g->ball.vx = (left_side ? absf(g->ball.vx) : -absf(g->ball.vx)) * speed_up;
 
     /* Clamp speeds. */

@@ -14,9 +14,10 @@ static float input_touch_max_speed(const pong_game_t *g)
     if (d > 3) d = 3;
     switch (d)
     {
-        case 1: return 3.2f;
-        case 2: return 3.8f;
-        default: return 4.4f;
+        /* Touch should feel 1:1; use a very high slew rate so motion does not lag behind a finger drag. */
+        case 1: return 120.0f;
+        case 2: return 140.0f;
+        default: return 160.0f;
     }
 }
 

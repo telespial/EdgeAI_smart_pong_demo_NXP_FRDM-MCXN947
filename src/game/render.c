@@ -461,9 +461,45 @@ void render_draw_frame(render_state_t *rs, const pong_game_t *g)
 
             render_scores(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, rs, g);
 
-            render_draw_paddle(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, rs, &g->paddle_l);
-            render_draw_paddle(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, rs, &g->paddle_r);
-            render_draw_ball(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, rs, &g->ball);
+            /* Simple painter's algorithm by depth (z): far -> near. */
+            struct draw_obj
+            {
+                float z;
+                uint8_t kind; /* 0=paddle_l, 1=paddle_r, 2=ball */
+            } objs[3] = {
+                {g->paddle_l.z, 0u},
+                {g->paddle_r.z, 1u},
+                {g->ball.z, 2u},
+            };
+
+            for (int i = 0; i < 2; i++)
+            {
+                for (int j = i + 1; j < 3; j++)
+                {
+                    if (objs[j].z > objs[i].z)
+                    {
+                        struct draw_obj tmp = objs[i];
+                        objs[i] = objs[j];
+                        objs[j] = tmp;
+                    }
+                }
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                switch (objs[i].kind)
+                {
+                    case 0u:
+                        render_draw_paddle(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, rs, &g->paddle_l);
+                        break;
+                    case 1u:
+                        render_draw_paddle(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, rs, &g->paddle_r);
+                        break;
+                    default:
+                        render_draw_ball(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, rs, &g->ball);
+                        break;
+                }
+            }
 
             render_ui(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
 
