@@ -17,6 +17,13 @@
 #define EDGEAI_I2C LPI2C3
 #endif
 
+/* Touch control tuning.
+ * Keep the controlling finger in an edge strip so it does not occlude paddles.
+ */
+#ifndef EDGEAI_TOUCH_STRIP_W_NORM
+#define EDGEAI_TOUCH_STRIP_W_NORM 0.18f
+#endif
+
 static uint32_t input_i2c_get_freq(void)
 {
     return CLOCK_GetLPFlexCommClkFreq(3u);
@@ -55,6 +62,22 @@ static inline float clamp01f(float v)
     if (v < 0.0f) return 0.0f;
     if (v > 1.0f) return 1.0f;
     return v;
+}
+
+static inline float remap_touch_y(float ty, float ui_y_max)
+{
+    if (ty <= ui_y_max) return 0.0f;
+    return clamp01f((ty - ui_y_max) / (1.0f - ui_y_max));
+}
+
+static inline float remap_touch_z_from_left_edge(float tx)
+{
+    return clamp01f(tx * (1.0f / EDGEAI_TOUCH_STRIP_W_NORM));
+}
+
+static inline float remap_touch_z_from_right_edge(float tx)
+{
+    return clamp01f((1.0f - tx) * (1.0f / EDGEAI_TOUCH_STRIP_W_NORM));
 }
 
 bool input_hal_init(input_hal_t *s)
@@ -137,9 +160,13 @@ void input_hal_poll(input_hal_t *s, platform_input_t *out)
         {
             if (ts.points[0].y >= ui_y_max)
             {
+                float tx = clamp01f(ts.points[0].x);
+                float ty = clamp01f(ts.points[0].y);
+
                 out->p1_active = true;
-                out->p1_y = clamp01f(ts.points[0].y);
-                out->p1_z = clamp01f(ts.points[0].x);
+                out->p1_y = remap_touch_y(ty, ui_y_max);
+                /* Single-player uses an opposite-side edge strip to avoid occluding the left paddle. */
+                out->p1_z = remap_touch_z_from_right_edge(tx);
             }
             if (s) s->prev_touch_active = out->touch_active;
             return;
@@ -153,14 +180,14 @@ void input_hal_poll(input_hal_t *s, platform_input_t *out)
             if (tx < 0.5f)
             {
                 out->p1_active = true;
-                out->p1_y = ty;
-                out->p1_z = tx * 2.0f;
+                out->p1_y = remap_touch_y(ty, ui_y_max);
+                out->p1_z = remap_touch_z_from_left_edge(tx);
             }
             else
             {
                 out->p2_active = true;
-                out->p2_y = ty;
-                out->p2_z = (tx - 0.5f) * 2.0f;
+                out->p2_y = remap_touch_y(ty, ui_y_max);
+                out->p2_z = remap_touch_z_from_right_edge(tx);
             }
         }
         if (s) s->prev_touch_active = out->touch_active;

@@ -35,6 +35,19 @@ static float rand_f(pong_game_t *g, float lo, float hi)
     return lo + (hi - lo) * rand_f01(g);
 }
 
+static float physics_ball_speed_scale(const pong_game_t *g)
+{
+    uint8_t d = g ? g->difficulty : 2;
+    if (d < 1) d = 1;
+    if (d > 3) d = 3;
+    switch (d)
+    {
+        case 1: return 1.20f;
+        case 2: return 1.30f;
+        default: return 1.40f;
+    }
+}
+
 static void physics_get_tuning(const pong_game_t *g, float *serve_speed, float *speed_up, float *vlim)
 {
     uint8_t d = g ? g->difficulty : 2;
@@ -63,6 +76,11 @@ static void physics_get_tuning(const pong_game_t *g, float *serve_speed, float *
             if (vlim) *vlim = 2.80f;
             break;
     }
+
+    /* Make overall ball speeds 20%-40% faster across difficulty presets. */
+    float s = physics_ball_speed_scale(g);
+    if (serve_speed) *serve_speed *= s;
+    if (vlim) *vlim *= s;
 }
 
 void physics_reset_ball(pong_game_t *g, int serve_dir)
