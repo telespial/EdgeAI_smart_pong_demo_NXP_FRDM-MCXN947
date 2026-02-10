@@ -35,6 +35,29 @@ static float rand_f(pong_game_t *g, float lo, float hi)
     return lo + (hi - lo) * rand_f01(g);
 }
 
+static int physics_substeps(const pong_game_t *g, float dt)
+{
+    if (!g) return 1;
+    if (dt <= 0.0f) return 1;
+
+    float vmax = absf(g->ball.vx);
+    float avy = absf(g->ball.vy);
+    float avz = absf(g->ball.vz);
+    if (avy > vmax) vmax = avy;
+    if (avz > vmax) vmax = avz;
+
+    /* Keep per-substep motion small to avoid tunneling through paddles at higher speeds. */
+    float limit = g->ball.r * 0.5f;
+    if (limit < 0.001f) limit = 0.001f;
+
+    float ratio = (vmax * dt) / limit;
+    int n = (int)ratio;
+    if ((float)n < ratio) n++;
+    if (n < 1) n = 1;
+    if (n > 8) n = 8;
+    return n;
+}
+
 static float physics_ball_speed_scale(const pong_game_t *g)
 {
     uint8_t d = g ? g->difficulty : 2;
@@ -153,9 +176,10 @@ static void physics_paddle_hit(pong_game_t *g, pong_paddle_t *p, bool left_side)
     }
 }
 
-void physics_step(pong_game_t *g, float dt)
+static bool physics_step_sub(pong_game_t *g, float dt)
 {
-    if (!g) return;
+    if (!g) return false;
+    if (dt <= 0.0f) return false;
 
     g->ball.x += g->ball.vx * dt;
     g->ball.y += g->ball.vy * dt;
@@ -200,10 +224,29 @@ void physics_step(pong_game_t *g, float dt)
     {
         g->score.right++;
         physics_reset_ball(g, +1);
+        return true;
     }
     else if (g->ball.x > 1.0f + margin)
     {
         g->score.left++;
         physics_reset_ball(g, -1);
+        return true;
+    }
+
+    return false;
+}
+
+void physics_step(pong_game_t *g, float dt)
+{
+    if (!g) return;
+
+    int n = physics_substeps(g, dt);
+    float h = dt / (float)n;
+    for (int i = 0; i < n; i++)
+    {
+        if (physics_step_sub(g, h))
+        {
+            return;
+        }
     }
 }

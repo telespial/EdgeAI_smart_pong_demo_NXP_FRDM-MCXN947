@@ -6,5 +6,5 @@
 ## Last Run
 - Date: 2026-02-10
 - Result: ok (build + flash)
-- Binary: mcuxsdk_ws/build_smart_pong_touch_controls_v2/edgeai_smart_pong_demo_cm33_core0.bin
-- Flash: west flash -d mcuxsdk_ws/build_smart_pong_touch_controls_v2 -r linkserver
+- Binary: mcuxsdk_ws/build_smart_pong_physics_substeps_v1/edgeai_smart_pong_demo_cm33_core0.bin
+- Flash: west flash -d mcuxsdk_ws/build_smart_pong_physics_substeps_v1 -r linkserver
