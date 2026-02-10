@@ -63,6 +63,7 @@ static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
         if (!hit_rect(px, py, panel_x, panel_y, panel_w, panel_h))
         {
             g->help_open = false;
+            g->ui_block_touch = true;
         }
         return;
     }
@@ -77,6 +78,7 @@ static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
     if (!hit_rect(px, py, panel_x, panel_y, panel_w, panel_h))
     {
         g->menu_open = false;
+        g->ui_block_touch = true;
         return;
     }
 
@@ -141,6 +143,7 @@ void game_init(pong_game_t *g)
     g->difficulty = 2;
     g->menu_open = false;
     g->help_open = false;
+    g->ui_block_touch = false;
 
     g->rng = 1u;
     g->frame = 0;
@@ -205,6 +208,15 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
     if (in && in->touch_pressed)
     {
         ui_handle_press(g, in->touch_x, in->touch_y);
+    }
+
+    if (g->ui_block_touch)
+    {
+        if (in && in->touch_active)
+        {
+            return;
+        }
+        g->ui_block_touch = false;
     }
 
     if (g->menu_open || g->help_open)

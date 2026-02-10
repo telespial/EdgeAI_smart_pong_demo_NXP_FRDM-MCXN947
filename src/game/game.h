@@ -43,6 +43,7 @@ typedef struct
     uint8_t difficulty; /* 1..3 */
     bool menu_open;
     bool help_open;
+    bool ui_block_touch;
 
     pong_ball_t ball;
     pong_paddle_t paddle_l;
