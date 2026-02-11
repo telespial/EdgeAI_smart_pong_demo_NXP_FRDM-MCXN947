@@ -103,8 +103,20 @@ static void input_hal_update_accel(input_hal_t *s, platform_input_t *out)
     accel_proc_out_t aout;
     accel_proc_update(&s->accel_proc, raw.x, raw.y, raw.z, &aout);
 
-    float ax = (float)aout.ax_soft_q15 / 32767.0f;
-    float ay = (float)aout.ay_soft_q15 / 32767.0f;
+    /* Use a mostly-linear mapping for tilt:
+     * - The "soft" response used for paddle control can make small tilts too weak.
+     * - Axis mapping must match accel_proc so game/render see the same directions.
+     */
+    int32_t ax_i = raw.x;
+    int32_t ay_i = raw.y;
+    accel_proc_apply_axis_map(&ax_i, &ay_i);
+
+    float ax = (float)ax_i / (float)EDGEAI_ACCEL_MAP_DENOM;
+    float ay = (float)ay_i / (float)EDGEAI_ACCEL_MAP_DENOM;
+    if (ax < -1.0f) ax = -1.0f;
+    if (ax > 1.0f) ax = 1.0f;
+    if (ay < -1.0f) ay = -1.0f;
+    if (ay > 1.0f) ay = 1.0f;
 
     s->accel_has_data = true;
     s->accel_last_ax = ax;

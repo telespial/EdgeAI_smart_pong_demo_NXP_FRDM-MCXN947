@@ -55,7 +55,8 @@ static void game_apply_accel_ball_nudge(pong_game_t *g, const platform_input_t *
     ax = game_deadzone(ax, dz);
     ay = game_deadzone(ay, dz);
 
-    const float k = 2.10f;
+    /* High gain on purpose: P0 is a "mess with the outcome" mode. */
+    const float k = 14.0f;
     g->ball.vz += ax * k * dt;
     g->ball.vy += ay * k * dt;
 
@@ -292,8 +293,9 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
     if (g->mode == kGameModeTwoPlayer || manual_r) ai_right = false;
     ai_step(g, dt, ai_left, ai_right);
 
-    game_apply_accel_ball_nudge(g, in, dt);
-
     physics_step(g, dt);
+
+    /* Apply after physics so paddle hits do not overwrite the external nudge. */
+    game_apply_accel_ball_nudge(g, in, dt);
     g->frame++;
 }
