@@ -221,18 +221,18 @@ static uint32_t ai_update_div(const pong_game_t *g, bool use_npu)
     {
         switch (d)
         {
-            case 1: return 6u;
-            case 2: return 4u;
+            case 1: return 5u;
+            case 2: return 3u;
             default: return 2u;
         }
     }
 
-    /* NPU invoke cadence is intentionally slower to protect frame pacing. */
+    /* Keep NPU cadence close to CPU path to avoid stale targets that make AI weak. */
     switch (d)
     {
-        case 1: return 12u;
-        case 2: return 8u;
-        default: return 6u;
+        case 1: return 6u;
+        case 2: return 4u;
+        default: return 3u;
     }
 }
 
@@ -243,9 +243,9 @@ static float ai_noise(const pong_game_t *g)
     if (d > 3) d = 3;
     switch (d)
     {
-        case 1: return 0.055f;
-        case 2: return 0.025f;
-        default: return 0.012f;
+        case 1: return 0.032f;
+        case 2: return 0.015f;
+        default: return 0.007f;
     }
 }
 
@@ -256,9 +256,9 @@ static float ai_max_speed(const pong_game_t *g)
     if (d > 3) d = 3;
     switch (d)
     {
-        case 1: return 0.95f;
-        case 2: return 1.15f;
-        default: return 1.35f;
+        case 1: return 1.22f;
+        case 2: return 1.48f;
+        default: return 1.78f;
     }
 }
 

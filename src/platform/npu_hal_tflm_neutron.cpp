@@ -319,7 +319,15 @@ extern "C" bool npu_hal_tflm_neutron_predict(npu_hal_t *s, const float features[
         float y_direct = y_lo + y01 * (y_hi - y_lo);
         float z_direct = z_lo + z01 * (z_hi - z_lo);
         float t_direct = t01 * 6.0f;
-        const float direct_w = 0.78f;
+
+        /* Confidence gate:
+         * if direct output diverges strongly from analytic physics, reduce direct weight.
+         */
+        float dy = fabsf(y_direct - y_analytic);
+        float dz = fabsf(z_direct - z_analytic);
+        float err = clampf((dy + dz) * 0.5f, 0.0f, 1.0f);
+        float trust = 1.0f - err;
+        float direct_w = 0.25f + 0.45f * trust; /* [0.25, 0.70] */
 
         y = clampf(y_analytic * (1.0f - direct_w) + y_direct * direct_w, y_lo, y_hi);
         z = clampf(z_analytic * (1.0f - direct_w) + z_direct * direct_w, z_lo, z_hi);

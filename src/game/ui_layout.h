@@ -52,7 +52,8 @@
 #define EDGEAI_END_PANEL_W 210
 #define EDGEAI_END_PANEL_H 88
 #define EDGEAI_END_PANEL_X ((EDGEAI_LCD_W - EDGEAI_END_PANEL_W) / 2)
-#define EDGEAI_END_PANEL_Y ((EDGEAI_LCD_H - EDGEAI_END_PANEL_H) / 2)
+/* Place end-game popup in lower third of play area. */
+#define EDGEAI_END_PANEL_Y (((EDGEAI_LCD_H * 2) / 3) - (EDGEAI_END_PANEL_H / 2))
 
 #define EDGEAI_END_BTN_W 72
 #define EDGEAI_END_BTN_H 24
