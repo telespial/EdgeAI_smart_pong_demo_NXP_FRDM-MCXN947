@@ -82,6 +82,40 @@ static inline float remap_touch_z_from_right_edge(float tx)
     return clamp01f((tx - start) * (1.0f / EDGEAI_TOUCH_STRIP_W_NORM));
 }
 
+static void input_hal_update_accel(input_hal_t *s, platform_input_t *out)
+{
+    if (!out) return;
+    if (!s || !s->accel_ok) return;
+
+    fxls8974_sample_t raw = {0};
+    if (!fxls8974_read_sample_12b(&s->accel, &raw))
+    {
+        s->accel_fail++;
+        if (s->accel_has_data)
+        {
+            out->accel_active = true;
+            out->accel_ax = s->accel_last_ax;
+            out->accel_ay = s->accel_last_ay;
+        }
+        return;
+    }
+
+    accel_proc_out_t aout;
+    accel_proc_update(&s->accel_proc, raw.x, raw.y, raw.z, &aout);
+
+    float ax = (float)aout.ax_soft_q15 / 32767.0f;
+    float ay = (float)aout.ay_soft_q15 / 32767.0f;
+
+    s->accel_has_data = true;
+    s->accel_last_ax = ax;
+    s->accel_last_ay = ay;
+
+    out->accel_active = true;
+    out->accel_ax = ax;
+    out->accel_ay = ay;
+    out->accel_bang = aout.bang_pulse;
+}
+
 bool input_hal_init(input_hal_t *s)
 {
     if (!s) return false;
@@ -140,10 +174,19 @@ void input_hal_poll(input_hal_t *s, platform_input_t *out)
     out->p2_y = 0.5f;
     out->p2_z = 0.5f;
     out->mode_toggle = false;
+    out->accel_active = false;
+    out->accel_ax = 0.0f;
+    out->accel_ay = 0.0f;
+    out->accel_bang = false;
     out->touch_active = false;
     out->touch_pressed = false;
     out->touch_x = 0.0f;
     out->touch_y = 0.0f;
+
+    /* Always sample accelerometer when present so game logic can use tilt even
+     * when touch is available. Touch still takes precedence for paddle control.
+     */
+    input_hal_update_accel(s, out);
 
     edgeai_touch_state_t ts;
     touch_hal_poll(&ts);
@@ -234,23 +277,13 @@ void input_hal_poll(input_hal_t *s, platform_input_t *out)
     }
 
     if (!s || !s->accel_ok) return;
-
-    fxls8974_sample_t raw = {0};
-    if (!fxls8974_read_sample_12b(&s->accel, &raw))
-    {
-        s->accel_fail++;
-        return;
-    }
-
-    accel_proc_out_t aout;
-    accel_proc_update(&s->accel_proc, raw.x, raw.y, raw.z, &aout);
-
-    float ax = (float)aout.ax_soft_q15 / 32767.0f;
-    float ay = (float)aout.ay_soft_q15 / 32767.0f;
+    if (!out->accel_active) return;
+    float ax = out->accel_ax;
+    float ay = out->accel_ay;
 
     /* Tilt mapping: ay -> y, ax -> z. */
     out->p1_active = true;
     out->p1_y = clamp01f(0.5f - (ay * 0.45f));
     out->p1_z = clamp01f(0.5f + (ax * 0.45f));
-    out->mode_toggle = aout.bang_pulse;
+    out->mode_toggle = out->accel_bang;
 }

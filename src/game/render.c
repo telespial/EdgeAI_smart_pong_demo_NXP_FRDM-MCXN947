@@ -581,12 +581,12 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         y += 16;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "PONG 1972 ATARI INC", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "CREATED BY ALLAN ALCORN", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "ORIGINAL VERSION: ALLAN ALCORN", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TRAINING BY NOLAN BUSHNELL", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "CONCEIVED BY: NOLAN BUSHNELL", c_body);
 
         int32_t credit_y = panel_y1 - ypad - 7 * s1;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, credit_y, s1, "CREATED BY: RICHARD HABERKERN", c_dim);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, credit_y, s1, "THIS VERSION: RICHARD HABERKERN", c_dim);
     }
 }
 

@@ -19,6 +19,12 @@ typedef struct
 
     bool mode_toggle;
 
+    /* Accelerometer (normalized, roughly -1..1). */
+    float accel_ax;
+    float accel_ay;
+    bool accel_active;
+    bool accel_bang;
+
     /* Primary touch (screen normalized). */
     bool touch_active;
     bool touch_pressed;
@@ -32,6 +38,10 @@ typedef struct
     fxls8974_dev_t accel;
     accel_proc_t accel_proc;
     uint32_t accel_fail;
+
+    float accel_last_ax;
+    float accel_last_ay;
+    bool accel_has_data;
 
     bool prev_touch_active;
 } input_hal_t;

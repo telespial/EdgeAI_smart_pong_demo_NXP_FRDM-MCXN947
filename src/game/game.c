@@ -15,9 +15,52 @@ static inline int32_t clampi(int32_t v, int32_t lo, int32_t hi)
     return v;
 }
 
+static inline float clampf(float v, float lo, float hi)
+{
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
+}
+
+static inline float absf(float v)
+{
+    return (v < 0.0f) ? -v : v;
+}
+
 static inline bool hit_rect(int32_t x, int32_t y, int32_t rx, int32_t ry, int32_t rw, int32_t rh)
 {
     return (x >= rx) && (x < (rx + rw)) && (y >= ry) && (y < (ry + rh));
+}
+
+static float game_deadzone(float v, float dz)
+{
+    if (dz <= 0.0f) return v;
+    if (dz >= 1.0f) return 0.0f;
+    return (absf(v) < dz) ? 0.0f : v;
+}
+
+static void game_apply_accel_ball_nudge(pong_game_t *g, const platform_input_t *in, float dt)
+{
+    if (!g || !in) return;
+    if (dt <= 0.0f) return;
+    if (g->mode != kGameModeZeroPlayer) return;
+    if (!in->accel_active) return;
+
+    /* Tilt affects ball vertical (y) and horizontal (z) to allow outcome nudging in AI vs AI mode. */
+    float ax = clampf(in->accel_ax, -1.0f, 1.0f);
+    float ay = clampf(in->accel_ay, -1.0f, 1.0f);
+
+    const float dz = 0.06f;
+    ax = game_deadzone(ax, dz);
+    ay = game_deadzone(ay, dz);
+
+    const float k = 0.70f;
+    g->ball.vz += ax * k * dt;
+    g->ball.vy += (-ay) * k * dt;
+
+    const float vlim = 6.0f;
+    g->ball.vy = clampf(g->ball.vy, -vlim, vlim);
+    g->ball.vz = clampf(g->ball.vz, -vlim, vlim);
 }
 
 static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
@@ -238,6 +281,8 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
     bool ai_right = (g->mode == kGameModeSinglePlayer) || (g->mode == kGameModeZeroPlayer);
     if (g->mode == kGameModeTwoPlayer || manual_r) ai_right = false;
     ai_step(g, dt, ai_left, ai_right);
+
+    game_apply_accel_ball_nudge(g, in, dt);
 
     physics_step(g, dt);
     g->frame++;
