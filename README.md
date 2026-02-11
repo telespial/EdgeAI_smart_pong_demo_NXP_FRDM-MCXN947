@@ -1,4 +1,4 @@
-# EdgeAI Smart Pong Demo (FRDM-MCXN947)
+# Smart Pong Demo (FRDM-MCXN947)
 
 3D-look Pong demo for FRDM-MCXN947 + LCD-PAR-S035.
 
@@ -6,12 +6,14 @@ Features:
 - 0P / 1P / 2P: AI vs AI, 1P vs AI, 2P local
 - 0P accel ball nudge (Accel 4 Click, FXLS8974CF): tilt perturbs ball vy/vz to influence AI vs AI outcomes
 - NPU-backed AI path (TFLM + eIQ Neutron) enabled via `CONFIG_EDGEAI_USE_NPU`
+- In-game `AI` setting: `ON/OFF` (toggles NPU-assisted prediction path)
 - Touch control (GT911, multi-touch):
   - 1 touch drives player 1
   - 2 touches split screen: left half drives player 1, right half drives player 2
 - Settings UI (top pill):
   - Players: 0 / 1 / 2
   - Difficulty: 1 / 2 / 3
+  - AI: ON / OFF
   - New game (score reset)
 - Fixed-timestep physics (60 Hz default)
 - Difficulty presets tune AI behavior, paddle speed, and ball speed

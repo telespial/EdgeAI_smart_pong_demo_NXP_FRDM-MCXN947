@@ -1,11 +1,11 @@
-# Project Description: EdgeAI Smart Pong (FRDM-MCXN947)
+# Project Description: Smart Pong (FRDM-MCXN947)
 
 Goal:
 - Implement a 3D-look Pong game on FRDM-MCXN947 with LCD-PAR-S035.
 
 Targets:
 - 0P / 1P / 2P: AI vs AI, 1P vs AI, 2P local
-- In-game settings UI (players 0/1/2, difficulty 1/2/3, new game)
+- In-game settings UI (players 0/1/2, difficulty 1/2/3, AI on/off, new game)
 - Touch-first control (GT911 multi-touch) with alternate inputs supported via platform HAL
 - Clean separation between platform bring-up, game logic, and rendering
 

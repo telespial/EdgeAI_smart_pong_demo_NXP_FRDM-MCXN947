@@ -166,10 +166,26 @@ static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
         }
     }
 
+    /* AI: ON, OFF */
+    for (int32_t i = 0; i < 2; i++)
+    {
+        int32_t bx = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+        int32_t by = EDGEAI_UI_ROW2_Y + opt_y0;
+        if (hit_rect(px, py, bx, by, EDGEAI_UI_OPT_W, EDGEAI_UI_OPT_H))
+        {
+            bool new_ai_enabled = (i == 0);
+            if (g->ai_enabled != new_ai_enabled)
+            {
+                g->ai_enabled = new_ai_enabled;
+            }
+            return;
+        }
+    }
+
     /* New game. */
     {
         int32_t bx = EDGEAI_UI_NEW_X;
-        int32_t by = EDGEAI_UI_ROW2_Y + new_y0;
+        int32_t by = EDGEAI_UI_ROW3_Y + new_y0;
         if (hit_rect(px, py, bx, by, EDGEAI_UI_NEW_W, EDGEAI_UI_NEW_H))
         {
             game_reset(g);
@@ -186,6 +202,7 @@ void game_init(pong_game_t *g)
 
     g->mode = kGameModeSinglePlayer;
     g->difficulty = 2;
+    g->ai_enabled = true;
     g->menu_open = false;
     g->help_open = false;
     g->ui_block_touch = false;

@@ -41,6 +41,7 @@ typedef struct
 {
     game_mode_t mode;
     uint8_t difficulty; /* 1..3 */
+    bool ai_enabled;
     bool menu_open;
     bool help_open;
     bool ui_block_touch;

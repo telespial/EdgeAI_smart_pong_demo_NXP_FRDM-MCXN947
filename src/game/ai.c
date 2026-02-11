@@ -203,16 +203,28 @@ static void ai_mirror_features_x(const float in[16], float out[16])
     out[12] = -in[12];
 }
 
-static uint32_t ai_update_div(const pong_game_t *g)
+static uint32_t ai_update_div(const pong_game_t *g, bool use_npu)
 {
     uint8_t d = g ? g->difficulty : 2;
     if (d < 1) d = 1;
     if (d > 3) d = 3;
+
+    if (!use_npu)
+    {
+        switch (d)
+        {
+            case 1: return 6u;
+            case 2: return 4u;
+            default: return 2u;
+        }
+    }
+
+    /* NPU invoke cadence is intentionally slower to protect frame pacing. */
     switch (d)
     {
-        case 1: return 6u;
-        case 2: return 4u;
-        default: return 2u;
+        case 1: return 12u;
+        case 2: return 8u;
+        default: return 6u;
     }
 }
 
@@ -246,8 +258,11 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
 {
     if (!g || !p) return;
 
+    bool ball_toward = right_side ? (g->ball.vx > 0.0f) : (g->ball.vx < 0.0f);
+    bool use_npu = g->ai_enabled && ball_toward;
+
     /* Refresh AI target at a lower rate for difficulty and lower CPU. */
-    uint32_t div = ai_update_div(g);
+    uint32_t div = ai_update_div(g, use_npu);
     if (div == 0u) div = 1u;
     if ((g->frame % div) == 0u)
     {
@@ -255,40 +270,52 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
         float z_hit = 0.5f;
         float t_hit = 0.0f;
 
-        float feat[16];
-        float feat2[16];
-        ai_build_features(g, feat);
+        if (ball_toward)
+        {
+            bool used_npu = false;
 
-        const float *use_feat = feat;
-        if (!right_side)
-        {
-            ai_mirror_features_x(feat, feat2);
-            use_feat = feat2;
-        }
+            if (use_npu)
+            {
+                float feat[16];
+                float feat2[16];
+                ai_build_features(g, feat);
 
-        npu_pred_t pred;
-        bool used_npu = npu_hal_predict(&g->npu, use_feat, &pred);
-        if (used_npu)
-        {
-            y_hit = pred.y_hit;
-            z_hit = pred.z_hit;
-            t_hit = pred.t_hit;
-        }
-        else if (right_side)
-        {
-            ai_predict_right(g, dt, &y_hit, &z_hit, &t_hit);
-        }
-        else
-        {
-            ai_predict_left(g, dt, &y_hit, &z_hit, &t_hit);
+                const float *use_feat = feat;
+                if (!right_side)
+                {
+                    ai_mirror_features_x(feat, feat2);
+                    use_feat = feat2;
+                }
+
+                npu_pred_t pred;
+                used_npu = npu_hal_predict(&g->npu, use_feat, &pred);
+                if (used_npu)
+                {
+                    y_hit = pred.y_hit;
+                    z_hit = pred.z_hit;
+                    t_hit = pred.t_hit;
+                }
+            }
+
+            if (!used_npu)
+            {
+                if (right_side)
+                {
+                    ai_predict_right(g, dt, &y_hit, &z_hit, &t_hit);
+                }
+                else
+                {
+                    ai_predict_left(g, dt, &y_hit, &z_hit, &t_hit);
+                }
+            }
+
+            /* Add small noise to avoid perfect play. */
+            float noise = ai_noise(g);
+            y_hit += rand_f(g, -noise, noise);
+            z_hit += rand_f(g, -noise, noise);
         }
 
         (void)t_hit;
-
-        /* Add small noise to avoid perfect play. */
-        float noise = ai_noise(g);
-        y_hit += rand_f(g, -noise, noise);
-        z_hit += rand_f(g, -noise, noise);
 
         p->target_y = clampf(y_hit, 0.0f, 1.0f);
         p->target_z = clampf(z_hit, 0.0f, 1.0f);

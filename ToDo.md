@@ -1,4 +1,4 @@
-# ToDo: EdgeAI Smart Pong (FRDM-MCXN947)
+# ToDo: Smart Pong (FRDM-MCXN947)
 
 Reference material:
 - `docs/project_description.md`
@@ -11,7 +11,7 @@ Reference material:
 
 ## Gameplay + Rendering
 - [x] 3D-look arena rendering aligned to style target (walls, floor, center dash, depth cues).
-- [x] 0P / 1P / 2P play modes with in-game settings pill (players, difficulty, new game).
+- [x] 0P / 1P / 2P play modes with in-game settings pill (players, difficulty, AI on/off, new game).
 - [x] Touch controls support split-screen two-player mapping.
 - [x] Ball speed scaling distributed across difficulty levels.
 - [x] Ball color hue shifts from red toward green as speed increases.

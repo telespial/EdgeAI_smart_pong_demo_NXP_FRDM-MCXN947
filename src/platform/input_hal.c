@@ -162,14 +162,14 @@ bool input_hal_init(input_hal_t *s)
 
     if (!s->accel_ok)
     {
-        PRINTF("PONG: accel not found (WHO_AM_I=0x%02x)\r\n", (unsigned)who);
+        PRINTF("SMART PONG: accel not found (WHO_AM_I=0x%02x)\r\n", (unsigned)who);
         return true;
     }
 
     (void)fxls8974_set_active(&s->accel, false);
     (void)fxls8974_set_fsr(&s->accel, FXLS8974_FSR_4G);
     (void)fxls8974_set_active(&s->accel, true);
-    PRINTF("PONG: accel ok addr=0x%02x\r\n", (unsigned)s->accel.addr7);
+    PRINTF("SMART PONG: accel ok addr=0x%02x\r\n", (unsigned)s->accel.addr7);
 
     return true;
 }

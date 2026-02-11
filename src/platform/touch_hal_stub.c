@@ -148,7 +148,7 @@ void touch_hal_init(void)
     status_t st = GT911_Init(&s_touchHandle, &cfg);
     if (st != kStatus_Success)
     {
-        PRINTF("PONG: touch init failed: %d\r\n", (int)st);
+        PRINTF("SMART PONG: touch init failed: %d\r\n", (int)st);
         return;
     }
 
@@ -163,7 +163,7 @@ void touch_hal_init(void)
     EnableIRQ(GPIO40_IRQn);
 
     s_touchOk = true;
-    PRINTF("PONG: touch ok res=%ux%u\r\n", (unsigned)s_touchHandle.resolutionX, (unsigned)s_touchHandle.resolutionY);
+    PRINTF("SMART PONG: touch ok res=%ux%u\r\n", (unsigned)s_touchHandle.resolutionX, (unsigned)s_touchHandle.resolutionY);
 }
 
 static inline float clamp01f(float v)
