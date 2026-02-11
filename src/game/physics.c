@@ -296,13 +296,15 @@ static bool physics_step_sub(pong_game_t *g, float dt)
     if (g->ball.x < -margin)
     {
         g->score.right++;
-        physics_reset_ball(g, +1);
+        /* Serve toward the player who just conceded (left). */
+        physics_reset_ball(g, -1);
         return true;
     }
     else if (g->ball.x > 1.0f + margin)
     {
         g->score.left++;
-        physics_reset_ball(g, -1);
+        /* Serve toward the player who just conceded (right). */
+        physics_reset_ball(g, +1);
         return true;
     }
 

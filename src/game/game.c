@@ -8,6 +8,9 @@
 #include "game/physics.h"
 #include "game/ui_layout.h"
 
+#define EDGEAI_WIN_SCORE 11u
+#define EDGEAI_END_PROMPT_DELAY_FRAMES 120u
+
 static inline int32_t clampi(int32_t v, int32_t lo, int32_t hi)
 {
     if (v < lo) return lo;
@@ -37,6 +40,16 @@ static float game_deadzone(float v, float dz)
     if (dz <= 0.0f) return v;
     if (dz >= 1.0f) return 0.0f;
     return (absf(v) < dz) ? 0.0f : v;
+}
+
+static bool game_end_prompt_visible(const pong_game_t *g)
+{
+    if (!g) return false;
+    if (!g->match_over) return false;
+    if (g->end_prompt_dismissed) return false;
+
+    uint32_t elapsed = g->frame - g->match_over_frame;
+    return (elapsed >= EDGEAI_END_PROMPT_DELAY_FRAMES);
 }
 
 static void game_apply_accel_ball_nudge(pong_game_t *g, const platform_input_t *in, float dt)
@@ -73,6 +86,44 @@ static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
     int32_t py = (int32_t)(touch_y * (float)(EDGEAI_LCD_H - 1) + 0.5f);
     px = clampi(px, 0, EDGEAI_LCD_W - 1);
     py = clampi(py, 0, EDGEAI_LCD_H - 1);
+
+    if (g->match_over)
+    {
+        if (g->end_prompt_dismissed)
+        {
+            g->end_prompt_dismissed = false;
+            if (g->frame > EDGEAI_END_PROMPT_DELAY_FRAMES)
+            {
+                g->match_over_frame = g->frame - EDGEAI_END_PROMPT_DELAY_FRAMES;
+            }
+            else
+            {
+                g->match_over_frame = 0u;
+            }
+            return;
+        }
+
+        if (game_end_prompt_visible(g))
+        {
+            if (hit_rect(px, py, EDGEAI_END_BTN_YES_X, EDGEAI_END_BTN_Y, EDGEAI_END_BTN_W, EDGEAI_END_BTN_H))
+            {
+                game_reset(g);
+                g->match_over = false;
+                g->winner_left = false;
+                g->end_prompt_dismissed = false;
+                g->menu_open = false;
+                g->help_open = false;
+                return;
+            }
+
+            if (hit_rect(px, py, EDGEAI_END_BTN_NO_X, EDGEAI_END_BTN_Y, EDGEAI_END_BTN_W, EDGEAI_END_BTN_H))
+            {
+                g->end_prompt_dismissed = true;
+                return;
+            }
+        }
+        return;
+    }
 
     const int32_t pill_x = EDGEAI_UI_PILL_X;
     const int32_t pill_y = EDGEAI_UI_PILL_Y;
@@ -206,9 +257,13 @@ void game_init(pong_game_t *g)
     g->menu_open = false;
     g->help_open = false;
     g->ui_block_touch = false;
+    g->match_over = false;
+    g->winner_left = false;
+    g->end_prompt_dismissed = false;
 
     g->rng = 1u;
     g->frame = 0;
+    g->match_over_frame = 0u;
 
     g->paddle_l.x_plane = 0.06f;
     g->paddle_r.x_plane = 0.94f;
@@ -263,8 +318,14 @@ void game_reset(pong_game_t *g)
 
     g->last_hit_dy = 0.0f;
     g->last_hit_dz = 0.0f;
+    g->match_over = false;
+    g->winner_left = false;
+    g->end_prompt_dismissed = false;
+    g->match_over_frame = g->frame;
 
-    physics_reset_ball(g, +1);
+    g->rng = g->rng * 1664525u + 1013904223u;
+    int serve_dir = (g->rng & 1u) ? +1 : -1;
+    physics_reset_ball(g, serve_dir);
 }
 
 void game_step(pong_game_t *g, const platform_input_t *in, float dt)
@@ -290,6 +351,12 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
         g->ui_block_touch = false;
     }
 
+    if (g->match_over)
+    {
+        g->frame++;
+        return;
+    }
+
     if (g->menu_open || g->help_open)
     {
         /* Pause simulation while an overlay UI panel is open. */
@@ -312,7 +379,22 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
 
     physics_step(g, dt);
 
+    if (g->score.left >= EDGEAI_WIN_SCORE || g->score.right >= EDGEAI_WIN_SCORE)
+    {
+        g->match_over = true;
+        g->winner_left = (g->score.left >= EDGEAI_WIN_SCORE);
+        g->end_prompt_dismissed = false;
+        g->match_over_frame = g->frame;
+
+        g->ball.vx = 0.0f;
+        g->ball.vy = 0.0f;
+        g->ball.vz = 0.0f;
+    }
+
     /* Apply after physics so paddle hits do not overwrite the external nudge. */
-    game_apply_accel_ball_nudge(g, in, dt);
+    if (!g->match_over)
+    {
+        game_apply_accel_ball_nudge(g, in, dt);
+    }
     g->frame++;
 }

@@ -54,7 +54,8 @@ Paddle collisions:
 
 Scoring:
 - Score when ball passes beyond x bounds.
-- Reset serve with slight randomness.
+- First side to 11 points wins the match.
+- Reset serve from center with slight randomness toward the side that just conceded.
 
 ## Projection
 Perspective projection:

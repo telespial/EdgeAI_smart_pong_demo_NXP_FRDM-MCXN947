@@ -13,6 +13,9 @@
 
 static uint16_t s_tile[EDGEAI_TILE_MAX_W * EDGEAI_TILE_MAX_H];
 
+#define EDGEAI_END_PROMPT_DELAY_FRAMES 120u
+#define EDGEAI_CONFETTI_COUNT 56
+
 static inline float clampf(float v, float lo, float hi)
 {
     if (v < lo) return lo;
@@ -30,6 +33,24 @@ static inline uint8_t clamp_u8(int32_t v)
     if (v < 0) return 0u;
     if (v > 255) return 255u;
     return (uint8_t)v;
+}
+
+static inline uint32_t render_hash_u32(uint32_t x)
+{
+    x ^= x >> 16;
+    x *= 0x7FEB352Du;
+    x ^= x >> 15;
+    x *= 0x846CA68Bu;
+    x ^= x >> 16;
+    return x;
+}
+
+static bool render_end_prompt_visible(const pong_game_t *g)
+{
+    if (!g) return false;
+    if (!g->match_over) return false;
+    if (g->end_prompt_dismissed) return false;
+    return ((g->frame - g->match_over_frame) >= EDGEAI_END_PROMPT_DELAY_FRAMES);
 }
 
 static void render_project(const render_state_t *rs, float x, float y, float z, int32_t *sx, int32_t *sy, float *out_scale)
@@ -330,11 +351,75 @@ static void render_digit7seg(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile
     if (m & (1u << 6)) sw_render_fill_rect(dst, w, h, tile_x0, tile_y0, x0 + t, y0 + seg_len + t, x0 + t + seg_len - 1, y0 + seg_len + 2 * t - 1, c);
 }
 
+static void render_score_value(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, int32_t tile_y0,
+                               int32_t cx, int32_t cy, int32_t seg_len, int32_t t, int score,
+                               uint16_t c_shadow, uint16_t c_digit)
+{
+    int val = score;
+    if (val < 0) val = 0;
+    if (val > 99) val = 99;
+
+    int digit_w = seg_len + (2 * t);
+    int gap = t + 2;
+
+    if (val >= 10)
+    {
+        int tens = (val / 10) % 10;
+        int ones = val % 10;
+
+        int total_w = (2 * digit_w) + gap;
+        int cx_tens = cx - (total_w / 2) + (digit_w / 2);
+        int cx_ones = cx_tens + digit_w + gap;
+
+        render_digit7seg(dst, w, h, tile_x0, tile_y0, cx_tens + 2, cy + 2, seg_len, t, tens, c_shadow);
+        render_digit7seg(dst, w, h, tile_x0, tile_y0, cx_ones + 2, cy + 2, seg_len, t, ones, c_shadow);
+        render_digit7seg(dst, w, h, tile_x0, tile_y0, cx_tens, cy, seg_len, t, tens, c_digit);
+        render_digit7seg(dst, w, h, tile_x0, tile_y0, cx_ones, cy, seg_len, t, ones, c_digit);
+        return;
+    }
+
+    render_digit7seg(dst, w, h, tile_x0, tile_y0, cx + 2, cy + 2, seg_len, t, val, c_shadow);
+    render_digit7seg(dst, w, h, tile_x0, tile_y0, cx, cy, seg_len, t, val, c_digit);
+}
+
 static void render_scores(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int32_t y0,
                           const render_state_t *rs, const pong_game_t *g)
 {
     const uint16_t c_shadow = sw_pack_rgb565_u8(6, 6, 8);
     const uint16_t c_digit = sw_pack_rgb565_u8(214, 215, 217);
+    int32_t lx = 0, ly = 0, rx = 0, ry = 0;
+
+    if (g->match_over)
+    {
+        float s_near = 1.0f / (1.0f + 0.38f * rs->persp);
+        int32_t seg_big = (int32_t)(74.0f * s_near);
+        int32_t th_big = (int32_t)(12.0f * s_near);
+        int32_t seg_small = (int32_t)(46.0f * s_near);
+        int32_t th_small = (int32_t)(8.0f * s_near);
+        if (seg_big < 28) seg_big = 28;
+        if (th_big < 5) th_big = 5;
+        if (seg_small < 18) seg_small = 18;
+        if (th_small < 3) th_small = 3;
+
+        render_project(rs, 0.28f, 0.16f, 0.38f, &lx, &ly, NULL);
+        render_project(rs, 0.72f, 0.16f, 0.38f, &rx, &ry, NULL);
+
+        bool flash_on = (((g->frame / 8u) & 1u) == 0u);
+        const uint16_t c_win = flash_on ? sw_pack_rgb565_u8(80, 255, 90) : sw_pack_rgb565_u8(28, 120, 36);
+        const uint16_t c_lose = sw_pack_rgb565_u8(230, 35, 35);
+
+        if (g->winner_left)
+        {
+            render_score_value(dst, w, h, x0, y0, lx, ly, seg_big, th_big, (int)g->score.left, c_shadow, c_win);
+            render_score_value(dst, w, h, x0, y0, rx, ry + 4, seg_small, th_small, (int)g->score.right, c_shadow, c_lose);
+        }
+        else
+        {
+            render_score_value(dst, w, h, x0, y0, lx, ly + 4, seg_small, th_small, (int)g->score.left, c_shadow, c_lose);
+            render_score_value(dst, w, h, x0, y0, rx, ry, seg_big, th_big, (int)g->score.right, c_shadow, c_win);
+        }
+        return;
+    }
 
     float s_far = 1.0f / (1.0f + 1.0f * rs->persp);
     int32_t seg_len = (int32_t)(58.0f * s_far);
@@ -342,17 +427,11 @@ static void render_scores(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int
     if (seg_len < 14) seg_len = 14;
     if (t < 3) t = 3;
 
-    int32_t lx = 0, ly = 0, rx = 0, ry = 0;
     render_project(rs, 0.25f, 0.16f, 1.0f, &lx, &ly, NULL);
     render_project(rs, 0.75f, 0.16f, 1.0f, &rx, &ry, NULL);
 
-    int dl = (int)(g->score.left % 10u);
-    int dr = (int)(g->score.right % 10u);
-
-    render_digit7seg(dst, w, h, x0, y0, lx + 2, ly + 2, seg_len, t, dl, c_shadow);
-    render_digit7seg(dst, w, h, x0, y0, rx + 2, ry + 2, seg_len, t, dr, c_shadow);
-    render_digit7seg(dst, w, h, x0, y0, lx, ly, seg_len, t, dl, c_digit);
-    render_digit7seg(dst, w, h, x0, y0, rx, ry, seg_len, t, dr, c_digit);
+    render_score_value(dst, w, h, x0, y0, lx, ly, seg_len, t, (int)g->score.left, c_shadow, c_digit);
+    render_score_value(dst, w, h, x0, y0, rx, ry, seg_len, t, (int)g->score.right, c_shadow, c_digit);
 }
 
 static void render_fill_round_rect(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, int32_t tile_y0,
@@ -618,30 +697,30 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "GAME RULES", c_body);
         y += 16;
 
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "HIT BALL WITH PADDLE", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "FIRST TO 11 POINTS WINS", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "SCORE WHEN BALL PASSES PADDLE", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "MISS GIVES OPPONENT 1 POINT", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "BALL BOUNCES OFF WALLS", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "BALL BOUNCES TOP AND BOTTOM", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "BALL SPEEDS UP ON HITS", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "PADDLE EDGE ADDS STEEPER ANGLE", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "BALL COLOR SHOWS SPEED", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "SERVE STARTS CENTER TO MISSED SIDE", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "DIFFICULTY CHANGES SPEED AND AI", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "BALL SPEEDS UP ON EACH HIT", c_body);
         y += lh + 4;
 
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "CONTROLS", c_dim);
         y += 16;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TOUCH Y UP DOWN", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TOUCH X DEPTH", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TOUCH X CONTROLS DEPTH", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "KNOB INPUT CAN MAP VIA PLATFORM HAL", c_body);
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P0 AI VS AI", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P1 ONE TOUCH", c_body);
-        y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P2 TWO TOUCHES L R", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P1 P2 TOUCH SPLIT CONTROL", c_body);
         y += lh + 4;
 
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "INSPIRED BY", c_dim);
@@ -654,6 +733,96 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
 
         int32_t credit_y = panel_y1 - ypad - 7 * s1;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, credit_y, s1, "THIS VERSION: RICHARD HABERKERN", c_dim);
+    }
+}
+
+static void render_confetti(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, int32_t tile_y0,
+                            const pong_game_t *g)
+{
+    if (!g || !g->match_over) return;
+
+    float t = (float)(g->frame - g->match_over_frame) * (1.0f / (float)EDGEAI_FIXED_FPS);
+    if (t < 0.0f) t = 0.0f;
+    if (t > 4.0f) t = 4.0f;
+
+    static const uint16_t pal[] = {
+        0xF800u, /* red */
+        0x07E0u, /* green */
+        0x001Fu, /* blue */
+        0xFFE0u, /* yellow */
+        0xF81Fu, /* magenta */
+        0x07FFu, /* cyan */
+    };
+
+    for (uint32_t i = 0; i < EDGEAI_CONFETTI_COUNT; i++)
+    {
+        uint32_t h0 = render_hash_u32(0x9E3779B9u * (i + 1u));
+        uint32_t h1 = render_hash_u32(h0 ^ 0xA5A5A5A5u);
+
+        float x0f = (float)(h0 % (uint32_t)EDGEAI_LCD_W);
+        float y0f = -(float)(h0 % 120u);
+        float vxf = ((float)((h0 >> 8) & 0xFFu) * (1.0f / 255.0f)) * 160.0f - 80.0f;
+        float vyf = 55.0f + ((float)((h0 >> 16) & 0xFFu) * (1.0f / 255.0f)) * 150.0f;
+        float gacc = 160.0f;
+
+        int32_t x = (int32_t)(x0f + vxf * t);
+        int32_t y = (int32_t)(y0f + vyf * t + 0.5f * gacc * t * t);
+        int32_t s = 2 + (int32_t)((h1 >> 29) & 0x3u);
+        uint16_t c = pal[h1 % (sizeof(pal) / sizeof(pal[0]))];
+
+        if (x < -s || y < -s || x >= EDGEAI_LCD_W || y >= EDGEAI_LCD_H) continue;
+        sw_render_fill_rect(dst, w, h, tile_x0, tile_y0, x, y, x + s - 1, y + s - 1, c);
+    }
+}
+
+static void render_end_popup(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, int32_t tile_y0,
+                             const pong_game_t *g)
+{
+    if (!render_end_prompt_visible(g)) return;
+
+    const uint16_t c_panel = sw_pack_rgb565_u8(18, 19, 22);
+    const uint16_t c_border = sw_pack_rgb565_u8(64, 66, 70);
+    const uint16_t c_text = sw_pack_rgb565_u8(234, 235, 238);
+    const uint16_t c_yes = sw_pack_rgb565_u8(46, 146, 62);
+    const uint16_t c_no = sw_pack_rgb565_u8(156, 36, 36);
+    const uint16_t c_btn_text = sw_pack_rgb565_u8(240, 240, 242);
+
+    int32_t px0 = EDGEAI_END_PANEL_X;
+    int32_t py0 = EDGEAI_END_PANEL_Y;
+    int32_t px1 = px0 + EDGEAI_END_PANEL_W - 1;
+    int32_t py1 = py0 + EDGEAI_END_PANEL_H - 1;
+
+    render_fill_round_rect(dst, w, h, tile_x0, tile_y0, px0, py0, px1, py1, 10, c_panel);
+    sw_render_line(dst, w, h, tile_x0, tile_y0, px0, py0, px1, py0, c_border);
+    sw_render_line(dst, w, h, tile_x0, tile_y0, px0, py1, px1, py1, c_border);
+    sw_render_line(dst, w, h, tile_x0, tile_y0, px0, py0, px0, py1, c_border);
+    sw_render_line(dst, w, h, tile_x0, tile_y0, px1, py0, px1, py1, c_border);
+
+    {
+        const char *title = "NEW GAME?";
+        int32_t ts = 2;
+        int32_t tw = edgeai_text5x7_width(ts, title);
+        int32_t tx = px0 + (EDGEAI_END_PANEL_W - tw) / 2;
+        int32_t ty = py0 + 14;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx, ty, ts, title, c_text);
+    }
+
+    {
+        int32_t yx0 = EDGEAI_END_BTN_YES_X;
+        int32_t yy0 = EDGEAI_END_BTN_Y;
+        int32_t yx1 = yx0 + EDGEAI_END_BTN_W - 1;
+        int32_t yy1 = yy0 + EDGEAI_END_BTN_H - 1;
+        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, yx0, yy0, yx1, yy1, 8, c_yes);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, yx0 + 20, yy0 + 5, 2, "YES", c_btn_text);
+    }
+
+    {
+        int32_t nx0 = EDGEAI_END_BTN_NO_X;
+        int32_t ny0 = EDGEAI_END_BTN_Y;
+        int32_t nx1 = nx0 + EDGEAI_END_BTN_W - 1;
+        int32_t ny1 = ny0 + EDGEAI_END_BTN_H - 1;
+        render_fill_round_rect(dst, w, h, tile_x0, tile_y0, nx0, ny0, nx1, ny1, 8, c_no);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, nx0 + 24, ny0 + 5, 2, "NO", c_btn_text);
     }
 }
 
@@ -796,7 +965,9 @@ void render_draw_frame(render_state_t *rs, const pong_game_t *g)
                 }
             }
 
+            render_confetti(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_ui(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
+            render_end_popup(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
 
             display_hal_blit_rect(x0, y0, x1, y1, s_tile);
         }

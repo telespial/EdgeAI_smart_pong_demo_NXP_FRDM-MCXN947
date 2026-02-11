@@ -45,6 +45,9 @@ typedef struct
     bool menu_open;
     bool help_open;
     bool ui_block_touch;
+    bool match_over;
+    bool winner_left;
+    bool end_prompt_dismissed;
 
     pong_ball_t ball;
     pong_paddle_t paddle_l;
@@ -53,6 +56,7 @@ typedef struct
 
     uint32_t rng;
     uint32_t frame;
+    uint32_t match_over_frame;
 
     float last_hit_dy;
     float last_hit_dz;
