@@ -4,6 +4,7 @@
 
 Features:
 - 0P / 1P / 2P: AI vs AI, 1P vs AI, 2P local
+- 0P accel ball nudge (Accel 4 Click, FXLS8974CF): tilt perturbs ball vy/vz to influence AI vs AI outcomes
 - Touch control (GT911, multi-touch):
   - 1 touch drives player 1
   - 2 touches split screen: left half drives player 1, right half drives player 2

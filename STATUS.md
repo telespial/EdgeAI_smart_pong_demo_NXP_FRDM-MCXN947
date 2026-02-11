@@ -8,3 +8,4 @@
 - Result: ok (build + flash)
 - Binary: mcuxsdk_ws/build_smart_pong_accel_fast_v1/edgeai_smart_pong_demo_cm33_core0.bin
 - Flash: west flash -d mcuxsdk_ws/build_smart_pong_accel_fast_v1 -r linkserver
+- Failsafe: failsafe/edgeai_smart_pong_demo_cm33_core0_20260210_1758_accel_ball_nudge_v1_golden.elf

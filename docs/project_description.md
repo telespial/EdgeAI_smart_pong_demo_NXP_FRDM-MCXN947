@@ -84,8 +84,9 @@ Two-player:
 - Each side supports full-range z mapping; optional edge strips remap z to full range near screen edges.
 - Single-touch drives the touched side; multi-touch supports simultaneous independent control.
 
-Accel fallback (optional):
-- Accel 4 Click (FXLS8974CF) can drive paddle targets in y/z via tilt mapping.
+Accel (optional):
+- Accel 4 Click (FXLS8974CF) tilt is available as a non-touch input path.
+- 0P mode: tilt nudges ball `vy`/`vz` to perturb AI vs AI outcomes.
 
 ## AI
 Baseline CPU AI:
