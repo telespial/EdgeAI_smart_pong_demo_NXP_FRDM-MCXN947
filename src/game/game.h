@@ -74,6 +74,13 @@ typedef struct
     float accel_ax;
     float accel_ay;
 
+    /* Runtime AI/NPU telemetry. */
+    uint32_t ai_telemetry_start_cycles;
+    uint32_t ai_npu_attempts_window;
+    uint32_t ai_fallback_window;
+    uint16_t ai_npu_rate_hz;
+    uint16_t ai_fallback_rate_hz;
+
     npu_hal_t npu;
 } pong_game_t;
 

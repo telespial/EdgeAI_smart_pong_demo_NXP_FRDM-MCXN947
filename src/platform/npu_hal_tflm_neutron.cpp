@@ -36,6 +36,17 @@ static inline float clampf(float v, float lo, float hi)
     return v;
 }
 
+static inline float sigmoidf(float x)
+{
+    if (x >= 0.0f)
+    {
+        float e = expf(-x);
+        return 1.0f / (1.0f + e);
+    }
+    float e = expf(x);
+    return e / (1.0f + e);
+}
+
 static float reflect_range(float p, float lo, float hi)
 {
     if (!(hi > lo)) return lo;
@@ -165,6 +176,33 @@ static bool output_to_noise2(const TfLiteTensor *out, float *ny, float *nz)
     return true;
 }
 
+static bool output_to_direct_pred(const TfLiteTensor *out, float *y01, float *z01, float *t01)
+{
+    if (!out || !y01 || !z01 || !t01) return false;
+    int n = tensor_num_elems(out);
+    if (n < 3) return false;
+
+    auto at_f = [&](int i) -> float {
+        if (out->type == kTfLiteFloat32) return out->data.f[i];
+
+        const float scale = out->params.scale;
+        const int32_t zp = (int32_t)out->params.zero_point;
+        if (scale <= 0.0f) return 0.0f;
+
+        int32_t q = 0;
+        if (out->type == kTfLiteInt8) q = (int32_t)out->data.int8[i];
+        else if (out->type == kTfLiteUInt8) q = (int32_t)out->data.uint8[i];
+        else return 0.0f;
+
+        return ((float)q - (float)zp) * scale;
+    };
+
+    *y01 = clampf(sigmoidf(at_f(0)), 0.0f, 1.0f);
+    *z01 = clampf(sigmoidf(at_f(1)), 0.0f, 1.0f);
+    *t01 = clampf(sigmoidf(at_f(2)), 0.0f, 1.0f);
+    return true;
+}
+
 static const tflite::Model *s_model = nullptr;
 static tflite::MicroInterpreter *s_interpreter = nullptr;
 static bool s_interpreter_ok = false;
@@ -263,13 +301,37 @@ extern "C" bool npu_hal_tflm_neutron_predict(npu_hal_t *s, const float features[
     if (t < 0.0f) t = 0.0f;
     if (t > 6.0f) t = 6.0f;
 
-    float y = reflect_range(y0 + (vy * t), y_lo, y_hi);
-    float z = reflect_range(z0 + (vz * t), z_lo, z_hi);
+    float y_analytic = reflect_range(y0 + (vy * t), y_lo, y_hi);
+    float z_analytic = reflect_range(z0 + (vz * t), z_lo, z_hi);
 
-    /* Small NPU-derived perturbation. */
-    const float amp = 0.028f;
-    y = clampf(y + ny * amp, y_lo, y_hi);
-    z = clampf(z + nz * amp, z_lo, z_hi);
+    float y = y_analytic;
+    float z = z_analytic;
+
+    /* Direct NPU path:
+     * decode first 3 output channels as (y,z,t) signals, map into physical ranges,
+     * then blend strongly toward direct output while retaining analytic stability.
+     */
+    float y01 = 0.5f;
+    float z01 = 0.5f;
+    float t01 = 0.5f;
+    if (output_to_direct_pred(out0, &y01, &z01, &t01))
+    {
+        float y_direct = y_lo + y01 * (y_hi - y_lo);
+        float z_direct = z_lo + z01 * (z_hi - z_lo);
+        float t_direct = t01 * 6.0f;
+        const float direct_w = 0.78f;
+
+        y = clampf(y_analytic * (1.0f - direct_w) + y_direct * direct_w, y_lo, y_hi);
+        z = clampf(z_analytic * (1.0f - direct_w) + z_direct * direct_w, z_lo, z_hi);
+        t = clampf(t * (1.0f - direct_w) + t_direct * direct_w, 0.0f, 6.0f);
+    }
+    else
+    {
+        /* Fallback if output layout is not suitable for direct decoding. */
+        const float amp = 0.028f;
+        y = clampf(y + ny * amp, y_lo, y_hi);
+        z = clampf(z + nz * amp, z_lo, z_hi);
+    }
 
     out->y_hit = y;
     out->z_hit = z;
@@ -278,4 +340,3 @@ extern "C" bool npu_hal_tflm_neutron_predict(npu_hal_t *s, const float features[
 }
 
 #endif /* CONFIG_EDGEAI_USE_NPU */
-

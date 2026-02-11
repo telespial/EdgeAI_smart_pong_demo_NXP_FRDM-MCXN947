@@ -2,11 +2,19 @@
 
 #include <string.h>
 
+#include "platform/time_hal.h"
+
 static inline float clampf(float v, float lo, float hi)
 {
     if (v < lo) return lo;
     if (v > hi) return hi;
     return v;
+}
+
+static inline uint16_t clampu16(uint32_t v, uint16_t hi)
+{
+    if (v > (uint32_t)hi) return hi;
+    return (uint16_t)v;
 }
 
 static inline float absf(float v)
@@ -254,6 +262,35 @@ static float ai_max_speed(const pong_game_t *g)
     }
 }
 
+static void ai_update_telemetry_window(pong_game_t *g)
+{
+    if (!g) return;
+
+    if (g->ai_telemetry_start_cycles == 0u)
+    {
+        g->ai_telemetry_start_cycles = time_hal_cycles();
+        return;
+    }
+
+    uint32_t elapsed_us = time_hal_elapsed_us(g->ai_telemetry_start_cycles);
+    if (elapsed_us < 1000000u) return;
+
+    uint32_t npu_hz = 0u;
+    uint32_t fb_hz = 0u;
+
+    if (elapsed_us > 0u)
+    {
+        npu_hz = (uint32_t)(((uint64_t)g->ai_npu_attempts_window * 1000000ull) / (uint64_t)elapsed_us);
+        fb_hz = (uint32_t)(((uint64_t)g->ai_fallback_window * 1000000ull) / (uint64_t)elapsed_us);
+    }
+
+    g->ai_npu_rate_hz = clampu16(npu_hz, 999u);
+    g->ai_fallback_rate_hz = clampu16(fb_hz, 999u);
+    g->ai_npu_attempts_window = 0u;
+    g->ai_fallback_window = 0u;
+    g->ai_telemetry_start_cycles = time_hal_cycles();
+}
+
 static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_side)
 {
     if (!g || !p) return;
@@ -287,6 +324,7 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
                     use_feat = feat2;
                 }
 
+                g->ai_npu_attempts_window++;
                 npu_pred_t pred;
                 used_npu = npu_hal_predict(&g->npu, use_feat, &pred);
                 if (used_npu)
@@ -294,6 +332,10 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
                     y_hit = pred.y_hit;
                     z_hit = pred.z_hit;
                     t_hit = pred.t_hit;
+                }
+                else
+                {
+                    g->ai_fallback_window++;
                 }
             }
 
@@ -357,4 +399,6 @@ void ai_step(pong_game_t *g, float dt, bool ai_left, bool ai_right)
     {
         ai_step_one(g, dt, &g->paddle_r, true);
     }
+
+    ai_update_telemetry_window(g);
 }

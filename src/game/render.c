@@ -42,6 +42,25 @@ static inline uint8_t clamp_u8(int32_t v)
     return (uint8_t)v;
 }
 
+static void text_u3(char out[3], uint32_t v)
+{
+    if (!out) return;
+    if (v > 999u) v = 999u;
+    out[0] = (char)('0' + ((v / 100u) % 10u));
+    out[1] = (char)('0' + ((v / 10u) % 10u));
+    out[2] = (char)('0' + (v % 10u));
+}
+
+static void text_u4(char out[4], uint32_t v)
+{
+    if (!out) return;
+    if (v > 9999u) v = 9999u;
+    out[0] = (char)('0' + ((v / 1000u) % 10u));
+    out[1] = (char)('0' + ((v / 100u) % 10u));
+    out[2] = (char)('0' + ((v / 10u) % 10u));
+    out[3] = (char)('0' + (v % 10u));
+}
+
 static inline uint32_t render_hash_u32(uint32_t x)
 {
     x ^= x >> 16;
@@ -875,6 +894,54 @@ static void render_end_popup(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile
     }
 }
 
+static void render_ai_telemetry(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, int32_t tile_y0,
+                                const pong_game_t *g)
+{
+    if (!g || !g->ai_enabled) return;
+    if (!(g->mode == kGameModeZeroPlayer || g->mode == kGameModeSinglePlayer)) return;
+
+    npu_telemetry_t npu_t;
+    if (!npu_hal_get_telemetry(&g->npu, &npu_t)) return;
+
+    char npu_hz[3];
+    char fb_hz[3];
+    char last_us[4];
+    char avg_us[4];
+    text_u3(npu_hz, g->ai_npu_rate_hz);
+    text_u3(fb_hz, g->ai_fallback_rate_hz);
+    text_u4(last_us, npu_t.last_infer_us);
+    text_u4(avg_us, npu_t.avg_infer_us);
+
+    char line1[] = "NPU 000H FB 000H";
+    char line2[] = "LAT 0000 AVG 0000";
+
+    line1[4] = npu_hz[0];
+    line1[5] = npu_hz[1];
+    line1[6] = npu_hz[2];
+    line1[12] = fb_hz[0];
+    line1[13] = fb_hz[1];
+    line1[14] = fb_hz[2];
+
+    line2[4] = last_us[0];
+    line2[5] = last_us[1];
+    line2[6] = last_us[2];
+    line2[7] = last_us[3];
+    line2[13] = avg_us[0];
+    line2[14] = avg_us[1];
+    line2[15] = avg_us[2];
+    line2[16] = avg_us[3];
+
+    const int32_t x = 8;
+    const int32_t y = EDGEAI_LCD_H - 18;
+    const uint16_t c = sw_pack_rgb565_u8(212, 214, 216);
+    const uint16_t cs = sw_pack_rgb565_u8(10, 10, 12);
+
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x + 1, y + 1, 1, line1, cs);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x + 1, y + 9, 1, line2, cs);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 1, line1, c);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y + 8, 1, line2, c);
+}
+
 typedef struct
 {
     float z0; /* near */
@@ -1016,6 +1083,7 @@ void render_draw_frame(render_state_t *rs, const pong_game_t *g)
 
             render_confetti(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_ui(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
+            render_ai_telemetry(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_countdown(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_end_popup(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
 

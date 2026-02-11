@@ -47,9 +47,12 @@ Smart Pong is a 3D-look Pong implementation for FRDM-MCXN947 with LCD-PAR-S035.
   - TensorFlow Lite Micro runtime
   - eIQ Neutron delegate/backend for NPU execution
 - AI behavior:
-  - Predicts intercept intent for paddle tracking.
+  - Predicts paddle intercept targets (`y_hit`, `z_hit`, `t_hit`) for tracking.
   - Difficulty presets apply reaction-time limits, speed limits, and tracking noise.
   - `AI ON/OFF` controls whether the NPU-assisted path is used; CPU fallback remains available.
+- Runtime telemetry:
+  - On-screen telemetry shows NPU invoke rate, fallback rate, last inference latency, and moving-average latency.
+  - Telemetry is displayed in AI-controlled modes (`P0`, `P1`) when AI is enabled.
 - Current embedded NPU model artifact is integrated in `src/npu/` and linked into flash (`.model` section).
 
 ## Features
@@ -59,6 +62,7 @@ Smart Pong is a 3D-look Pong implementation for FRDM-MCXN947 with LCD-PAR-S035.
 - 0P accelerometer perturbation of ball trajectory (`vy`, `vz`) for live outcome nudging
 - New-game countdown (`3`, `2`, `1`; red/yellow/green) on game start only
 - Fixed-timestep simulation
+- Real-time NPU telemetry overlay for performance tuning
 
 ## Build and Flash
 1. Bootstrap tools:

@@ -339,6 +339,12 @@ void game_init(pong_game_t *g)
     g->accel_ax = 0.0f;
     g->accel_ay = 0.0f;
 
+    g->ai_telemetry_start_cycles = 0u;
+    g->ai_npu_attempts_window = 0u;
+    g->ai_fallback_window = 0u;
+    g->ai_npu_rate_hz = 0u;
+    g->ai_fallback_rate_hz = 0u;
+
     ai_init(g);
     game_reset(g);
 }
@@ -372,6 +378,11 @@ void game_reset(pong_game_t *g)
     g->end_prompt_dismissed = false;
     g->match_over_frame = g->frame;
     g->match_over_start_cycles = 0u;
+    g->ai_telemetry_start_cycles = 0u;
+    g->ai_npu_attempts_window = 0u;
+    g->ai_fallback_window = 0u;
+    g->ai_npu_rate_hz = 0u;
+    g->ai_fallback_rate_hz = 0u;
 
     g->rng = g->rng * 1664525u + 1013904223u;
     int serve_dir = (g->rng & 1u) ? +1 : -1;
