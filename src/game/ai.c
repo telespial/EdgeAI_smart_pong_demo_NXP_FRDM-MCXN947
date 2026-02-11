@@ -177,6 +177,32 @@ static void ai_build_features(const pong_game_t *g, float f[16])
     f[15] = 1.0f;
 }
 
+static void ai_mirror_features_x(const float in[16], float out[16])
+{
+    if (!in || !out) return;
+
+    /* Keep the NPU feature view always predicting the right paddle plane:
+     * - mirror x and vx
+     * - swap left/right paddle features
+     * - flip score diff sign (left-right -> right-left)
+     */
+    memcpy(out, in, 16 * sizeof(out[0]));
+
+    out[0] = 1.0f - in[0];   /* ball.x */
+    out[3] = -in[3];         /* ball.vx */
+
+    /* left paddle (6..9) <-> right paddle (10..11) */
+    out[6] = in[10]; /* opp y */
+    out[7] = in[11]; /* opp z */
+    out[8] = 0.0f;
+    out[9] = 0.0f;
+
+    out[10] = in[6]; /* self y */
+    out[11] = in[7]; /* self z */
+
+    out[12] = -in[12];
+}
+
 static uint32_t ai_update_div(const pong_game_t *g)
 {
     uint8_t d = g ? g->difficulty : 2;
@@ -229,22 +255,28 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
         float z_hit = 0.5f;
         float t_hit = 0.0f;
 
-        if (right_side)
+        float feat[16];
+        float feat2[16];
+        ai_build_features(g, feat);
+
+        const float *use_feat = feat;
+        if (!right_side)
         {
-            float feat[16];
-            ai_build_features(g, feat);
-            npu_pred_t pred;
-            bool used_npu = npu_hal_predict(&g->npu, feat, &pred);
-            if (used_npu)
-            {
-                y_hit = pred.y_hit;
-                z_hit = pred.z_hit;
-                t_hit = pred.t_hit;
-            }
-            else
-            {
-                ai_predict_right(g, dt, &y_hit, &z_hit, &t_hit);
-            }
+            ai_mirror_features_x(feat, feat2);
+            use_feat = feat2;
+        }
+
+        npu_pred_t pred;
+        bool used_npu = npu_hal_predict(&g->npu, use_feat, &pred);
+        if (used_npu)
+        {
+            y_hit = pred.y_hit;
+            z_hit = pred.z_hit;
+            t_hit = pred.t_hit;
+        }
+        else if (right_side)
+        {
+            ai_predict_right(g, dt, &y_hit, &z_hit, &t_hit);
         }
         else
         {

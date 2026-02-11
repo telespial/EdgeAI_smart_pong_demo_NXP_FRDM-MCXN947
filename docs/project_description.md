@@ -93,15 +93,22 @@ Baseline CPU AI:
 - Predict intercept at the right paddle plane by forward simulation with wall bounces.
 - Apply reaction delay, noise, and speed limits for difficulty presets.
 
-Optional NPU predictor (future work):
+NPU predictor path:
 - Model predicts `(y_hit, z_hit, t_hit)` from a compact feature vector.
-- Suggested features (16 values):
+- Feature vector (16 values):
   - Ball: x,y,z,vx,vy,vz (6)
   - Player paddle: py,pz,dpy,dpz (4)
   - AI paddle: ay,az (2)
   - Score diff (1)
   - Last hit offsets: lastDy,lastDz (2)
   - Bias (1)
+- Runtime uses NPU-first prediction with CPU predictor fallback.
+
+Current implementation notes:
+- NPU runtime uses TFLM + eIQ Neutron (`CONFIG_EDGEAI_USE_NPU=y`).
+- Embedded model is a NeutronGraph placeholder blob in `src/npu/model_ds_cnn_s_npu_data.h`.
+- Current NPU output contributes deterministic perturbation terms; final `(y_hit, z_hit, t_hit)` is solved by an analytic intercept path.
+- Planned upgrade path: replace placeholder with Pong-specific predictor model that emits direct intercept outputs.
 
 ## Repo Architecture
 - `src/platform/`: display, input, time, touch, NPU hooks

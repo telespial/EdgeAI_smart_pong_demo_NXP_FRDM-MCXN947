@@ -34,6 +34,7 @@ Build output:
 Notes:
 - Relative `BUILD_DIR` values are resolved under `WS_DIR` (default: `./mcuxsdk_ws`).
 - Set `BUILD_DIR` to use a non-default build directory (for example, `BUILD_DIR=build_alt ./tools/build_frdmmcxn947.sh debug`).
+- Current known-good NPU run used `BUILD_DIR=build_smart_pong_npu_v1`.
 - For a clean rebuild, use a fresh `BUILD_DIR` or remove the existing build directory contents.
 
 ## 4) Flash

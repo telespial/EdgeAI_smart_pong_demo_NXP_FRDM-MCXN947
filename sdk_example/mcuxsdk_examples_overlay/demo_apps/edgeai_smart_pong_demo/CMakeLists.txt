@@ -27,6 +27,7 @@ mcux_add_source(
             src/platform/time_hal.c
             src/platform/touch_hal_stub.c
             src/platform/npu_hal_stub.c
+            src/platform/npu_hal_tflm_neutron.cpp
             src/game/ai.c
             src/game/game.c
             src/game/input.c
@@ -51,11 +52,11 @@ mcux_add_include(
     INCLUDES components/touch/gt911
 )
 
-# Default linker script stack is 0x800 (2 KB), which is enough for the render loop
-# but not for TFLM/Neutron init/invoke when NPU inference is enabled (STKOF/HardFault).
-if(DEFINED EDGEAI_ENABLE_NPU_INFERENCE AND EDGEAI_ENABLE_NPU_INFERENCE)
-  mcux_add_linker_symbol(SYMBOLS "__stack_size__=0x2000")
-endif()
+# Default linker script stack is 0x800 (2 KB), which is not enough for
+# TFLM/Neutron init/invoke in this demo (observed boot hard-fault).
+# Keep this unconditional so NPU-enabled configs do not depend on an external
+# CMake variable that may not be defined in the west build path.
+mcux_add_linker_symbol(SYMBOLS "__stack_size__=0x8000")
 
 include(${SdkRootDirPath}/${board_root}/${board}/demo_apps/edgeai_smart_pong_demo/reconfig.cmake OPTIONAL)
 
