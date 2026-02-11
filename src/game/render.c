@@ -748,9 +748,9 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
 
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "CONTROLS", c_dim);
         y += 16;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TOUCH Y UP DOWN", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "LEFT/RIGHT EDGE STRIPS DRIVE P1/P2", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TOUCH X CONTROLS DEPTH", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TOUCH Y UP DOWN, X CONTROLS DEPTH", c_body);
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "KNOB INPUT CAN MAP VIA PLATFORM HAL", c_body);
         y += lh;

@@ -18,12 +18,8 @@
 #endif
 
 /* Touch control tuning.
- * Edge strips provide a non-occluding control option; full-region mapping remains
- * available as a fallback for robustness.
+ * Use dedicated side strips so player fingers stay out of the center play view.
  */
-#ifndef EDGEAI_TOUCH_STRIP_W_NORM
-#define EDGEAI_TOUCH_STRIP_W_NORM 0.18f
-#endif
 
 static uint32_t input_i2c_get_freq(void)
 {
@@ -212,26 +208,25 @@ void input_hal_poll(input_hal_t *s, platform_input_t *out)
         /* Do not drive paddles from touches inside the UI bar region. */
         const float ui_y_max = (float)EDGEAI_UI_BAR_H / (float)(EDGEAI_LCD_H - 1);
 
-        /* Touch mapping: y -> paddle y, x -> paddle z. */
+        /* Touch mapping (strip-only): y -> paddle y, strip x -> paddle z. */
         if (ts.count == 1)
         {
             if (ts.points[0].y >= ui_y_max)
             {
                 float tx = clamp01f(ts.points[0].x);
                 float ty = clamp01f(ts.points[0].y);
-
-                out->p1_active = true;
-                out->p1_y = remap_touch_y(ty, ui_y_max);
-
-                /* Default: full-region mapping. */
-                float z = tx;
-
-                /* Optional: opposite-side edge strip for non-occluding control. */
-                if (tx >= (1.0f - EDGEAI_TOUCH_STRIP_W_NORM))
+                if (tx <= EDGEAI_TOUCH_STRIP_W_NORM)
                 {
-                    z = remap_touch_z_from_right_edge(tx);
+                    out->p1_active = true;
+                    out->p1_y = remap_touch_y(ty, ui_y_max);
+                    out->p1_z = remap_touch_z_from_left_edge(tx);
                 }
-                out->p1_z = z;
+                else if (tx >= (1.0f - EDGEAI_TOUCH_STRIP_W_NORM))
+                {
+                    out->p2_active = true;
+                    out->p2_y = remap_touch_y(ty, ui_y_max);
+                    out->p2_z = 1.0f - remap_touch_z_from_right_edge(tx);
+                }
             }
             if (s) s->prev_touch_active = out->touch_active;
             return;
@@ -242,36 +237,17 @@ void input_hal_poll(input_hal_t *s, platform_input_t *out)
             float tx = clamp01f(ts.points[i].x);
             float ty = clamp01f(ts.points[i].y);
             if (ty < ui_y_max) continue;
-            if (tx < 0.5f)
+            if (tx <= EDGEAI_TOUCH_STRIP_W_NORM)
             {
                 out->p1_active = true;
                 out->p1_y = remap_touch_y(ty, ui_y_max);
-
-                /* Default: map the left half to full z range. */
-                float z = tx * 2.0f;
-
-                /* Optional: left-edge strip for non-occluding control. */
-                if (tx <= EDGEAI_TOUCH_STRIP_W_NORM)
-                {
-                    z = remap_touch_z_from_left_edge(tx);
-                }
-                out->p1_z = z;
+                out->p1_z = remap_touch_z_from_left_edge(tx);
             }
-            else
+            else if (tx >= (1.0f - EDGEAI_TOUCH_STRIP_W_NORM))
             {
                 out->p2_active = true;
                 out->p2_y = remap_touch_y(ty, ui_y_max);
-
-                /* Default: map the right half to full z range. */
-                float z = (tx - 0.5f) * 2.0f;
-
-                /* Optional: right-edge strip for non-occluding control. */
-                if (tx >= (1.0f - EDGEAI_TOUCH_STRIP_W_NORM))
-                {
-                    z = remap_touch_z_from_right_edge(tx);
-                }
-                /* Right paddle: flip z sign for intuitive depth control. */
-                out->p2_z = 1.0f - clamp01f(z);
+                out->p2_z = 1.0f - remap_touch_z_from_right_edge(tx);
             }
         }
         if (s) s->prev_touch_active = out->touch_active;

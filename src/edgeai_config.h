@@ -31,3 +31,8 @@
 #ifndef EDGEAI_UI_BAR_H
 #define EDGEAI_UI_BAR_H 32
 #endif
+
+/* Touch control strips at the left/right screen edges (normalized width). */
+#ifndef EDGEAI_TOUCH_STRIP_W_NORM
+#define EDGEAI_TOUCH_STRIP_W_NORM 0.18f
+#endif

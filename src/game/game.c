@@ -13,6 +13,7 @@
 
 #define EDGEAI_WIN_SCORE 11u
 #define EDGEAI_END_PROMPT_DELAY_FRAMES 120u
+#define EDGEAI_P0_DEMO_RESET_FRAMES 240u
 #define EDGEAI_COUNTDOWN_STEP_US 1000000u
 #define EDGEAI_COUNTDOWN_TOTAL_US (3u * EDGEAI_COUNTDOWN_STEP_US)
 
@@ -128,6 +129,8 @@ static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
 
     if (g->match_over)
     {
+        if (g->mode == kGameModeZeroPlayer) return;
+
         if (g->end_prompt_dismissed)
         {
             g->end_prompt_dismissed = false;
@@ -290,7 +293,7 @@ void game_init(pong_game_t *g)
     if (!g) return;
     memset(g, 0, sizeof(*g));
 
-    g->mode = kGameModeSinglePlayer;
+    g->mode = kGameModeZeroPlayer;
     g->difficulty = 2;
     g->ai_enabled = true;
     g->menu_open = false;
@@ -371,7 +374,15 @@ void game_reset(pong_game_t *g)
     g->rng = g->rng * 1664525u + 1013904223u;
     int serve_dir = (g->rng & 1u) ? +1 : -1;
     physics_reset_ball(g, serve_dir);
-    game_start_countdown(g);
+    if (g->mode == kGameModeZeroPlayer)
+    {
+        g->countdown_active = false;
+        g->countdown_us_left = 0u;
+    }
+    else
+    {
+        game_start_countdown(g);
+    }
 }
 
 void game_step(pong_game_t *g, const platform_input_t *in, float dt)
@@ -399,6 +410,14 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
 
     if (g->match_over)
     {
+        if (g->mode == kGameModeZeroPlayer)
+        {
+            uint32_t elapsed = g->frame - g->match_over_frame;
+            if (elapsed >= EDGEAI_P0_DEMO_RESET_FRAMES)
+            {
+                game_reset(g);
+            }
+        }
         g->frame++;
         return;
     }
@@ -436,7 +455,7 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
     {
         g->match_over = true;
         g->winner_left = (g->score.left >= EDGEAI_WIN_SCORE);
-        g->end_prompt_dismissed = false;
+        g->end_prompt_dismissed = (g->mode == kGameModeZeroPlayer);
         g->match_over_frame = g->frame;
 
         g->ball.vx = 0.0f;

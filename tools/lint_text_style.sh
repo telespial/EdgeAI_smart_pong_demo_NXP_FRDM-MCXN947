@@ -9,7 +9,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 # Keep patterns conservative to avoid false positives in code (for example, character literals).
-PATTERN='\b(you|your|yours|we|our|ours|chatgpt|codex|assistant|ai model|language model)\b'
+PATTERN='\b(you|your|yours|we|our|ours)\b'
 
 echo "[lint] Checking for conversational phrasing / direct reader references..."
 

@@ -69,23 +69,6 @@ void input_apply(pong_game_t *g, const platform_input_t *in, float dt)
     float p2_y = in ? in->p2_y : 0.5f;
     float p2_z = in ? in->p2_z : 0.5f;
 
-    /* Two-player: allow a single touch to drive the touched side. */
-    if (g->mode == kGameModeTwoPlayer && in && in->touch_active && p1_active && !p2_active)
-    {
-        float tx = clampf(in->touch_x, 0.0f, 1.0f);
-        if (tx < 0.5f)
-        {
-            p1_z = clampf(tx * 2.0f, 0.0f, 1.0f);
-        }
-        else
-        {
-            p2_active = true;
-            p2_y = p1_y;
-            p2_z = 1.0f - clampf((tx - 0.5f) * 2.0f, 0.0f, 1.0f);
-            p1_active = false;
-        }
-    }
-
     if (g->mode != kGameModeZeroPlayer)
     {
         if (p1_active)

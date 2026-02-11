@@ -1,49 +1,92 @@
 # Smart Pong Demo (FRDM-MCXN947)
 
-3D-look Pong demo for FRDM-MCXN947 + LCD-PAR-S035.
+Smart Pong is a 3D-look Pong implementation for FRDM-MCXN947 with LCD-PAR-S035.
 
-Features:
-- 0P / 1P / 2P: AI vs AI, 1P vs AI, 2P local
-- Match objective: first side to 11 points wins
-- 0P accel ball nudge (Accel 4 Click, FXLS8974CF): tilt perturbs ball vy/vz to influence AI vs AI outcomes
-- NPU-backed AI path (TFLM + eIQ Neutron) enabled via `CONFIG_EDGEAI_USE_NPU`
-- In-game `AI` setting: `ON/OFF` (toggles NPU-assisted prediction path)
-- Touch control (GT911, multi-touch):
-  - 1 touch drives player 1
-  - 2 touches split screen: left half drives player 1, right half drives player 2
-- Settings UI (top pill):
-  - Players: 0 / 1 / 2
-  - Difficulty: 1 / 2 / 3
-  - AI: ON / OFF
-  - New game (score reset)
-- Serve flow: `3,2,1` countdown only at new game start (`3` red, `2` yellow, `1` green)
-- Win flow: winner score flashes green/larger, loser is smaller red, confetti animation, then `NEW GAME? YES/NO` popup
-- Fixed-timestep physics (60 Hz default)
-- Difficulty presets tune AI behavior, paddle speed, and ball speed
-- NPU path can be disabled by clearing `CONFIG_EDGEAI_USE_NPU`
+## Hardware Components
+1. Manufacturer: NXP Semiconductors
+   - Name: FRDM-MCXN947 development board
+   - Part number: FRDM-MCXN947
+2. Manufacturer: NXP Semiconductors
+   - Name: 3.5" Parallel TFT LCD shield (ST7796S + GT911)
+   - Part number: LCD-PAR-S035
+3. Manufacturer: MikroElektronika (sensor IC by NXP)
+   - Name: Accel 4 Click (3-axis accelerometer module, FXLS8974CF)
+   - Part number: MIKROE-4630
 
-Key folders:
-- `sdk_example/`: MCUX SDK example wrapper (built via `west`)
-- `src/`: firmware sources (platform + game)
-- `docs/`: bring-up and build notes
-- `tools/`: bootstrap/build/flash scripts
+## Gameplay Rules
+- Objective: first side to 11 points wins the match.
+- Scoring: when a side misses and the ball exits that side, the opponent gains 1 point.
+- Ball motion: ball reflects from top and bottom arena walls.
+- Paddle collision: ball reflects from paddles with hit-position-based angle shaping ("english").
+- Serve behavior: each serve starts from center and is directed toward the side that conceded the previous point.
+- Match flow:
+  - `P0` (AI vs AI): at 11 points, winner styling + confetti are shown, then the game auto-resets and continues in an endless loop.
+  - `P1` and `P2`: at 11 points, winner styling + confetti are shown, then `NEW GAME? YES/NO` is displayed.
 
-## Quickstart (Ubuntu)
-1. Bootstrap user-local tools (no sudo): `./tools/bootstrap_ubuntu_user.sh`
-2. Create/update local MCUX west workspace: `./tools/setup_mcuxsdk_ws.sh`
-3. Build: `./tools/build_frdmmcxn947.sh debug`
-4. Flash (requires NXP LinkServer installed): `./tools/flash_frdmmcxn947.sh`
-5. Install repo guardrails (optional): `./tools/install_git_hooks.sh`
+## Controls
+- Touch control strips at left/right edges:
+  - Left strip controls player 1 paddle.
+  - Right strip controls player 2 paddle.
+  - Touch `Y` controls paddle height.
+  - Touch `X` within the strip controls paddle depth.
+- UI top bar is reserved for settings.
+- Alternate control sources (for example knob mappings) can be routed through `src/platform/input_hal.c`.
 
-## Docs Entry Point
-- `docs/START_HERE.md`
+## Settings
+- `Players`: `0`, `1`, `2`
+- `Difficulty`: `1`, `2`, `3`
+- `AI`: `ON`, `OFF`
+- `New Game`: immediate score reset
+
+## AI and NPU Implementation
+- Runtime has two AI paths:
+  - CPU analytic intercept predictor (deterministic fallback)
+  - NPU-assisted predictor path
+- NPU path is enabled by `CONFIG_EDGEAI_USE_NPU=y`.
+- Inference stack:
+  - TensorFlow Lite Micro runtime
+  - eIQ Neutron delegate/backend for NPU execution
+- AI behavior:
+  - Predicts intercept intent for paddle tracking.
+  - Difficulty presets apply reaction-time limits, speed limits, and tracking noise.
+  - `AI ON/OFF` controls whether the NPU-assisted path is used; CPU fallback remains available.
+- Current embedded NPU model artifact is integrated in `src/npu/` and linked into flash (`.model` section).
+
+## Features
+- 3D-look arena with depth cues, wall shading, and segmented score digits
+- 0P / 1P / 2P modes
+- Ball-speed-linked color gradient (red to green)
+- 0P accelerometer perturbation of ball trajectory (`vy`, `vz`) for live outcome nudging
+- New-game countdown (`3`, `2`, `1`; red/yellow/green) on game start only
+- Fixed-timestep simulation
+
+## Build and Flash
+1. Bootstrap tools:
+```bash
+./tools/bootstrap_ubuntu_user.sh
+```
+2. Prepare MCUX workspace:
+```bash
+./tools/setup_mcuxsdk_ws.sh
+```
+3. Build:
+```bash
+./tools/build_frdmmcxn947.sh debug
+```
+4. Flash:
+```bash
+./tools/flash_frdmmcxn947.sh
+```
+
+## Project Layout
+- `src/`: game logic, rendering, platform HAL, AI/NPU integration
+- `docs/`: hardware, build/flash, restore-point, and project description docs
+- `tools/`: bootstrap, build, flash, lint, and helper scripts
+- `failsafe/`: pinned restore binaries
 
 ## Restore Points
-- Active Golden/Failsafe pointer: `docs/failsafe.md`
+- Active golden/failsafe pointer: `docs/failsafe.md`
 - Failsafe flash command:
-  - `FAILSAFE_CONFIRM="$(sed -n '1p' docs/failsafe.md)" ./tools/flash_failsafe.sh`
-
-## Text Style Guardrails
-Comments and docs are required to avoid conversational phrasing and direct reader references.
-- Rules: `docs/STYLE_RULES.md`
-- Lint: `./tools/lint_text_style.sh`
+```bash
+FAILSAFE_CONFIRM="$(sed -n '1p' docs/failsafe.md)" ./tools/flash_failsafe.sh
+```

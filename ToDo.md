@@ -11,30 +11,30 @@ Reference material:
 
 ## Gameplay + Rendering
 - [x] 3D-look arena rendering aligned to style target (walls, floor, center dash, depth cues).
-- [x] 0P / 1P / 2P play modes with in-game settings pill (players, difficulty, AI on/off, new game).
-- [x] Touch controls support split-screen two-player mapping.
-- [x] Ball speed scaling distributed across difficulty levels.
-- [x] Ball color hue shifts from red toward green as speed increases.
-- [x] Help overlay (`?`) is integrated in top menu flow with usage/rules text and credits.
-- [x] Win condition at 11 points with end-of-match celebration and `NEW GAME? YES/NO` prompt.
-- [x] Pre-serve countdown (`3,2,1`) runs only at new game start.
+- [x] 0P / 1P / 2P play modes with in-game settings pill (`P`, `D`, `A`, `N`).
+- [x] Touch controls use left/right edge strips for non-occluding paddle control.
+- [x] Ball speed scaling distributed across all three difficulty levels.
+- [x] Ball hue shifts from red toward green as speed increases.
+- [x] Help overlay (`?`) shows rules, controls, inspiration credit, and version credit.
+- [x] Win condition at 11 points with confetti and winner/loser score styling.
+- [x] `P1/P2`: post-win `NEW GAME? YES/NO` dialog.
+- [x] `P0`: no dialog; game auto-resets after the 11-point celebration for endless desk demo operation.
+- [x] New-game countdown (`3,2,1`) is shown only at game start and skipped for `P0`.
 
 ## Physics + Control
 - [x] Fixed timestep game loop.
-- [x] Paddle-ball collision and depth handling improved for left/right parity.
-- [x] Single-player and two-player paddle behavior tuned to avoid recentring on finger release.
-- [x] Accelerometer tilt perturbation path active for 0P mode (X/Y influence).
+- [x] Paddle-ball collision and depth handling tuned for left/right parity.
+- [x] Single-player and two-player paddle behavior tuned to avoid forced recentering.
+- [x] Serve direction targets the side that conceded the previous point.
 
 ## AI/NPU
 - [x] CPU baseline predictor path implemented.
 - [x] NPU runtime integration enabled (`CONFIG_EDGEAI_USE_NPU=y`).
-- [x] TFLM + eIQ Neutron execution path verified through debug trace.
-- [x] Model section placement fixed (`.model` mapped to `m_flash1`) and flashed.
+- [x] TFLM + eIQ Neutron execution path verified.
 - [x] NPU path has CPU fallback behavior.
+- [x] In-game AI enable/disable setting integrated.
 
-## Remaining Backlog
-- [ ] Replace placeholder NeutronGraph model with Pong-specific trained model that directly predicts intercept outputs.
-- [ ] Add AI telemetry overlay toggle (NPU invoke rate, fallback count, frame-time budget).
-- [ ] Define and validate win condition/end-game UX.
-- [ ] Add automated gameplay regression scenarios for collision edge cases.
-- [ ] Document model training/export pipeline in a dedicated `docs/AI_MODEL.md`.
+## Optional Backlog
+- [ ] Replace placeholder NeutronGraph model with a Pong-specific trained predictor model.
+- [ ] Add runtime telemetry overlay toggle (AI invoke cadence, fallback count, frame budget).
+- [ ] Add deterministic gameplay regression scenarios for collision edge cases.
