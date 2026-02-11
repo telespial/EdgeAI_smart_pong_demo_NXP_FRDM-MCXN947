@@ -471,7 +471,7 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
             if (max_dy < 0) max_dy = 0;
 
             int32_t dx = (int32_t)(ax * (float)max_dx);
-            int32_t dy = (int32_t)((-ay) * (float)max_dy);
+            int32_t dy = (int32_t)(ay * (float)max_dy);
             sw_render_filled_circle(dst, w, h, tile_x0, tile_y0, cx + dx, cy + dy, r, c_ind_dot);
         }
         else
