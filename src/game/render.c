@@ -7,6 +7,7 @@
 #include "edgeai_config.h"
 
 #include "platform/display_hal.h"
+#include "platform/time_hal.h"
 #include "text5x7.h"
 
 #include "game/ui_layout.h"
@@ -15,6 +16,8 @@ static uint16_t s_tile[EDGEAI_TILE_MAX_W * EDGEAI_TILE_MAX_H];
 
 #define EDGEAI_END_PROMPT_DELAY_FRAMES 120u
 #define EDGEAI_CONFETTI_COUNT 56
+#define EDGEAI_CONFETTI_TIME_SCALE 2.30f
+#define EDGEAI_CONFETTI_MAX_T_S 4.0f
 #define EDGEAI_COUNTDOWN_STEP_US 1000000u
 #define EDGEAI_COUNTDOWN_3_US (3u * EDGEAI_COUNTDOWN_STEP_US)
 #define EDGEAI_COUNTDOWN_2_US (2u * EDGEAI_COUNTDOWN_STEP_US)
@@ -777,9 +780,19 @@ static void render_confetti(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_
 {
     if (!g || !g->match_over) return;
 
-    float t = (float)(g->frame - g->match_over_frame) * (1.0f / (float)EDGEAI_FIXED_FPS);
+    float t = 0.0f;
+    if (g->match_over_start_cycles != 0u)
+    {
+        uint32_t elapsed_us = time_hal_elapsed_us(g->match_over_start_cycles);
+        t = ((float)elapsed_us * 1.0e-6f) * EDGEAI_CONFETTI_TIME_SCALE;
+    }
+    else
+    {
+        /* Fallback path if match-over start cycles are not initialized. */
+        t = (float)(g->frame - g->match_over_frame) * (1.0f / (float)EDGEAI_FIXED_FPS) * EDGEAI_CONFETTI_TIME_SCALE;
+    }
     if (t < 0.0f) t = 0.0f;
-    if (t > 4.0f) t = 4.0f;
+    if (t > EDGEAI_CONFETTI_MAX_T_S) t = EDGEAI_CONFETTI_MAX_T_S;
 
     static const uint16_t pal[] = {
         0xF800u, /* red */

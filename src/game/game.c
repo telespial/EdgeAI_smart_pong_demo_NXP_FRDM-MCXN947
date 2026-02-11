@@ -13,7 +13,7 @@
 
 #define EDGEAI_WIN_SCORE 11u
 #define EDGEAI_END_PROMPT_DELAY_FRAMES 120u
-#define EDGEAI_P0_DEMO_RESET_FRAMES 240u
+#define EDGEAI_P0_DEMO_RESET_US 1300000u
 #define EDGEAI_COUNTDOWN_STEP_US 1000000u
 #define EDGEAI_COUNTDOWN_TOTAL_US (3u * EDGEAI_COUNTDOWN_STEP_US)
 
@@ -307,6 +307,7 @@ void game_init(pong_game_t *g)
     g->rng = 1u;
     g->frame = 0;
     g->match_over_frame = 0u;
+    g->match_over_start_cycles = 0u;
     g->countdown_us_left = 0u;
     g->countdown_start_cycles = 0u;
 
@@ -370,6 +371,7 @@ void game_reset(pong_game_t *g)
     g->winner_left = false;
     g->end_prompt_dismissed = false;
     g->match_over_frame = g->frame;
+    g->match_over_start_cycles = 0u;
 
     g->rng = g->rng * 1664525u + 1013904223u;
     int serve_dir = (g->rng & 1u) ? +1 : -1;
@@ -412,8 +414,8 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
     {
         if (g->mode == kGameModeZeroPlayer)
         {
-            uint32_t elapsed = g->frame - g->match_over_frame;
-            if (elapsed >= EDGEAI_P0_DEMO_RESET_FRAMES)
+            uint32_t elapsed_us = time_hal_elapsed_us(g->match_over_start_cycles);
+            if (elapsed_us >= EDGEAI_P0_DEMO_RESET_US)
             {
                 game_reset(g);
             }
@@ -457,6 +459,7 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
         g->winner_left = (g->score.left >= EDGEAI_WIN_SCORE);
         g->end_prompt_dismissed = (g->mode == kGameModeZeroPlayer);
         g->match_over_frame = g->frame;
+        g->match_over_start_cycles = time_hal_cycles();
 
         g->ball.vx = 0.0f;
         g->ball.vy = 0.0f;
