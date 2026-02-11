@@ -56,6 +56,11 @@ typedef struct
     float last_hit_dy;
     float last_hit_dz;
 
+    /* Latest accel sample (for UI/debug + optional game effects). */
+    bool accel_active;
+    float accel_ax;
+    float accel_ay;
+
     npu_hal_t npu;
 } pong_game_t;
 

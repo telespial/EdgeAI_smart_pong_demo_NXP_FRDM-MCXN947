@@ -212,6 +212,10 @@ void game_init(pong_game_t *g)
     g->last_hit_dy = 0.0f;
     g->last_hit_dz = 0.0f;
 
+    g->accel_active = false;
+    g->accel_ax = 0.0f;
+    g->accel_ay = 0.0f;
+
     ai_init(g);
     game_reset(g);
 }
@@ -247,6 +251,11 @@ void game_reset(pong_game_t *g)
 void game_step(pong_game_t *g, const platform_input_t *in, float dt)
 {
     if (!g) return;
+
+    /* Keep latest accel values in game state for UI/debug even when not used for control. */
+    g->accel_active = (in && in->accel_active);
+    g->accel_ax = in ? in->accel_ax : 0.0f;
+    g->accel_ay = in ? in->accel_ay : 0.0f;
 
     if (in && in->touch_pressed)
     {
