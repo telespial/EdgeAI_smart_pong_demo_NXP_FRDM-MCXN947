@@ -56,7 +56,7 @@ Scoring:
 - Score when ball passes beyond x bounds.
 - First side to 11 points wins the match.
 - Reset serve from center with slight randomness toward the side that just conceded.
-- Apply a pre-serve `3,2,1` countdown on first serve and all subsequent serves.
+- Apply a pre-serve `3,2,1` countdown on new game start only.
 
 ## Projection
 Perspective projection:

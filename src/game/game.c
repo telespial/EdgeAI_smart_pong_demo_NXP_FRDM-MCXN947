@@ -2,16 +2,19 @@
 
 #include <string.h>
 
+#include "edgeai_config.h"
+
 #include "game/ai.h"
 #include "game/input.h"
 #include "game/modes.h"
 #include "game/physics.h"
 #include "game/ui_layout.h"
+#include "platform/time_hal.h"
 
 #define EDGEAI_WIN_SCORE 11u
 #define EDGEAI_END_PROMPT_DELAY_FRAMES 120u
-#define EDGEAI_COUNTDOWN_STEP_FRAMES 60u
-#define EDGEAI_COUNTDOWN_TOTAL_FRAMES (3u * EDGEAI_COUNTDOWN_STEP_FRAMES)
+#define EDGEAI_COUNTDOWN_STEP_US 1000000u
+#define EDGEAI_COUNTDOWN_TOTAL_US (3u * EDGEAI_COUNTDOWN_STEP_US)
 
 static inline int32_t clampi(int32_t v, int32_t lo, int32_t hi)
 {
@@ -66,20 +69,26 @@ static void game_start_countdown(pong_game_t *g)
     g->ball.vz = 0.0f;
 
     g->countdown_active = true;
-    g->countdown_frames_left = EDGEAI_COUNTDOWN_TOTAL_FRAMES;
+    g->countdown_us_left = EDGEAI_COUNTDOWN_TOTAL_US;
+    g->countdown_start_cycles = time_hal_cycles();
 }
 
 static void game_update_countdown(pong_game_t *g)
 {
     if (!g || !g->countdown_active) return;
-    if (g->countdown_frames_left > 0u) g->countdown_frames_left--;
-    if (g->countdown_frames_left == 0u)
+
+    uint32_t elapsed_us = time_hal_elapsed_us(g->countdown_start_cycles);
+    if (elapsed_us >= EDGEAI_COUNTDOWN_TOTAL_US)
     {
+        g->countdown_us_left = 0u;
         g->countdown_active = false;
         g->ball.vx = g->serve_vx;
         g->ball.vy = g->serve_vy;
         g->ball.vz = g->serve_vz;
+        return;
     }
+
+    g->countdown_us_left = EDGEAI_COUNTDOWN_TOTAL_US - elapsed_us;
 }
 
 static void game_apply_accel_ball_nudge(pong_game_t *g, const platform_input_t *in, float dt)
@@ -295,7 +304,8 @@ void game_init(pong_game_t *g)
     g->rng = 1u;
     g->frame = 0;
     g->match_over_frame = 0u;
-    g->countdown_frames_left = 0u;
+    g->countdown_us_left = 0u;
+    g->countdown_start_cycles = 0u;
 
     g->paddle_l.x_plane = 0.06f;
     g->paddle_r.x_plane = 0.94f;
@@ -413,9 +423,6 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
     if (g->mode == kGameModeTwoPlayer || manual_r) ai_right = false;
     ai_step(g, dt, ai_left, ai_right);
 
-    uint16_t score_l_prev = g->score.left;
-    uint16_t score_r_prev = g->score.right;
-
     if (!g->countdown_active)
     {
         physics_step(g, dt);
@@ -436,11 +443,7 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
         g->ball.vy = 0.0f;
         g->ball.vz = 0.0f;
         g->countdown_active = false;
-        g->countdown_frames_left = 0u;
-    }
-    else if ((g->score.left != score_l_prev) || (g->score.right != score_r_prev))
-    {
-        game_start_countdown(g);
+        g->countdown_us_left = 0u;
     }
 
     /* Apply after physics so paddle hits do not overwrite the external nudge. */

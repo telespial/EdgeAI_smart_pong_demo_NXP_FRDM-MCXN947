@@ -15,7 +15,10 @@ static uint16_t s_tile[EDGEAI_TILE_MAX_W * EDGEAI_TILE_MAX_H];
 
 #define EDGEAI_END_PROMPT_DELAY_FRAMES 120u
 #define EDGEAI_CONFETTI_COUNT 56
-#define EDGEAI_COUNTDOWN_STEP_FRAMES 60u
+#define EDGEAI_COUNTDOWN_STEP_US 1000000u
+#define EDGEAI_COUNTDOWN_3_US (3u * EDGEAI_COUNTDOWN_STEP_US)
+#define EDGEAI_COUNTDOWN_2_US (2u * EDGEAI_COUNTDOWN_STEP_US)
+#define EDGEAI_COUNTDOWN_1_US EDGEAI_COUNTDOWN_STEP_US
 
 static inline float clampf(float v, float lo, float hi)
 {
@@ -59,16 +62,16 @@ static void render_countdown(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile
 {
     if (!g || !g->countdown_active) return;
 
-    uint32_t r = g->countdown_frames_left;
+    uint32_t r = g->countdown_us_left;
     int digit = 1;
     uint16_t c = sw_pack_rgb565_u8(30, 220, 40); /* green */
 
-    if (r > (2u * EDGEAI_COUNTDOWN_STEP_FRAMES))
+    if (r > EDGEAI_COUNTDOWN_2_US)
     {
         digit = 3;
         c = sw_pack_rgb565_u8(240, 30, 30); /* red */
     }
-    else if (r > EDGEAI_COUNTDOWN_STEP_FRAMES)
+    else if (r > EDGEAI_COUNTDOWN_1_US)
     {
         digit = 2;
         c = sw_pack_rgb565_u8(245, 220, 40); /* yellow */
@@ -738,7 +741,7 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "PADDLE EDGE ADDS STEEPER ANGLE", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "SERVE AFTER 3 2 1 TOWARD MISSED SIDE", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "NEW GAME SERVE AFTER 3 2 1", c_body);
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "BALL SPEEDS UP ON EACH HIT", c_body);
         y += lh + 4;

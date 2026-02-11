@@ -16,7 +16,7 @@ Features:
   - Difficulty: 1 / 2 / 3
   - AI: ON / OFF
   - New game (score reset)
-- Serve flow: every serve starts with a `3,2,1` countdown (`3` red, `2` yellow, `1` green)
+- Serve flow: `3,2,1` countdown only at new game start (`3` red, `2` yellow, `1` green)
 - Win flow: winner score flashes green/larger, loser is smaller red, confetti animation, then `NEW GAME? YES/NO` popup
 - Fixed-timestep physics (60 Hz default)
 - Difficulty presets tune AI behavior, paddle speed, and ball speed

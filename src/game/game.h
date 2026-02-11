@@ -58,7 +58,8 @@ typedef struct
     uint32_t rng;
     uint32_t frame;
     uint32_t match_over_frame;
-    uint32_t countdown_frames_left;
+    uint32_t countdown_us_left;
+    uint32_t countdown_start_cycles;
 
     float last_hit_dy;
     float last_hit_dz;
