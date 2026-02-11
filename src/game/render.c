@@ -560,11 +560,30 @@ static void render_score_value(uint16_t *dst, uint32_t w, uint32_t h, int32_t ti
 {
     int val = score;
     if (val < 0) val = 0;
-    if (val > 99) val = 99;
+    if (val > 999) val = 999;
 
     int digit_w = seg_len + (2 * t);
     int gap = t + 2;
 
+    if (val >= 100)
+    {
+        int hundreds = (val / 100) % 10;
+        int tens = (val / 10) % 10;
+        int ones = val % 10;
+
+        int total_w = (3 * digit_w) + (2 * gap);
+        int cx_hundreds = cx - (total_w / 2) + (digit_w / 2);
+        int cx_tens = cx_hundreds + digit_w + gap;
+        int cx_ones = cx_tens + digit_w + gap;
+
+        render_digit7seg(dst, w, h, tile_x0, tile_y0, cx_hundreds + 2, cy + 2, seg_len, t, hundreds, c_shadow);
+        render_digit7seg(dst, w, h, tile_x0, tile_y0, cx_tens + 2, cy + 2, seg_len, t, tens, c_shadow);
+        render_digit7seg(dst, w, h, tile_x0, tile_y0, cx_ones + 2, cy + 2, seg_len, t, ones, c_shadow);
+        render_digit7seg(dst, w, h, tile_x0, tile_y0, cx_hundreds, cy, seg_len, t, hundreds, c_digit);
+        render_digit7seg(dst, w, h, tile_x0, tile_y0, cx_tens, cy, seg_len, t, tens, c_digit);
+        render_digit7seg(dst, w, h, tile_x0, tile_y0, cx_ones, cy, seg_len, t, ones, c_digit);
+        return;
+    }
     if (val >= 10)
     {
         int tens = (val / 10) % 10;
@@ -640,17 +659,17 @@ static void render_scores(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int
     if (g->match_over)
     {
         float s_near = 1.0f / (1.0f + 0.38f * rs->persp);
-        int32_t seg_big = (int32_t)(74.0f * s_near);
-        int32_t th_big = (int32_t)(12.0f * s_near);
-        int32_t seg_small = (int32_t)(46.0f * s_near);
-        int32_t th_small = (int32_t)(8.0f * s_near);
-        if (seg_big < 28) seg_big = 28;
-        if (th_big < 5) th_big = 5;
-        if (seg_small < 18) seg_small = 18;
+        int32_t seg_big = (int32_t)(60.0f * s_near);
+        int32_t th_big = (int32_t)(10.0f * s_near);
+        int32_t seg_small = (int32_t)(38.0f * s_near);
+        int32_t th_small = (int32_t)(7.0f * s_near);
+        if (seg_big < 22) seg_big = 22;
+        if (th_big < 4) th_big = 4;
+        if (seg_small < 14) seg_small = 14;
         if (th_small < 3) th_small = 3;
 
-        render_project(rs, 0.28f, 0.16f, 0.38f, &lx, &ly, NULL);
-        render_project(rs, 0.72f, 0.16f, 0.38f, &rx, &ry, NULL);
+        render_project(rs, 0.22f, 0.16f, 0.38f, &lx, &ly, NULL);
+        render_project(rs, 0.78f, 0.16f, 0.38f, &rx, &ry, NULL);
 
         bool flash_on = (((g->frame / 8u) & 1u) == 0u);
         const uint16_t c_win = flash_on ? sw_pack_rgb565_u8(80, 255, 90) : sw_pack_rgb565_u8(28, 120, 36);
@@ -671,13 +690,13 @@ static void render_scores(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int
     }
 
     float s_far = 1.0f / (1.0f + 1.0f * rs->persp);
-    int32_t seg_len = (int32_t)(58.0f * s_far);
-    int32_t t = (int32_t)(10.0f * s_far);
-    if (seg_len < 14) seg_len = 14;
+    int32_t seg_len = (int32_t)(50.0f * s_far);
+    int32_t t = (int32_t)(8.0f * s_far);
+    if (seg_len < 12) seg_len = 12;
     if (t < 3) t = 3;
 
-    render_project(rs, 0.25f, 0.16f, 1.0f, &lx, &ly, NULL);
-    render_project(rs, 0.75f, 0.16f, 1.0f, &rx, &ry, NULL);
+    render_project(rs, 0.20f, 0.16f, 1.0f, &lx, &ly, NULL);
+    render_project(rs, 0.80f, 0.16f, 1.0f, &rx, &ry, NULL);
 
     render_score_value(dst, w, h, x0, y0, lx, ly, seg_len, t, (int)g->score.left, c_shadow, c_digit);
     render_score_value(dst, w, h, x0, y0, rx, ry, seg_len, t, (int)g->score.right, c_shadow, c_digit);
