@@ -2,6 +2,8 @@
 
 Smart Pong is a 3D-look Pong implementation for FRDM-MCXN947 with LCD-PAR-S035.
 
+https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
+
 ## Real World AI Learning Demonstration
 1. Compare three control behaviors in the same system:
    - `HUMAN`: touch-driven paddle control
