@@ -51,16 +51,17 @@ static void text_u3(char out[3], uint32_t v)
     out[2] = (char)('0' + (v % 10u));
 }
 
-static void text_ms21(char out[3], uint32_t us)
+static void text_s13(char out[4], uint32_t us)
 {
     if (!out) return;
-    /* Convert microseconds to deci-milliseconds for compact "00.0" formatting. */
-    uint32_t deci_ms = (us + 50u) / 100u;
-    if (deci_ms > 999u) deci_ms = 999u;
+    /* Convert microseconds to seconds in fixed-point "0.000" format. */
+    uint32_t milli_s = (us + 500u) / 1000u;
+    if (milli_s > 9999u) milli_s = 9999u;
 
-    out[0] = (char)('0' + ((deci_ms / 100u) % 10u));
-    out[1] = (char)('0' + ((deci_ms / 10u) % 10u));
-    out[2] = (char)('0' + (deci_ms % 10u));
+    out[0] = (char)('0' + ((milli_s / 1000u) % 10u));
+    out[1] = (char)('0' + ((milli_s / 100u) % 10u));
+    out[2] = (char)('0' + ((milli_s / 10u) % 10u));
+    out[3] = (char)('0' + (milli_s % 10u));
 }
 
 static bool rect_intersects(int32_t ax0, int32_t ay0, int32_t ax1, int32_t ay1,
@@ -321,6 +322,140 @@ static void render_draw_paddle(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0
     sw_render_line(dst, w, h, x0, y0, q[1].x, q[1].y, q[2].x, q[2].y, c_edge_side);
 }
 
+static float render_absf(float v)
+{
+    return (v < 0.0f) ? -v : v;
+}
+
+static void render_target_wall(float *p, float *v, float r)
+{
+    if (!p || !v) return;
+    if ((*p - r) < 0.0f)
+    {
+        *p = r;
+        *v = render_absf(*v);
+    }
+    if ((*p + r) > 1.0f)
+    {
+        *p = 1.0f - r;
+        *v = -render_absf(*v);
+    }
+}
+
+static bool render_predict_paddle_target(const pong_game_t *g, bool right_side, float *out_y, float *out_z, float *out_t)
+{
+    if (!g || !out_y || !out_z || !out_t) return false;
+
+    *out_y = 0.5f;
+    *out_z = 0.5f;
+    *out_t = 0.0f;
+
+    if (right_side)
+    {
+        if (g->ball.vx <= 0.0f) return false;
+    }
+    else
+    {
+        if (g->ball.vx >= 0.0f) return false;
+    }
+
+    float x = g->ball.x;
+    float y = g->ball.y;
+    float z = g->ball.z;
+    float vx = g->ball.vx;
+    float vy = g->ball.vy;
+    float vz = g->ball.vz;
+    float r = g->ball.r;
+
+    float x_hit = right_side ? (g->paddle_r.x_plane - r) : (g->paddle_l.x_plane + r);
+    float dt = 1.0f / (float)EDGEAI_FIXED_FPS;
+    int max_steps = EDGEAI_FIXED_FPS * 4;
+    if (max_steps < 1) max_steps = 1;
+
+    for (int i = 0; i < max_steps; i++)
+    {
+        x += vx * dt;
+        y += vy * dt;
+        z += vz * dt;
+        render_target_wall(&y, &vy, r);
+        render_target_wall(&z, &vz, r);
+
+        if ((right_side && (x >= x_hit)) || (!right_side && (x <= x_hit)))
+        {
+            *out_y = clampf(y, 0.0f, 1.0f);
+            *out_z = clampf(z, 0.0f, 1.0f);
+            *out_t = (float)(i + 1) * dt;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool render_target_inside_paddle(const pong_paddle_t *p, float y, float z)
+{
+    if (!p) return false;
+    float hy = p->size_y * 0.5f;
+    float hz = p->size_z * 0.5f;
+    return (render_absf(y - p->y) <= hy) && (render_absf(z - p->z) <= hz);
+}
+
+static void render_draw_target_mark(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int32_t y0,
+                                    const render_state_t *rs, const pong_paddle_t *p,
+                                    float mark_y, float mark_z)
+{
+    if (!dst || !rs || !p) return;
+
+    float hy = p->size_y * 0.5f;
+    float hz = p->size_z * 0.5f;
+    float inset = 0.004f;
+    float y = clampf(mark_y, p->y - hy + inset, p->y + hy - inset);
+    float z = clampf(mark_z, p->z - hz + inset, p->z + hz - inset);
+
+    int32_t sx = 0, sy = 0;
+    float sc = 1.0f;
+    render_project(rs, p->x_plane, y, z, &sx, &sy, &sc);
+
+    int32_t arm = (int32_t)(3.0f + 4.0f * sc);
+    if (arm < 3) arm = 3;
+    if (arm > 8) arm = 8;
+
+    const int32_t thick = 2;
+    const uint16_t c = sw_pack_rgb565_u8(6, 6, 8);
+    for (int32_t t = 0; t < thick; t++)
+    {
+        sw_render_line(dst, w, h, x0, y0, sx - arm, sy + t, sx + arm, sy + t, c);
+        sw_render_line(dst, w, h, x0, y0, sx + t, sy - arm, sx + t, sy + arm, c);
+    }
+}
+
+static void render_draw_target_guides(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int32_t y0,
+                                      const render_state_t *rs, const pong_game_t *g)
+{
+    if (!dst || !rs || !g) return;
+    if (!g->target_overlay_enabled) return;
+    if (g->match_over) return;
+
+    float ly = g->paddle_l.y;
+    float lz = g->paddle_l.z;
+    float lt = 0.0f;
+    bool l_valid = render_predict_paddle_target(g, false, &ly, &lz, &lt);
+
+    float ry = g->paddle_r.y;
+    float rz = g->paddle_r.z;
+    float rt = 0.0f;
+    bool r_valid = render_predict_paddle_target(g, true, &ry, &rz, &rt);
+
+    if (l_valid && (lt >= 0.0f) && render_target_inside_paddle(&g->paddle_l, ly, lz))
+    {
+        render_draw_target_mark(dst, w, h, x0, y0, rs, &g->paddle_l, ly, lz);
+    }
+    if (r_valid && (rt >= 0.0f) && render_target_inside_paddle(&g->paddle_r, ry, rz))
+    {
+        render_draw_target_mark(dst, w, h, x0, y0, rs, &g->paddle_r, ry, rz);
+    }
+}
+
 static void render_draw_ball(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int32_t y0,
                              const render_state_t *rs, const pong_ball_t *b)
 {
@@ -450,6 +585,51 @@ static void render_score_value(uint16_t *dst, uint32_t w, uint32_t h, int32_t ti
     render_digit7seg(dst, w, h, tile_x0, tile_y0, cx, cy, seg_len, t, val, c_digit);
 }
 
+typedef enum
+{
+    kSideRoleHuman = 0,
+    kSideRoleAlgo = 1,
+    kSideRoleEdgeAi = 2,
+} side_role_t;
+
+static side_role_t render_side_role(const pong_game_t *g, bool right_side)
+{
+    if (!g) return kSideRoleHuman;
+
+    bool ai_side = right_side ? g->ai_right_active : g->ai_left_active;
+    if (!ai_side) return kSideRoleHuman;
+
+    if (!g->ai_enabled) return kSideRoleAlgo;
+    if ((g->ai_learn_mode == kAiLearnModeVsClassic) && !right_side) return kSideRoleAlgo;
+    return kSideRoleEdgeAi;
+}
+
+static void render_side_role_text(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, int32_t tile_y0,
+                                  int32_t cx, int32_t cy, side_role_t role)
+{
+    const char *txt = "HUMAN";
+    uint16_t c_role = sw_pack_rgb565_u8(255, 198, 90);
+    const uint16_t c_shadow = sw_pack_rgb565_u8(10, 10, 12);
+    const int32_t scale = 2;
+
+    if (role == kSideRoleAlgo)
+    {
+        txt = "ALGO";
+        c_role = sw_pack_rgb565_u8(102, 198, 255);
+    }
+    else if (role == kSideRoleEdgeAi)
+    {
+        txt = "EdgeAI";
+        c_role = sw_pack_rgb565_u8(94, 255, 150);
+    }
+
+    int32_t tw = edgeai_text5x7_width(scale, txt);
+    int32_t tx = cx - (tw / 2);
+    int32_t ty = cy - (7 * scale) / 2;
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx + 1, ty + 1, scale, txt, c_shadow);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx, ty, scale, txt, c_role);
+}
+
 static void render_scores(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int32_t y0,
                           const render_state_t *rs, const pong_game_t *g)
 {
@@ -486,6 +666,7 @@ static void render_scores(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int
             render_score_value(dst, w, h, x0, y0, lx, ly + 4, seg_small, th_small, (int)g->score.left, c_shadow, c_lose);
             render_score_value(dst, w, h, x0, y0, rx, ry, seg_big, th_big, (int)g->score.right, c_shadow, c_win);
         }
+
         return;
     }
 
@@ -500,6 +681,7 @@ static void render_scores(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int
 
     render_score_value(dst, w, h, x0, y0, lx, ly, seg_len, t, (int)g->score.left, c_shadow, c_digit);
     render_score_value(dst, w, h, x0, y0, rx, ry, seg_len, t, (int)g->score.right, c_shadow, c_digit);
+
 }
 
 static void render_fill_round_rect(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, int32_t tile_y0,
@@ -582,6 +764,15 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, qx, qy, qscale, q, c_text);
     }
 
+    /* Side role labels shown on the same top line as menu/? controls. */
+    {
+        const int32_t role_y = pill_y0 + EDGEAI_UI_PILL_H / 2;
+        const int32_t left_cx = EDGEAI_UI_PILL_X - 58;
+        const int32_t right_cx = EDGEAI_UI_PILL_X + EDGEAI_UI_PILL_W + 58;
+        render_side_role_text(dst, w, h, tile_x0, tile_y0, left_cx, role_y, render_side_role(g, false));
+        render_side_role_text(dst, w, h, tile_x0, tile_y0, right_cx, role_y, render_side_role(g, true));
+    }
+
     /* Tilt indicator (P0): shows accel vector used to nudge the ball.
      * Helps confirm the accelerometer is alive without needing a serial console.
      */
@@ -651,16 +842,21 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x0, panel_y0, panel_x0, panel_y1, c_panel_border);
         sw_render_line(dst, w, h, tile_x0, tile_y0, panel_x1, panel_y0, panel_x1, panel_y1, c_panel_border);
 
-        const int32_t label_scale = 2;
-        const int32_t label_yoff = (EDGEAI_UI_ROW_H - 7 * label_scale) / 2;
+        const int32_t title_scale = 1;
+        const int32_t opt_scale = 2;
+        const int32_t label_yoff = (EDGEAI_UI_ROW_H - 7 * title_scale) / 2;
         const int32_t opt_yoff = (EDGEAI_UI_ROW_H - EDGEAI_UI_OPT_H) / 2;
         const int32_t new_yoff = (EDGEAI_UI_ROW_H - EDGEAI_UI_NEW_H) / 2;
 
         /* Row labels. */
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW0_Y + label_yoff, label_scale, "P", c_opt_text);
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW1_Y + label_yoff, label_scale, "D", c_opt_text);
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW2_Y + label_yoff, label_scale, "A", c_opt_text);
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW3_Y + label_yoff, label_scale, "N", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW0_Y + label_yoff, title_scale, "PLAYERS", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW1_Y + label_yoff, title_scale, "LEVEL", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW2_Y + label_yoff, title_scale, "NPU", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW3_Y + label_yoff, title_scale, "2AI AI/ALGO", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW4_Y + label_yoff, title_scale, "PERSIST", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW5_Y + label_yoff, title_scale, "MATCH", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW6_Y + label_yoff, title_scale, "TARGET", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW7_Y + label_yoff, title_scale, "NEW GAME", c_opt_text);
 
         /* Players: 0/1/2 */
         for (int i = 0; i < 3; i++)
@@ -674,10 +870,10 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
             render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
 
             char t[2] = {(char)('0' + i), 0};
-            int32_t tw = edgeai_text5x7_width(label_scale, t);
+            int32_t tw = edgeai_text5x7_width(opt_scale, t);
             int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
-            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * label_scale) / 2;
-            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, label_scale, t, sel ? c_opt_text_sel : c_opt_text);
+            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * opt_scale) / 2;
+            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, opt_scale, t, sel ? c_opt_text_sel : c_opt_text);
         }
 
         /* Difficulty: 1/2/3 */
@@ -693,10 +889,10 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
             render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
 
             char t[2] = {(char)('0' + (i + 1)), 0};
-            int32_t tw = edgeai_text5x7_width(label_scale, t);
+            int32_t tw = edgeai_text5x7_width(opt_scale, t);
             int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
-            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * label_scale) / 2;
-            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, label_scale, t, sel ? c_opt_text_sel : c_opt_text);
+            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * opt_scale) / 2;
+            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, opt_scale, t, sel ? c_opt_text_sel : c_opt_text);
         }
 
         /* AI: ON/OFF */
@@ -712,16 +908,93 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
             render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
 
             const char *t = en ? "ON" : "OFF";
-            int32_t tw = edgeai_text5x7_width(label_scale, t);
+            int32_t tw = edgeai_text5x7_width(opt_scale, t);
             int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
-            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * label_scale) / 2;
-            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, label_scale, t, sel ? c_opt_text_sel : c_opt_text);
+            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * opt_scale) / 2;
+            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, opt_scale, t, sel ? c_opt_text_sel : c_opt_text);
+        }
+
+        /* Learn mode: BOTH AI adaptive vs VS (left classic, right adaptive). */
+        for (int i = 0; i < 2; i++)
+        {
+            int32_t bx0 = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+            int32_t by0 = EDGEAI_UI_ROW3_Y + opt_yoff;
+            int32_t bx1 = bx0 + EDGEAI_UI_OPT_W - 1;
+            int32_t by1 = by0 + EDGEAI_UI_OPT_H - 1;
+
+            ai_learn_mode_t mode = (i == 0) ? kAiLearnModeBoth : kAiLearnModeVsClassic;
+            bool sel = (g->ai_learn_mode == mode);
+            render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
+
+            const int32_t learn_scale = 1;
+            const char *t = (i == 0) ? "2AI" : "AI/ALGO";
+            int32_t tw = edgeai_text5x7_width(learn_scale, t);
+            int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
+            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * learn_scale) / 2;
+            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, learn_scale, t, sel ? c_opt_text_sel : c_opt_text);
+        }
+
+        /* Persistent learning: ON/OFF */
+        for (int i = 0; i < 2; i++)
+        {
+            int32_t bx0 = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+            int32_t by0 = EDGEAI_UI_ROW4_Y + opt_yoff;
+            int32_t bx1 = bx0 + EDGEAI_UI_OPT_W - 1;
+            int32_t by1 = by0 + EDGEAI_UI_OPT_H - 1;
+
+            bool en = (i == 0);
+            bool sel = (g->persistent_learning == en);
+            render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
+
+            const char *t = en ? "ON" : "OFF";
+            int32_t tw = edgeai_text5x7_width(opt_scale, t);
+            int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
+            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * opt_scale) / 2;
+            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, opt_scale, t, sel ? c_opt_text_sel : c_opt_text);
+        }
+
+        /* Perpetual play: first to 11 vs endless. */
+        for (int i = 0; i < 2; i++)
+        {
+            int32_t bx0 = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+            int32_t by0 = EDGEAI_UI_ROW5_Y + opt_yoff;
+            int32_t bx1 = bx0 + EDGEAI_UI_OPT_W - 1;
+            int32_t by1 = by0 + EDGEAI_UI_OPT_H - 1;
+
+            bool inf = (i == 1);
+            bool sel = (g->perpetual_play == inf);
+            render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
+
+            const char *t = inf ? "INF" : "11";
+            int32_t tw = edgeai_text5x7_width(opt_scale, t);
+            int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
+            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * opt_scale) / 2;
+            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, opt_scale, t, sel ? c_opt_text_sel : c_opt_text);
+        }
+
+        /* Target guide: ON/OFF */
+        for (int i = 0; i < 2; i++)
+        {
+            int32_t bx0 = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+            int32_t by0 = EDGEAI_UI_ROW6_Y + opt_yoff;
+            int32_t bx1 = bx0 + EDGEAI_UI_OPT_W - 1;
+            int32_t by1 = by0 + EDGEAI_UI_OPT_H - 1;
+
+            bool en = (i == 0);
+            bool sel = (g->target_overlay_enabled == en);
+            render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
+
+            const char *t = en ? "ON" : "OFF";
+            int32_t tw = edgeai_text5x7_width(opt_scale, t);
+            int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
+            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * opt_scale) / 2;
+            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, opt_scale, t, sel ? c_opt_text_sel : c_opt_text);
         }
 
         /* New game. */
         {
             int32_t bx0 = EDGEAI_UI_NEW_X;
-            int32_t by0 = EDGEAI_UI_ROW3_Y + new_yoff;
+            int32_t by0 = EDGEAI_UI_ROW7_Y + new_yoff;
             int32_t bx1 = bx0 + EDGEAI_UI_NEW_W - 1;
             int32_t by1 = by0 + EDGEAI_UI_NEW_H - 1;
 
@@ -765,7 +1038,7 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "GAME RULES", c_body);
         y += 16;
 
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "FIRST TO 11 POINTS WINS", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "FIRST TO 11 OR SET X TO INF", c_body);
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "MISS GIVES OPPONENT 1 POINT", c_body);
         y += lh;
@@ -786,7 +1059,7 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "KNOB INPUT CAN MAP VIA PLATFORM HAL", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P0 AI VS AI", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "2AI=BOTH LEARN AI/ALGO=VS", c_body);
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P1 P2 TOUCH SPLIT CONTROL", c_body);
         y += lh + 4;
@@ -922,12 +1195,11 @@ static void render_ai_telemetry(uint16_t *dst, uint32_t w, uint32_t h, int32_t t
 
     static uint32_t s_rate_start_cycles = 0u;
     static uint32_t s_prev_invoke = 0u;
-    static uint32_t s_prev_fail = 0u;
-    static uint16_t s_rate_n = 0u;
-    static uint16_t s_rate_f = 0u;
+    static uint16_t s_n_ms = 0u;
+    static uint16_t s_f_ms = 0u;
     static uint32_t s_cached_frame = 0xFFFFFFFFu;
-    static char s_line1[] = "N000/S F000/S";
-    static char s_line2[] = "L00.0 A00.0 T000";
+    static char s_line1[] = "N000MS F000MS";
+    static char s_line2[] = "L0.000S A0.000S";
 
     if (s_cached_frame != g->frame)
     {
@@ -938,7 +1210,6 @@ static void render_ai_telemetry(uint16_t *dst, uint32_t w, uint32_t h, int32_t t
         {
             s_rate_start_cycles = time_hal_cycles();
             s_prev_invoke = npu_t.invoke_count;
-            s_prev_fail = npu_t.invoke_fail_count;
         }
         else
         {
@@ -946,46 +1217,52 @@ static void render_ai_telemetry(uint16_t *dst, uint32_t w, uint32_t h, int32_t t
             if (elapsed_us >= 250000u)
             {
                 uint32_t dinv = npu_t.invoke_count - s_prev_invoke;
-                uint32_t dfail = npu_t.invoke_fail_count - s_prev_fail;
-                uint32_t rn = (elapsed_us > 0u) ? (uint32_t)(((uint64_t)dinv * 1000000ull) / (uint64_t)elapsed_us) : 0u;
-                uint32_t rf = (elapsed_us > 0u) ? (uint32_t)(((uint64_t)dfail * 1000000ull) / (uint64_t)elapsed_us) : 0u;
-                if (rn > 999u) rn = 999u;
-                if (rf > 999u) rf = 999u;
-                s_rate_n = (uint16_t)rn;
-                s_rate_f = (uint16_t)rf;
+                uint32_t n_ms = 0u;
+                uint32_t f_ms = 0u;
+                if (dinv > 0u)
+                {
+                    uint64_t num = (uint64_t)elapsed_us + ((uint64_t)dinv * 500ull);
+                    n_ms = (uint32_t)(num / ((uint64_t)dinv * 1000ull));
+                }
+                /* F tracks software fallback update period from runtime fallback cadence. */
+                if (g->ai_fallback_rate_hz > 0u)
+                {
+                    uint32_t hz = g->ai_fallback_rate_hz;
+                    f_ms = (1000u + (hz / 2u)) / hz;
+                }
+                if (n_ms > 999u) n_ms = 999u;
+                if (f_ms > 999u) f_ms = 999u;
+                s_n_ms = (uint16_t)n_ms;
+                s_f_ms = (uint16_t)f_ms;
                 s_prev_invoke = npu_t.invoke_count;
-                s_prev_fail = npu_t.invoke_fail_count;
                 s_rate_start_cycles = time_hal_cycles();
             }
         }
 
-        char npu_hz[3];
-        char fb_hz[3];
-        char last_ms[3];
-        char avg_ms[3];
-        char inv_mod[3];
-        text_u3(npu_hz, s_rate_n);
-        text_u3(fb_hz, s_rate_f);
-        text_ms21(last_ms, npu_t.last_infer_us);
-        text_ms21(avg_ms, npu_t.avg_infer_us);
-        text_u3(inv_mod, npu_t.invoke_count % 1000u);
+        char n_ms[3];
+        char f_ms[3];
+        char last_s[4];
+        char avg_s[4];
+        text_u3(n_ms, s_n_ms);
+        text_u3(f_ms, s_f_ms);
+        text_s13(last_s, npu_t.last_infer_us);
+        text_s13(avg_s, npu_t.avg_infer_us);
 
-        s_line1[1] = npu_hz[0];
-        s_line1[2] = npu_hz[1];
-        s_line1[3] = npu_hz[2];
-        s_line1[8] = fb_hz[0];
-        s_line1[9] = fb_hz[1];
-        s_line1[10] = fb_hz[2];
+        s_line1[1] = n_ms[0];
+        s_line1[2] = n_ms[1];
+        s_line1[3] = n_ms[2];
+        s_line1[8] = f_ms[0];
+        s_line1[9] = f_ms[1];
+        s_line1[10] = f_ms[2];
 
-        s_line2[1] = last_ms[0];
-        s_line2[2] = last_ms[1];
-        s_line2[4] = last_ms[2];
-        s_line2[7] = avg_ms[0];
-        s_line2[8] = avg_ms[1];
-        s_line2[10] = avg_ms[2];
-        s_line2[13] = inv_mod[0];
-        s_line2[14] = inv_mod[1];
-        s_line2[15] = inv_mod[2];
+        s_line2[1] = last_s[0];
+        s_line2[3] = last_s[1];
+        s_line2[4] = last_s[2];
+        s_line2[5] = last_s[3];
+        s_line2[9] = avg_s[0];
+        s_line2[11] = avg_s[1];
+        s_line2[12] = avg_s[2];
+        s_line2[13] = avg_s[3];
 
         s_cached_frame = g->frame;
     }
@@ -997,6 +1274,25 @@ static void render_ai_telemetry(uint16_t *dst, uint32_t w, uint32_t h, int32_t t
     edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x + 1, y + 9, 1, s_line2, cs);
     edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 1, s_line1, c);
     edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y + 8, 1, s_line2, c);
+}
+
+static void render_corner_credit(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, int32_t tile_y0)
+{
+    if (!dst) return;
+
+    const char *credit = "\xA9""RICHARD HABERKERN";
+    const int32_t scale = 1;
+    const int32_t pad_x = 4;
+    const int32_t pad_y = 2;
+    const int32_t tw = edgeai_text5x7_width(scale, credit);
+    const int32_t th = 7 * scale;
+    const int32_t x = EDGEAI_LCD_W - tw - pad_x;
+    const int32_t y = EDGEAI_LCD_H - th - pad_y;
+
+    const uint16_t c = sw_pack_rgb565_u8(122, 124, 128);
+    const uint16_t cs = sw_pack_rgb565_u8(8, 8, 10);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x + 1, y + 1, scale, credit, cs);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, scale, credit, c);
 }
 
 typedef struct
@@ -1138,11 +1434,13 @@ void render_draw_frame(render_state_t *rs, const pong_game_t *g)
                 }
             }
 
+            render_draw_target_guides(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, rs, g);
             render_confetti(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_ui(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_ai_telemetry(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_countdown(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_end_popup(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
+            render_corner_credit(s_tile, (uint32_t)w, (uint32_t)h, x0, y0);
 
             display_hal_blit_rect(x0, y0, x1, y1, s_tile);
         }

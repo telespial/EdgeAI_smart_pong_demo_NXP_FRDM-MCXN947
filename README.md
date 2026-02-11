@@ -2,6 +2,21 @@
 
 Smart Pong is a 3D-look Pong implementation for FRDM-MCXN947 with LCD-PAR-S035.
 
+## Real World AI Learning Demonstration
+1. Compare three control behaviors in the same system:
+   - `HUMAN`: touch-driven paddle control
+   - `ALGO`: fixed classic CPU predictor (non-learning baseline)
+   - `EdgeAI`: NPU-assisted predictor with adaptive runtime tuning
+2. Observe online learning in live play:
+   - The adaptive controller updates from rally outcomes (hits/misses), then changes paddle speed, anticipation, and tracking noise.
+   - In `AI/ALGO` mode, one side stays fixed (ALGO) while the other side adapts (EdgeAI), so improvement is easy to see.
+3. Validate session learning vs persistent learning:
+   - `PERSIST ON`: learned profile carries across new matches in the running session.
+   - `PERSIST OFF`: learned profile is cleared, forcing a cold-start behavior.
+4. Demonstrate deployment-style tradeoffs:
+   - NPU path is used when enabled and available, with CPU fallback always present for robustness.
+   - Bottom telemetry helps correlate behavior with NPU/fallback timing and latency trends.
+
 ## Hardware Components
 1. Manufacturer: NXP Semiconductors
    - Name: FRDM-MCXN947 development board

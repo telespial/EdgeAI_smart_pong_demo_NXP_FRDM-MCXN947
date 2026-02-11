@@ -18,5 +18,5 @@
 - Notes (P0 win loop): post-win restart delay uses real elapsed time; confetti progression is real-time and tuned.
 - Notes (mode default): startup mode is `P0`.
 - Notes (touch): paddle control uses left/right edge strips; no visual touch-guide overlays.
-- Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260211_0953_ai_lag_telemetry_showcase_golden.elf`
+- Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260211_1230_final_release_golden.elf`
 - Restore point: current build is the active Golden + Failsafe snapshot.

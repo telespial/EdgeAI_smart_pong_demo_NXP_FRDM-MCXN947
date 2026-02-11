@@ -42,6 +42,158 @@ static float rand_f(pong_game_t *g, float lo, float hi)
     return lo + (hi - lo) * rand_f01(g);
 }
 
+#define EDGEAI_LEARN_STORE_MAGIC 0x4C524E31u /* "LRN1" */
+
+typedef struct
+{
+    uint32_t magic;
+    ai_learn_profile_t left;
+    ai_learn_profile_t right;
+} ai_learn_store_t;
+
+static ai_learn_store_t s_learn_store = {0u};
+
+static ai_learn_profile_t ai_profile_default(void)
+{
+    ai_learn_profile_t p;
+    p.speed_scale = 1.0f;
+    p.noise_scale = 1.0f;
+    p.lead_scale = 1.0f;
+    p.hits = 0u;
+    p.misses = 0u;
+    return p;
+}
+
+static void ai_profile_clamp(ai_learn_profile_t *p)
+{
+    if (!p) return;
+    p->speed_scale = clampf(p->speed_scale, 0.75f, 1.85f);
+    p->noise_scale = clampf(p->noise_scale, 0.40f, 2.20f);
+    p->lead_scale = clampf(p->lead_scale, 0.70f, 2.00f);
+}
+
+static ai_learn_profile_t *ai_profile_side(pong_game_t *g, bool right_side)
+{
+    if (!g) return NULL;
+    return right_side ? &g->ai_profile_right : &g->ai_profile_left;
+}
+
+static const ai_learn_profile_t *ai_profile_side_const(const pong_game_t *g, bool right_side)
+{
+    if (!g) return NULL;
+    return right_side ? &g->ai_profile_right : &g->ai_profile_left;
+}
+
+static bool ai_learning_side_selected(const pong_game_t *g, bool right_side)
+{
+    if (!g) return false;
+    if (right_side)
+    {
+        if (!g->ai_right_active) return false;
+        return true;
+    }
+
+    if (!g->ai_left_active) return false;
+    if (g->ai_learn_mode == kAiLearnModeVsClassic) return false;
+    return true;
+}
+
+static void ai_learning_commit_store(const pong_game_t *g)
+{
+    if (!g || !g->persistent_learning) return;
+    s_learn_store.magic = EDGEAI_LEARN_STORE_MAGIC;
+    s_learn_store.left = g->ai_profile_left;
+    s_learn_store.right = g->ai_profile_right;
+}
+
+static void ai_learning_load_store(pong_game_t *g)
+{
+    if (!g || !g->persistent_learning) return;
+    if (s_learn_store.magic == EDGEAI_LEARN_STORE_MAGIC)
+    {
+        g->ai_profile_left = s_learn_store.left;
+        g->ai_profile_right = s_learn_store.right;
+        ai_profile_clamp(&g->ai_profile_left);
+        ai_profile_clamp(&g->ai_profile_right);
+    }
+    else
+    {
+        s_learn_store.magic = EDGEAI_LEARN_STORE_MAGIC;
+        s_learn_store.left = g->ai_profile_left;
+        s_learn_store.right = g->ai_profile_right;
+    }
+}
+
+void ai_learning_reset_session(pong_game_t *g)
+{
+    if (!g) return;
+    g->ai_profile_left = ai_profile_default();
+    g->ai_profile_right = ai_profile_default();
+    ai_learning_load_store(g);
+}
+
+void ai_learning_set_mode(pong_game_t *g, ai_learn_mode_t mode)
+{
+    if (!g) return;
+    g->ai_learn_mode = (mode == kAiLearnModeVsClassic) ? kAiLearnModeVsClassic : kAiLearnModeBoth;
+}
+
+void ai_learning_set_persistent(pong_game_t *g, bool enabled)
+{
+    if (!g) return;
+    if (enabled)
+    {
+        g->persistent_learning = true;
+        ai_learning_load_store(g);
+        return;
+    }
+
+    /* Persistence OFF means no carry-over advantage:
+     * clear current learned profiles and wipe stored snapshot.
+     */
+    g->persistent_learning = false;
+    ai_learning_reset_session(g);
+    memset(&s_learn_store, 0, sizeof(s_learn_store));
+}
+
+void ai_learning_on_paddle_hit(pong_game_t *g, bool left_side)
+{
+    if (!g) return;
+    bool right_side = !left_side;
+    if (!ai_learning_side_selected(g, right_side)) return;
+
+    ai_learn_profile_t *p = ai_profile_side(g, right_side);
+    if (!p) return;
+
+    p->hits = clampu16((uint32_t)p->hits + 1u, 65535u);
+
+    /* Successful return: slightly cleaner and quicker tracking, with mild anticipation. */
+    p->noise_scale *= 0.987f;
+    p->speed_scale += 0.008f;
+    p->lead_scale += 0.005f;
+    ai_profile_clamp(p);
+    ai_learning_commit_store(g);
+}
+
+void ai_learning_on_miss(pong_game_t *g, bool left_side)
+{
+    if (!g) return;
+    bool right_side = !left_side;
+    if (!ai_learning_side_selected(g, right_side)) return;
+
+    ai_learn_profile_t *p = ai_profile_side(g, right_side);
+    if (!p) return;
+
+    p->misses = clampu16((uint32_t)p->misses + 1u, 65535u);
+
+    /* Missed return: make AI react faster and reduce wander so it recovers over the session. */
+    p->noise_scale *= 0.94f;
+    p->speed_scale += 0.045f;
+    p->lead_scale += 0.030f;
+    ai_profile_clamp(p);
+    ai_learning_commit_store(g);
+}
+
 static void ai_sim_wall(float *p, float *v, float r)
 {
     if (!p || !v) return;
@@ -153,6 +305,7 @@ void ai_init(pong_game_t *g)
 {
     if (!g) return;
     (void)npu_hal_init(&g->npu);
+    ai_learning_reset_session(g);
 }
 
 static void ai_build_features(const pong_game_t *g, float f[16])
@@ -246,7 +399,7 @@ static uint32_t ai_update_div(const pong_game_t *g, bool use_npu)
     return div;
 }
 
-static float ai_noise(const pong_game_t *g)
+static float ai_noise(const pong_game_t *g, bool right_side)
 {
     uint8_t d = g ? g->difficulty : 2;
     if (d < 1) d = 1;
@@ -265,10 +418,21 @@ static float ai_noise(const pong_game_t *g)
     {
         n *= 1.7f;
     }
+
+    if (g && ai_learning_side_selected(g, right_side))
+    {
+        const ai_learn_profile_t *p = ai_profile_side_const(g, right_side);
+        if (p)
+        {
+            n *= p->noise_scale;
+        }
+    }
+
+    n = clampf(n, 0.002f, 0.08f);
     return n;
 }
 
-static float ai_max_speed(const pong_game_t *g)
+static float ai_max_speed(const pong_game_t *g, bool right_side)
 {
     uint8_t d = g ? g->difficulty : 2;
     if (d < 1) d = 1;
@@ -285,7 +449,27 @@ static float ai_max_speed(const pong_game_t *g)
     {
         s *= 0.82f;
     }
+
+    if (g && ai_learning_side_selected(g, right_side))
+    {
+        const ai_learn_profile_t *p = ai_profile_side_const(g, right_side);
+        if (p)
+        {
+            s *= p->speed_scale;
+        }
+    }
+
+    s = clampf(s, 0.70f, 2.60f);
     return s;
+}
+
+static float ai_lead_scale(const pong_game_t *g, bool right_side)
+{
+    if (!g) return 1.0f;
+    if (!ai_learning_side_selected(g, right_side)) return 1.0f;
+    const ai_learn_profile_t *p = ai_profile_side_const(g, right_side);
+    if (!p) return 1.0f;
+    return clampf(p->lead_scale, 0.70f, 2.00f);
 }
 
 static void ai_update_telemetry_window(pong_game_t *g)
@@ -332,11 +516,10 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
         float y_hit = 0.5f;
         float z_hit = 0.5f;
         float t_hit = 0.0f;
+        bool used_npu = false;
 
         if (ball_toward)
         {
-            bool used_npu = false;
-
             if (use_npu)
             {
                 float feat[16];
@@ -359,10 +542,6 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
                     z_hit = pred.z_hit;
                     t_hit = pred.t_hit;
                 }
-                else
-                {
-                    g->ai_fallback_window++;
-                }
             }
 
             if (!used_npu)
@@ -377,13 +556,25 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
                 }
             }
 
+            /* Learned anticipation: shift target along projected travel based on side profile. */
+            {
+                float lead = ai_lead_scale(g, right_side);
+                float t_use = clampf(t_hit, 0.0f, 0.80f);
+                float k = (lead - 1.0f) * 0.45f;
+                y_hit += g->ball.vy * t_use * k;
+                z_hit += g->ball.vz * t_use * k;
+            }
+
             /* Add small noise to avoid perfect play. */
-            float noise = ai_noise(g);
+            float noise = ai_noise(g, right_side);
             y_hit += rand_f(g, -noise, noise);
             z_hit += rand_f(g, -noise, noise);
         }
 
-        (void)t_hit;
+        if (!used_npu)
+        {
+            g->ai_fallback_window++;
+        }
 
         p->target_y = clampf(y_hit, 0.0f, 1.0f);
         p->target_z = clampf(z_hit, 0.0f, 1.0f);
@@ -393,7 +584,7 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
     float prev_y = p->y;
     float prev_z = p->z;
 
-    float max_speed = ai_max_speed(g);
+    float max_speed = ai_max_speed(g, right_side);
     float max_step = max_speed * dt;
 
     float dy = p->target_y - p->y;
@@ -424,6 +615,24 @@ void ai_step(pong_game_t *g, float dt, bool ai_left, bool ai_right)
     if (ai_right)
     {
         ai_step_one(g, dt, &g->paddle_r, true);
+    }
+
+    /* Gentle decay toward baseline so long sessions stay stable. */
+    if (ai_learning_side_selected(g, false))
+    {
+        ai_learn_profile_t *p = &g->ai_profile_left;
+        p->speed_scale += (1.0f - p->speed_scale) * 0.0008f;
+        p->noise_scale += (1.0f - p->noise_scale) * 0.0010f;
+        p->lead_scale += (1.0f - p->lead_scale) * 0.0008f;
+        ai_profile_clamp(p);
+    }
+    if (ai_learning_side_selected(g, true))
+    {
+        ai_learn_profile_t *p = &g->ai_profile_right;
+        p->speed_scale += (1.0f - p->speed_scale) * 0.0008f;
+        p->noise_scale += (1.0f - p->noise_scale) * 0.0010f;
+        p->lead_scale += (1.0f - p->lead_scale) * 0.0008f;
+        ai_profile_clamp(p);
     }
 
     ai_update_telemetry_window(g);

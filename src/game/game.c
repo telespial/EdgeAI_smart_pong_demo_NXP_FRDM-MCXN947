@@ -275,10 +275,74 @@ static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
         }
     }
 
+    /* Learning mode: BOTH, VS (left classic CPU vs right adaptive AI) */
+    for (int32_t i = 0; i < 2; i++)
+    {
+        int32_t bx = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+        int32_t by = EDGEAI_UI_ROW3_Y + opt_y0;
+        if (hit_rect(px, py, bx, by, EDGEAI_UI_OPT_W, EDGEAI_UI_OPT_H))
+        {
+            ai_learn_mode_t mode = (i == 0) ? kAiLearnModeBoth : kAiLearnModeVsClassic;
+            if (g->ai_learn_mode != mode)
+            {
+                ai_learning_set_mode(g, mode);
+            }
+            return;
+        }
+    }
+
+    /* Persistent learning: ON, OFF */
+    for (int32_t i = 0; i < 2; i++)
+    {
+        int32_t bx = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+        int32_t by = EDGEAI_UI_ROW4_Y + opt_y0;
+        if (hit_rect(px, py, bx, by, EDGEAI_UI_OPT_W, EDGEAI_UI_OPT_H))
+        {
+            bool en = (i == 0);
+            if (g->persistent_learning != en)
+            {
+                ai_learning_set_persistent(g, en);
+            }
+            return;
+        }
+    }
+
+    /* Perpetual play: 11, INF */
+    for (int32_t i = 0; i < 2; i++)
+    {
+        int32_t bx = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+        int32_t by = EDGEAI_UI_ROW5_Y + opt_y0;
+        if (hit_rect(px, py, bx, by, EDGEAI_UI_OPT_W, EDGEAI_UI_OPT_H))
+        {
+            bool inf = (i == 1);
+            if (g->perpetual_play != inf)
+            {
+                g->perpetual_play = inf;
+            }
+            return;
+        }
+    }
+
+    /* Target guide: ON, OFF */
+    for (int32_t i = 0; i < 2; i++)
+    {
+        int32_t bx = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+        int32_t by = EDGEAI_UI_ROW6_Y + opt_y0;
+        if (hit_rect(px, py, bx, by, EDGEAI_UI_OPT_W, EDGEAI_UI_OPT_H))
+        {
+            bool en = (i == 0);
+            if (g->target_overlay_enabled != en)
+            {
+                g->target_overlay_enabled = en;
+            }
+            return;
+        }
+    }
+
     /* New game. */
     {
         int32_t bx = EDGEAI_UI_NEW_X;
-        int32_t by = EDGEAI_UI_ROW3_Y + new_y0;
+        int32_t by = EDGEAI_UI_ROW7_Y + new_y0;
         if (hit_rect(px, py, bx, by, EDGEAI_UI_NEW_W, EDGEAI_UI_NEW_H))
         {
             game_reset(g);
@@ -296,6 +360,10 @@ void game_init(pong_game_t *g)
     g->mode = kGameModeZeroPlayer;
     g->difficulty = 2;
     g->ai_enabled = true;
+    g->perpetual_play = false;
+    g->persistent_learning = true;
+    g->target_overlay_enabled = true;
+    g->ai_learn_mode = kAiLearnModeBoth;
     g->menu_open = false;
     g->help_open = false;
     g->ui_block_touch = false;
@@ -344,6 +412,8 @@ void game_init(pong_game_t *g)
     g->ai_fallback_window = 0u;
     g->ai_npu_rate_hz = 0u;
     g->ai_fallback_rate_hz = 0u;
+    g->ai_left_active = false;
+    g->ai_right_active = false;
 
     ai_init(g);
     game_reset(g);
@@ -453,6 +523,8 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
     bool ai_left = (g->mode == kGameModeZeroPlayer);
     bool ai_right = (g->mode == kGameModeSinglePlayer) || (g->mode == kGameModeZeroPlayer);
     if (g->mode == kGameModeTwoPlayer || manual_r) ai_right = false;
+    g->ai_left_active = ai_left;
+    g->ai_right_active = ai_right;
     ai_step(g, dt, ai_left, ai_right);
 
     if (!g->countdown_active)
@@ -464,7 +536,7 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
         game_update_countdown(g);
     }
 
-    if (g->score.left >= EDGEAI_WIN_SCORE || g->score.right >= EDGEAI_WIN_SCORE)
+    if (!g->perpetual_play && (g->score.left >= EDGEAI_WIN_SCORE || g->score.right >= EDGEAI_WIN_SCORE))
     {
         g->match_over = true;
         g->winner_left = (g->score.left >= EDGEAI_WIN_SCORE);

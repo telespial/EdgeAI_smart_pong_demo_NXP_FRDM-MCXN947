@@ -37,11 +37,29 @@ typedef struct
     uint16_t right;
 } pong_score_t;
 
+typedef enum
+{
+    kAiLearnModeBoth = 0,
+    kAiLearnModeVsClassic = 1,
+} ai_learn_mode_t;
+
+typedef struct
+{
+    float speed_scale;
+    float noise_scale;
+    float lead_scale;
+    uint16_t hits;
+    uint16_t misses;
+} ai_learn_profile_t;
+
 typedef struct
 {
     game_mode_t mode;
     uint8_t difficulty; /* 1..3 */
     bool ai_enabled;
+    bool perpetual_play;
+    bool persistent_learning;
+    bool target_overlay_enabled;
     bool menu_open;
     bool help_open;
     bool ui_block_touch;
@@ -80,6 +98,12 @@ typedef struct
     uint32_t ai_fallback_window;
     uint16_t ai_npu_rate_hz;
     uint16_t ai_fallback_rate_hz;
+
+    ai_learn_mode_t ai_learn_mode;
+    bool ai_left_active;
+    bool ai_right_active;
+    ai_learn_profile_t ai_profile_left;
+    ai_learn_profile_t ai_profile_right;
 
     npu_hal_t npu;
 } pong_game_t;

@@ -2,6 +2,8 @@
 
 #include <stddef.h>
 
+#include "game/ai.h"
+
 static inline float clampf(float v, float lo, float hi)
 {
     if (v < lo) return lo;
@@ -104,6 +106,9 @@ static void physics_get_tuning(const pong_game_t *g, float *serve_speed, float *
     float s = physics_ball_speed_scale(g);
     if (serve_speed) *serve_speed *= s;
     if (vlim) *vlim *= s;
+
+    /* Requested: double max speed cap for every difficulty setting. */
+    if (vlim) *vlim *= 2.0f;
 }
 
 void physics_reset_ball(pong_game_t *g, int serve_dir)
@@ -200,6 +205,7 @@ static void physics_paddle_hit(pong_game_t *g, pong_paddle_t *p, bool left_side)
 
     g->last_hit_dy = dy;
     g->last_hit_dz = dz;
+    ai_learning_on_paddle_hit(g, left_side);
 
     const float english = 0.55f;
     const float p_influence = 0.12f;
@@ -296,6 +302,7 @@ static bool physics_step_sub(pong_game_t *g, float dt)
     if (g->ball.x < -margin)
     {
         g->score.right++;
+        ai_learning_on_miss(g, true);
         /* Serve toward the player who just conceded (left). */
         physics_reset_ball(g, -1);
         return true;
@@ -303,6 +310,7 @@ static bool physics_step_sub(pong_game_t *g, float dt)
     else if (g->ball.x > 1.0f + margin)
     {
         g->score.left++;
+        ai_learning_on_miss(g, false);
         /* Serve toward the player who just conceded (right). */
         physics_reset_ball(g, +1);
         return true;
