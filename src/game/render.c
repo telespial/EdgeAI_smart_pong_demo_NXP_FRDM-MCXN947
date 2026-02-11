@@ -51,17 +51,24 @@ static void text_u3(char out[3], uint32_t v)
     out[2] = (char)('0' + (v % 10u));
 }
 
-static void text_ms31(char out[4], uint32_t us)
+static void text_ms21(char out[3], uint32_t us)
 {
     if (!out) return;
-    /* Convert microseconds to deci-milliseconds for compact "000.0" formatting. */
+    /* Convert microseconds to deci-milliseconds for compact "00.0" formatting. */
     uint32_t deci_ms = (us + 50u) / 100u;
-    if (deci_ms > 9999u) deci_ms = 9999u;
+    if (deci_ms > 999u) deci_ms = 999u;
 
-    out[0] = (char)('0' + ((deci_ms / 1000u) % 10u));
-    out[1] = (char)('0' + ((deci_ms / 100u) % 10u));
-    out[2] = (char)('0' + ((deci_ms / 10u) % 10u));
-    out[3] = (char)('0' + (deci_ms % 10u));
+    out[0] = (char)('0' + ((deci_ms / 100u) % 10u));
+    out[1] = (char)('0' + ((deci_ms / 10u) % 10u));
+    out[2] = (char)('0' + (deci_ms % 10u));
+}
+
+static bool rect_intersects(int32_t ax0, int32_t ay0, int32_t ax1, int32_t ay1,
+                            int32_t bx0, int32_t by0, int32_t bx1, int32_t by1)
+{
+    if (ax1 < bx0 || bx1 < ax0) return false;
+    if (ay1 < by0 || by1 < ay0) return false;
+    return true;
 }
 
 static inline uint32_t render_hash_u32(uint32_t x)
@@ -903,46 +910,93 @@ static void render_ai_telemetry(uint16_t *dst, uint32_t w, uint32_t h, int32_t t
     if (!g || !g->ai_enabled) return;
     if (!(g->mode == kGameModeZeroPlayer || g->mode == kGameModeSinglePlayer)) return;
 
-    npu_telemetry_t npu_t;
-    if (!npu_hal_get_telemetry(&g->npu, &npu_t)) return;
-
-    char npu_hz[3];
-    char fb_hz[3];
-    char last_ms[4];
-    char avg_ms[4];
-    text_u3(npu_hz, g->ai_npu_rate_hz);
-    text_u3(fb_hz, g->ai_fallback_rate_hz);
-    text_ms31(last_ms, npu_t.last_infer_us);
-    text_ms31(avg_ms, npu_t.avg_infer_us);
-
-    char line1[] = "N000/S F000/S";
-    char line2[] = "L000.0M A000.0M";
-
-    line1[1] = npu_hz[0];
-    line1[2] = npu_hz[1];
-    line1[3] = npu_hz[2];
-    line1[8] = fb_hz[0];
-    line1[9] = fb_hz[1];
-    line1[10] = fb_hz[2];
-
-    line2[1] = last_ms[0];
-    line2[2] = last_ms[1];
-    line2[3] = last_ms[2];
-    line2[5] = last_ms[3];
-    line2[9] = avg_ms[0];
-    line2[10] = avg_ms[1];
-    line2[11] = avg_ms[2];
-    line2[13] = avg_ms[3];
-
     const int32_t x = 8;
     const int32_t y = EDGEAI_LCD_H - 18;
+    const int32_t ow = 106;
+    const int32_t oh = 16;
+    const int32_t tx0 = tile_x0;
+    const int32_t ty0 = tile_y0;
+    const int32_t tx1 = tile_x0 + (int32_t)w - 1;
+    const int32_t ty1 = tile_y0 + (int32_t)h - 1;
+    if (!rect_intersects(x, y, x + ow, y + oh, tx0, ty0, tx1, ty1)) return;
+
+    static uint32_t s_rate_start_cycles = 0u;
+    static uint32_t s_prev_invoke = 0u;
+    static uint32_t s_prev_fail = 0u;
+    static uint16_t s_rate_n = 0u;
+    static uint16_t s_rate_f = 0u;
+    static uint32_t s_cached_frame = 0xFFFFFFFFu;
+    static char s_line1[] = "N000/S F000/S";
+    static char s_line2[] = "L00.0 A00.0 T000";
+
+    if (s_cached_frame != g->frame)
+    {
+        npu_telemetry_t npu_t;
+        if (!npu_hal_get_telemetry(&g->npu, &npu_t)) return;
+
+        if (s_rate_start_cycles == 0u)
+        {
+            s_rate_start_cycles = time_hal_cycles();
+            s_prev_invoke = npu_t.invoke_count;
+            s_prev_fail = npu_t.invoke_fail_count;
+        }
+        else
+        {
+            uint32_t elapsed_us = time_hal_elapsed_us(s_rate_start_cycles);
+            if (elapsed_us >= 250000u)
+            {
+                uint32_t dinv = npu_t.invoke_count - s_prev_invoke;
+                uint32_t dfail = npu_t.invoke_fail_count - s_prev_fail;
+                uint32_t rn = (elapsed_us > 0u) ? (uint32_t)(((uint64_t)dinv * 1000000ull) / (uint64_t)elapsed_us) : 0u;
+                uint32_t rf = (elapsed_us > 0u) ? (uint32_t)(((uint64_t)dfail * 1000000ull) / (uint64_t)elapsed_us) : 0u;
+                if (rn > 999u) rn = 999u;
+                if (rf > 999u) rf = 999u;
+                s_rate_n = (uint16_t)rn;
+                s_rate_f = (uint16_t)rf;
+                s_prev_invoke = npu_t.invoke_count;
+                s_prev_fail = npu_t.invoke_fail_count;
+                s_rate_start_cycles = time_hal_cycles();
+            }
+        }
+
+        char npu_hz[3];
+        char fb_hz[3];
+        char last_ms[3];
+        char avg_ms[3];
+        char inv_mod[3];
+        text_u3(npu_hz, s_rate_n);
+        text_u3(fb_hz, s_rate_f);
+        text_ms21(last_ms, npu_t.last_infer_us);
+        text_ms21(avg_ms, npu_t.avg_infer_us);
+        text_u3(inv_mod, npu_t.invoke_count % 1000u);
+
+        s_line1[1] = npu_hz[0];
+        s_line1[2] = npu_hz[1];
+        s_line1[3] = npu_hz[2];
+        s_line1[8] = fb_hz[0];
+        s_line1[9] = fb_hz[1];
+        s_line1[10] = fb_hz[2];
+
+        s_line2[1] = last_ms[0];
+        s_line2[2] = last_ms[1];
+        s_line2[4] = last_ms[2];
+        s_line2[7] = avg_ms[0];
+        s_line2[8] = avg_ms[1];
+        s_line2[10] = avg_ms[2];
+        s_line2[13] = inv_mod[0];
+        s_line2[14] = inv_mod[1];
+        s_line2[15] = inv_mod[2];
+
+        s_cached_frame = g->frame;
+    }
+
     const uint16_t c = sw_pack_rgb565_u8(212, 214, 216);
     const uint16_t cs = sw_pack_rgb565_u8(10, 10, 12);
 
-    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x + 1, y + 1, 1, line1, cs);
-    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x + 1, y + 9, 1, line2, cs);
-    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 1, line1, c);
-    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y + 8, 1, line2, c);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x + 1, y + 1, 1, s_line1, cs);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x + 1, y + 9, 1, s_line2, cs);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 1, s_line1, c);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y + 8, 1, s_line2, c);
 }
 
 typedef struct

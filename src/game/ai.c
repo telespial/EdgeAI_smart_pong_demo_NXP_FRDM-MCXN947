@@ -227,13 +227,23 @@ static uint32_t ai_update_div(const pong_game_t *g, bool use_npu)
         }
     }
 
-    /* Keep NPU cadence close to CPU path to avoid stale targets that make AI weak. */
+    /* NPU path: throttle updates to protect frame pacing, then adapt to observed latency. */
+    uint32_t div = 4u;
     switch (d)
     {
-        case 1: return 6u;
-        case 2: return 4u;
-        default: return 3u;
+        case 1: div = 9u; break;
+        case 2: div = 7u; break;
+        default: div = 5u; break;
     }
+
+    uint32_t avg_us = g ? g->npu.avg_infer_us : 0u;
+    if (avg_us > 14000u) div += 3u;
+    else if (avg_us > 9000u) div += 2u;
+    else if (avg_us > 5000u) div += 1u;
+
+    if (div < 2u) div = 2u;
+    if (div > 14u) div = 14u;
+    return div;
 }
 
 static float ai_noise(const pong_game_t *g)
@@ -241,12 +251,21 @@ static float ai_noise(const pong_game_t *g)
     uint8_t d = g ? g->difficulty : 2;
     if (d < 1) d = 1;
     if (d > 3) d = 3;
+
+    float n = 0.015f;
     switch (d)
     {
-        case 1: return 0.032f;
-        case 2: return 0.015f;
-        default: return 0.007f;
+        case 1: n = 0.032f; break;
+        case 2: n = 0.015f; break;
+        default: n = 0.007f; break;
     }
+
+    /* Show clear behavior difference when NPU path is disabled. */
+    if (g && !g->ai_enabled)
+    {
+        n *= 1.7f;
+    }
+    return n;
 }
 
 static float ai_max_speed(const pong_game_t *g)
@@ -254,12 +273,19 @@ static float ai_max_speed(const pong_game_t *g)
     uint8_t d = g ? g->difficulty : 2;
     if (d < 1) d = 1;
     if (d > 3) d = 3;
+    float s = 1.48f;
     switch (d)
     {
-        case 1: return 1.22f;
-        case 2: return 1.48f;
-        default: return 1.78f;
+        case 1: s = 1.22f; break;
+        case 2: s = 1.48f; break;
+        default: s = 1.78f; break;
     }
+
+    if (g && !g->ai_enabled)
+    {
+        s *= 0.82f;
+    }
+    return s;
 }
 
 static void ai_update_telemetry_window(pong_game_t *g)
