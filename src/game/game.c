@@ -50,7 +50,8 @@ static void game_apply_accel_ball_nudge(pong_game_t *g, const platform_input_t *
     float ax = clampf(in->accel_ax, -1.0f, 1.0f);
     float ay = clampf(in->accel_ay, -1.0f, 1.0f);
 
-    const float dz = 0.06f;
+    /* Input is already deadzoned/softened in accel_proc; avoid a second deadzone here. */
+    const float dz = 0.0f;
     ax = game_deadzone(ax, dz);
     ay = game_deadzone(ay, dz);
 
