@@ -545,43 +545,156 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         int32_t x = panel_x0 + xpad;
         int32_t y = panel_y0 + ypad;
 
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "RULES", c_body);
-        y += 18;
-
         const int32_t s1 = 1;
-        const int32_t lh = 10;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TOUCH Y = PADDLE Y", c_body);
-        y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TOUCH X = PADDLE Z", c_body);
-        y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P0 AI VS AI", c_body);
-        y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P1 TOUCH LEFT", c_body);
-        y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P2 TWO TOUCHES L/R", c_body);
+        const int32_t lh = 9;
+
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "GAME RULES", c_body);
+        y += 16;
+
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "HIT BALL WITH PADDLE", c_body);
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "SCORE WHEN BALL PASSES PADDLE", c_body);
         y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "BALL BOUNCES OFF WALLS", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "BALL SPEEDS UP ON HITS", c_body);
+        y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "BALL COLOR SHOWS SPEED", c_body);
-        y += lh + 6;
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "DIFFICULTY CHANGES SPEED AND AI", c_body);
+        y += lh + 4;
+
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "CONTROLS", c_dim);
+        y += 16;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TOUCH Y UP DOWN", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TOUCH X DEPTH", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P0 AI VS AI", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P1 ONE TOUCH", c_body);
+        y += lh;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P2 TWO TOUCHES L R", c_body);
+        y += lh + 4;
 
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "INSPIRED BY", c_dim);
-        y += 18;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "PONG IS A 1972 SPORTS VIDEO GAME", c_body);
-        y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "DEVELOPED AND PUBLISHED BY ATARI INC", c_body);
+        y += 16;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "PONG 1972 ATARI INC", c_body);
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "CREATED BY ALLAN ALCORN", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TRAINING EXERCISE ASSIGNED BY", c_body);
-        y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "ATARI COFOUNDER NOLAN BUSHNELL", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "TRAINING BY NOLAN BUSHNELL", c_body);
+
+        int32_t credit_y = panel_y1 - ypad - 7 * s1;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, credit_y, s1, "CREATED BY: RICHARD HABERKERN", c_dim);
     }
+}
+
+typedef struct
+{
+    float z0; /* near */
+    float z1; /* far */
+    float zc; /* center */
+} render_depth_range_t;
+
+static bool render_depth_behind(const render_depth_range_t r[3], int a, int b, float eps)
+{
+    return r && (r[a].z0 >= (r[b].z1 + eps));
+}
+
+static bool render_depth_overlap(const render_depth_range_t r[3], int a, int b)
+{
+    return r && (r[a].z0 <= r[b].z1) && (r[a].z1 >= r[b].z0);
+}
+
+static uint8_t render_depth_order3(const pong_game_t *g, uint8_t out_order[3])
+{
+    if (!out_order) return 0u;
+    if (!g)
+    {
+        out_order[0] = 0u;
+        out_order[1] = 1u;
+        out_order[2] = 2u;
+        return 3u;
+    }
+
+    float lhz = g->paddle_l.size_z * 0.5f;
+    float rhz = g->paddle_r.size_z * 0.5f;
+
+    render_depth_range_t r[3] = {
+        {g->paddle_l.z - lhz, g->paddle_l.z + lhz, g->paddle_l.z},
+        {g->paddle_r.z - rhz, g->paddle_r.z + rhz, g->paddle_r.z},
+        {g->ball.z - g->ball.r, g->ball.z + g->ball.r, g->ball.z},
+    };
+
+    const float eps = 1e-4f;
+
+    static const uint8_t perms[6][3] = {
+        {0u, 1u, 2u},
+        {0u, 2u, 1u},
+        {1u, 0u, 2u},
+        {1u, 2u, 0u},
+        {2u, 0u, 1u},
+        {2u, 1u, 0u},
+    };
+
+    int best_i = 0;
+    int best_score = 0x7FFFFFFF;
+
+    for (int pi = 0; pi < 6; pi++)
+    {
+        const uint8_t *p = perms[pi];
+
+        int pos[3] = {0, 0, 0};
+        pos[p[0]] = 0;
+        pos[p[1]] = 1;
+        pos[p[2]] = 2;
+
+        int score = 0;
+
+        /* Hard constraints: if A is fully behind B, A must be drawn first. */
+        for (int a = 0; a < 3; a++)
+        {
+            for (int b = a + 1; b < 3; b++)
+            {
+                if (render_depth_behind(r, a, b, eps) && (pos[a] > pos[b])) score += 1000;
+                if (render_depth_behind(r, b, a, eps) && (pos[b] > pos[a])) score += 1000;
+            }
+        }
+
+        /* Soft preference: if z ranges overlap, draw the ball on top (last) for readability. */
+        if (render_depth_overlap(r, 2, 0) && (pos[2] < pos[0])) score += 1;
+        if (render_depth_overlap(r, 2, 1) && (pos[2] < pos[1])) score += 1;
+
+        /* Tie-breaker: prefer far->near by center z when possible. */
+        for (int a = 0; a < 3; a++)
+        {
+            for (int b = a + 1; b < 3; b++)
+            {
+                if ((r[a].zc > r[b].zc) && (pos[a] > pos[b])) score += 1;
+                if ((r[b].zc > r[a].zc) && (pos[b] > pos[a])) score += 1;
+            }
+        }
+
+        if (score < best_score)
+        {
+            best_score = score;
+            best_i = pi;
+        }
+    }
+
+    out_order[0] = perms[best_i][0];
+    out_order[1] = perms[best_i][1];
+    out_order[2] = perms[best_i][2];
+    return 3u;
 }
 
 void render_draw_frame(render_state_t *rs, const pong_game_t *g)
 {
     if (!rs || !g) return;
+
+    uint8_t draw_order[3] = {0u, 1u, 2u};
+    (void)render_depth_order3(g, draw_order);
 
     for (int32_t y0 = 0; y0 < EDGEAI_LCD_H; y0 += EDGEAI_TILE_MAX_H)
     {
@@ -599,33 +712,10 @@ void render_draw_frame(render_state_t *rs, const pong_game_t *g)
 
             render_scores(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, rs, g);
 
-            /* Simple painter's algorithm by depth (z): far -> near. */
-            struct draw_obj
-            {
-                float z;
-                uint8_t kind; /* 0=paddle_l, 1=paddle_r, 2=ball */
-            } objs[3] = {
-                {g->paddle_l.z, 0u},
-                {g->paddle_r.z, 1u},
-                {g->ball.z, 2u},
-            };
-
-            for (int i = 0; i < 2; i++)
-            {
-                for (int j = i + 1; j < 3; j++)
-                {
-                    if (objs[j].z > objs[i].z)
-                    {
-                        struct draw_obj tmp = objs[i];
-                        objs[i] = objs[j];
-                        objs[j] = tmp;
-                    }
-                }
-            }
-
+            /* Painter's algorithm by depth (z): far -> near, with simple z-range handling. */
             for (int i = 0; i < 3; i++)
             {
-                switch (objs[i].kind)
+                switch (draw_order[i])
                 {
                     case 0u:
                         render_draw_paddle(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, rs, &g->paddle_l);

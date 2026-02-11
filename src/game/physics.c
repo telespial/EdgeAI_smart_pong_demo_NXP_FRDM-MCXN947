@@ -139,6 +139,52 @@ static void physics_wall_bounce(float *p, float *v, float r)
     }
 }
 
+static float physics_axis_reflect(float p0, float v, float tau, float r)
+{
+    float lo = r;
+    float hi = 1.0f - r;
+    float p = p0 + v * tau;
+
+    /* Apply a small number of reflections; with substeps, more than one is unlikely. */
+    for (int i = 0; i < 4; i++)
+    {
+        if (p < lo)
+        {
+            p = lo + (lo - p);
+            continue;
+        }
+        if (p > hi)
+        {
+            p = hi - (p - hi);
+            continue;
+        }
+        break;
+    }
+
+    return clampf(p, lo, hi);
+}
+
+static bool physics_paddle_overlap_yz(const pong_paddle_t *p, float y, float z, float ball_r, float slop)
+{
+    if (!p) return false;
+
+    /* Sphere vs paddle-rect overlap, evaluated in the paddle plane (y/z).
+     * Use a circle-rectangle distance test to avoid "ghost" corner bounces
+     * from the overly-permissive AABB expansion.
+     */
+    float hy = p->size_y * 0.5f;
+    float hz = p->size_z * 0.5f;
+    float rr = ball_r + slop;
+
+    float dy = absf(y - p->y) - hy;
+    float dz = absf(z - p->z) - hz;
+    if (dy <= 0.0f && dz <= 0.0f) return true;
+
+    if (dy < 0.0f) dy = 0.0f;
+    if (dz < 0.0f) dz = 0.0f;
+    return (dy * dy + dz * dz) <= (rr * rr);
+}
+
 static void physics_paddle_hit(pong_game_t *g, pong_paddle_t *p, bool left_side)
 {
     if (!g || !p) return;
@@ -189,6 +235,8 @@ static bool physics_step_sub(pong_game_t *g, float dt)
     float prev_x = g->ball.x;
     float prev_y = g->ball.y;
     float prev_z = g->ball.z;
+    float start_vy = g->ball.vy;
+    float start_vz = g->ball.vz;
 
     g->ball.x += g->ball.vx * dt;
     g->ball.y += g->ball.vy * dt;
@@ -199,7 +247,7 @@ static bool physics_step_sub(pong_game_t *g, float dt)
     physics_wall_bounce(&g->ball.z, &g->ball.vz, g->ball.r);
 
     /* Paddle collisions. */
-    const float slop = g->ball.r * 0.10f;
+    const float slop = g->ball.r * 0.02f;
 
     const float x_hit_l = g->paddle_l.x_plane + g->ball.r;
     if (g->ball.vx < 0.0f && prev_x > x_hit_l && g->ball.x <= x_hit_l)
@@ -208,14 +256,11 @@ static bool physics_step_sub(pong_game_t *g, float dt)
         float t = (denom != 0.0f) ? ((prev_x - x_hit_l) / denom) : 0.0f;
         t = clampf(t, 0.0f, 1.0f);
 
-        float y_at = prev_y + (g->ball.y - prev_y) * t;
-        float z_at = prev_z + (g->ball.z - prev_z) * t;
+        float tau = dt * t;
+        float y_at = physics_axis_reflect(prev_y, start_vy, tau, g->ball.r);
+        float z_at = physics_axis_reflect(prev_z, start_vz, tau, g->ball.r);
 
-        float hy = g->paddle_l.size_y * 0.5f;
-        float hz = g->paddle_l.size_z * 0.5f;
-        bool hit =
-            (absf(y_at - g->paddle_l.y) <= (hy + g->ball.r + slop)) &&
-            (absf(z_at - g->paddle_l.z) <= (hz + g->ball.r + slop));
+        bool hit = physics_paddle_overlap_yz(&g->paddle_l, y_at, z_at, g->ball.r, slop);
         if (hit)
         {
             g->ball.x = x_hit_l;
@@ -232,14 +277,11 @@ static bool physics_step_sub(pong_game_t *g, float dt)
         float t = (denom != 0.0f) ? ((x_hit_r - prev_x) / denom) : 0.0f;
         t = clampf(t, 0.0f, 1.0f);
 
-        float y_at = prev_y + (g->ball.y - prev_y) * t;
-        float z_at = prev_z + (g->ball.z - prev_z) * t;
+        float tau = dt * t;
+        float y_at = physics_axis_reflect(prev_y, start_vy, tau, g->ball.r);
+        float z_at = physics_axis_reflect(prev_z, start_vz, tau, g->ball.r);
 
-        float hy = g->paddle_r.size_y * 0.5f;
-        float hz = g->paddle_r.size_z * 0.5f;
-        bool hit =
-            (absf(y_at - g->paddle_r.y) <= (hy + g->ball.r + slop)) &&
-            (absf(z_at - g->paddle_r.z) <= (hz + g->ball.r + slop));
+        bool hit = physics_paddle_overlap_yz(&g->paddle_r, y_at, z_at, g->ball.r, slop);
         if (hit)
         {
             g->ball.x = x_hit_r;
