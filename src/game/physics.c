@@ -65,9 +65,9 @@ static float physics_ball_speed_scale(const pong_game_t *g)
     if (d > 3) d = 3;
     switch (d)
     {
-        case 1: return 1.68f;
-        case 2: return 1.82f;
-        default: return 1.96f;
+        case 1: return 1.95f;
+        case 2: return 2.14f;
+        default: return 2.32f;
     }
 }
 

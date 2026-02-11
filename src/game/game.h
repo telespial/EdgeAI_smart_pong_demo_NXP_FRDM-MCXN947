@@ -48,6 +48,7 @@ typedef struct
     bool match_over;
     bool winner_left;
     bool end_prompt_dismissed;
+    bool countdown_active;
 
     pong_ball_t ball;
     pong_paddle_t paddle_l;
@@ -57,9 +58,14 @@ typedef struct
     uint32_t rng;
     uint32_t frame;
     uint32_t match_over_frame;
+    uint32_t countdown_frames_left;
 
     float last_hit_dy;
     float last_hit_dz;
+
+    float serve_vx;
+    float serve_vy;
+    float serve_vz;
 
     /* Latest accel sample (for UI/debug + optional game effects). */
     bool accel_active;

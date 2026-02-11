@@ -19,8 +19,8 @@
 #endif
 
 /* Render tile limits (single-blit path). */
-#define EDGEAI_TILE_MAX_W 200
-#define EDGEAI_TILE_MAX_H 200
+#define EDGEAI_TILE_MAX_W 160
+#define EDGEAI_TILE_MAX_H 320
 
 /* Fixed-timestep target. */
 #ifndef EDGEAI_FIXED_FPS

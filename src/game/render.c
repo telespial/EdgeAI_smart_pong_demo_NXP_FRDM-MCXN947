@@ -15,6 +15,7 @@ static uint16_t s_tile[EDGEAI_TILE_MAX_W * EDGEAI_TILE_MAX_H];
 
 #define EDGEAI_END_PROMPT_DELAY_FRAMES 120u
 #define EDGEAI_CONFETTI_COUNT 56
+#define EDGEAI_COUNTDOWN_STEP_FRAMES 60u
 
 static inline float clampf(float v, float lo, float hi)
 {
@@ -51,6 +52,38 @@ static bool render_end_prompt_visible(const pong_game_t *g)
     if (!g->match_over) return false;
     if (g->end_prompt_dismissed) return false;
     return ((g->frame - g->match_over_frame) >= EDGEAI_END_PROMPT_DELAY_FRAMES);
+}
+
+static void render_countdown(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, int32_t tile_y0,
+                             const pong_game_t *g)
+{
+    if (!g || !g->countdown_active) return;
+
+    uint32_t r = g->countdown_frames_left;
+    int digit = 1;
+    uint16_t c = sw_pack_rgb565_u8(30, 220, 40); /* green */
+
+    if (r > (2u * EDGEAI_COUNTDOWN_STEP_FRAMES))
+    {
+        digit = 3;
+        c = sw_pack_rgb565_u8(240, 30, 30); /* red */
+    }
+    else if (r > EDGEAI_COUNTDOWN_STEP_FRAMES)
+    {
+        digit = 2;
+        c = sw_pack_rgb565_u8(245, 220, 40); /* yellow */
+    }
+
+    char s[2] = {(char)('0' + digit), 0};
+    const int32_t scale = 12;
+    int32_t tw = edgeai_text5x7_width(scale, s);
+    int32_t th = 7 * scale;
+    int32_t x = (EDGEAI_LCD_W - tw) / 2;
+    int32_t y = (EDGEAI_LCD_H - th) / 2;
+    uint16_t shadow = sw_pack_rgb565_u8(8, 8, 10);
+
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x + 4, y + 4, scale, s, shadow);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, scale, s, c);
 }
 
 static void render_project(const render_state_t *rs, float x, float y, float z, int32_t *sx, int32_t *sy, float *out_scale)
@@ -705,7 +738,7 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "PADDLE EDGE ADDS STEEPER ANGLE", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "SERVE STARTS CENTER TO MISSED SIDE", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "SERVE AFTER 3 2 1 TOWARD MISSED SIDE", c_body);
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "BALL SPEEDS UP ON EACH HIT", c_body);
         y += lh + 4;
@@ -932,17 +965,17 @@ void render_draw_frame(render_state_t *rs, const pong_game_t *g)
     uint8_t draw_order[3] = {0u, 1u, 2u};
     (void)render_depth_order3(g, draw_order);
 
-    for (int32_t y0 = 0; y0 < EDGEAI_LCD_H; y0 += EDGEAI_TILE_MAX_H)
+    for (int32_t x0 = 0; x0 < EDGEAI_LCD_W; x0 += EDGEAI_TILE_MAX_W)
     {
-        int32_t y1 = y0 + EDGEAI_TILE_MAX_H - 1;
-        if (y1 >= EDGEAI_LCD_H) y1 = EDGEAI_LCD_H - 1;
-        int32_t h = y1 - y0 + 1;
+        int32_t x1 = x0 + EDGEAI_TILE_MAX_W - 1;
+        if (x1 >= EDGEAI_LCD_W) x1 = EDGEAI_LCD_W - 1;
+        int32_t w = x1 - x0 + 1;
 
-        for (int32_t x0 = 0; x0 < EDGEAI_LCD_W; x0 += EDGEAI_TILE_MAX_W)
+        for (int32_t y0 = 0; y0 < EDGEAI_LCD_H; y0 += EDGEAI_TILE_MAX_H)
         {
-            int32_t x1 = x0 + EDGEAI_TILE_MAX_W - 1;
-            if (x1 >= EDGEAI_LCD_W) x1 = EDGEAI_LCD_W - 1;
-            int32_t w = x1 - x0 + 1;
+            int32_t y1 = y0 + EDGEAI_TILE_MAX_H - 1;
+            if (y1 >= EDGEAI_LCD_H) y1 = EDGEAI_LCD_H - 1;
+            int32_t h = y1 - y0 + 1;
 
             render_bg_tile(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, rs);
 
@@ -967,6 +1000,7 @@ void render_draw_frame(render_state_t *rs, const pong_game_t *g)
 
             render_confetti(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_ui(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
+            render_countdown(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_end_popup(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
 
             display_hal_blit_rect(x0, y0, x1, y1, s_tile);

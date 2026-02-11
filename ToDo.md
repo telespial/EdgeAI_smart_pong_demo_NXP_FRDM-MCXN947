@@ -17,6 +17,7 @@ Reference material:
 - [x] Ball color hue shifts from red toward green as speed increases.
 - [x] Help overlay (`?`) is integrated in top menu flow with usage/rules text and credits.
 - [x] Win condition at 11 points with end-of-match celebration and `NEW GAME? YES/NO` prompt.
+- [x] Pre-serve countdown (`3,2,1`) runs on first serve and after every point.
 
 ## Physics + Control
 - [x] Fixed timestep game loop.
