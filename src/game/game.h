@@ -40,7 +40,8 @@ typedef struct
 typedef enum
 {
     kAiLearnModeBoth = 0,
-    kAiLearnModeVsClassic = 1,
+    kAiLearnModeAiAlgo = 1,
+    kAiLearnModeAlgoAi = 2,
 } ai_learn_mode_t;
 
 typedef struct
@@ -59,6 +60,7 @@ typedef struct
     bool ai_enabled;
     bool perpetual_play;
     bool persistent_learning;
+    bool speedpp_enabled;
     bool target_overlay_enabled;
     bool menu_open;
     bool help_open;
@@ -86,6 +88,10 @@ typedef struct
     float serve_vx;
     float serve_vy;
     float serve_vz;
+    float speedpp_peak_speed;
+    float speedpp_serve_speed_target;
+    uint8_t speedpp_stage;
+    uint16_t speedpp_next_threshold;
 
     /* Latest accel sample (for UI/debug + optional game effects). */
     bool accel_active;

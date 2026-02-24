@@ -275,14 +275,15 @@ static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
         }
     }
 
-    /* Learning mode: BOTH, VS (left classic CPU vs right adaptive AI) */
-    for (int32_t i = 0; i < 2; i++)
+    /* Skill mode: 2AI, AI/ALGO, ALGO/AI */
+    for (int32_t i = 0; i < 3; i++)
     {
-        int32_t bx = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+        int32_t bx = EDGEAI_UI_OPT_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
         int32_t by = EDGEAI_UI_ROW3_Y + opt_y0;
         if (hit_rect(px, py, bx, by, EDGEAI_UI_OPT_W, EDGEAI_UI_OPT_H))
         {
-            ai_learn_mode_t mode = (i == 0) ? kAiLearnModeBoth : kAiLearnModeVsClassic;
+            ai_learn_mode_t mode =
+                (i == 0) ? kAiLearnModeBoth : ((i == 1) ? kAiLearnModeAiAlgo : kAiLearnModeAlgoAi);
             if (g->ai_learn_mode != mode)
             {
                 ai_learning_set_mode(g, mode);
@@ -339,10 +340,30 @@ static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
         }
     }
 
+    /* SPEED++: ON, OFF */
+    for (int32_t i = 0; i < 2; i++)
+    {
+        int32_t bx = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+        int32_t by = EDGEAI_UI_ROW7_Y + opt_y0;
+        if (hit_rect(px, py, bx, by, EDGEAI_UI_OPT_W, EDGEAI_UI_OPT_H))
+        {
+            bool en = (i == 0);
+            if (g->speedpp_enabled != en)
+            {
+                g->speedpp_enabled = en;
+                g->speedpp_stage = 0u;
+                g->speedpp_next_threshold = 11u;
+                g->speedpp_serve_speed_target = 0.0f;
+                g->speedpp_peak_speed = 0.0f;
+            }
+            return;
+        }
+    }
+
     /* New game. */
     {
         int32_t bx = EDGEAI_UI_NEW_X;
-        int32_t by = EDGEAI_UI_ROW7_Y + new_y0;
+        int32_t by = EDGEAI_UI_ROW8_Y + new_y0;
         if (hit_rect(px, py, bx, by, EDGEAI_UI_NEW_W, EDGEAI_UI_NEW_H))
         {
             game_reset(g);
@@ -362,6 +383,7 @@ void game_init(pong_game_t *g)
     g->ai_enabled = true;
     g->perpetual_play = false;
     g->persistent_learning = true;
+    g->speedpp_enabled = false;
     g->target_overlay_enabled = true;
     g->ai_learn_mode = kAiLearnModeBoth;
     g->menu_open = false;
@@ -402,6 +424,10 @@ void game_init(pong_game_t *g)
     g->serve_vx = 0.0f;
     g->serve_vy = 0.0f;
     g->serve_vz = 0.0f;
+    g->speedpp_peak_speed = 0.0f;
+    g->speedpp_serve_speed_target = 0.0f;
+    g->speedpp_stage = 0u;
+    g->speedpp_next_threshold = 11u;
 
     g->accel_active = false;
     g->accel_ax = 0.0f;
@@ -422,6 +448,8 @@ void game_init(pong_game_t *g)
 void game_reset(pong_game_t *g)
 {
     if (!g) return;
+
+    ai_learning_sync_store(g);
 
     g->score.left = 0;
     g->score.right = 0;
@@ -453,6 +481,11 @@ void game_reset(pong_game_t *g)
     g->ai_fallback_window = 0u;
     g->ai_npu_rate_hz = 0u;
     g->ai_fallback_rate_hz = 0u;
+
+    if (g->persistent_learning)
+    {
+        ai_learning_set_persistent(g, true);
+    }
 
     g->rng = g->rng * 1664525u + 1013904223u;
     int serve_dir = (g->rng & 1u) ? +1 : -1;

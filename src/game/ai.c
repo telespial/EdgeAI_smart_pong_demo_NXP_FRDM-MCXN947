@@ -2,6 +2,7 @@
 
 #include <string.h>
 
+#include "fsl_flash.h"
 #include "platform/time_hal.h"
 
 static inline float clampf(float v, float lo, float hi)
@@ -43,15 +44,108 @@ static float rand_f(pong_game_t *g, float lo, float hi)
 }
 
 #define EDGEAI_LEARN_STORE_MAGIC 0x4C524E31u /* "LRN1" */
+#define EDGEAI_LEARN_STORE_VERSION 0x00000002u
+#define EDGEAI_LEARN_FLASH_PROGRAM_BYTES 512u
 
 typedef struct
 {
     uint32_t magic;
+    uint32_t version;
+    uint32_t crc32;
     ai_learn_profile_t left;
     ai_learn_profile_t right;
+    uint32_t reserved[(EDGEAI_LEARN_FLASH_PROGRAM_BYTES - (3u * sizeof(uint32_t)) - (2u * sizeof(ai_learn_profile_t))) /
+                      sizeof(uint32_t)];
 } ai_learn_store_t;
 
 static ai_learn_store_t s_learn_store = {0u};
+static bool s_learn_store_dirty = false;
+static bool s_flash_ready = false;
+static bool s_flash_init_done = false;
+static uint32_t s_flash_store_addr = 0u;
+static uint32_t s_flash_sector_size = 0u;
+static flash_config_t s_flash_cfg;
+
+static uint32_t ai_store_checksum(const ai_learn_store_t *store)
+{
+    if (!store) return 0u;
+    ai_learn_store_t copy = *store;
+    copy.crc32 = 0u;
+
+    const uint8_t *p = (const uint8_t *)&copy;
+    uint32_t hash = 2166136261u;
+    for (uint32_t i = 0u; i < (uint32_t)sizeof(copy); i++)
+    {
+        hash ^= p[i];
+        hash *= 16777619u;
+    }
+    return hash;
+}
+
+static bool ai_flash_init(void)
+{
+    if (s_flash_init_done) return s_flash_ready;
+    s_flash_init_done = true;
+
+    if (FLASH_Init(&s_flash_cfg) != kStatus_FLASH_Success) return false;
+
+    uint32_t pflash_base = 0u;
+    uint32_t pflash_size = 0u;
+    uint32_t sector_size = 0u;
+    if (FLASH_GetProperty(&s_flash_cfg, kFLASH_PropertyPflashBlockBaseAddr, &pflash_base) != kStatus_FLASH_Success)
+        return false;
+    if (FLASH_GetProperty(&s_flash_cfg, kFLASH_PropertyPflashTotalSize, &pflash_size) != kStatus_FLASH_Success)
+        return false;
+    if (FLASH_GetProperty(&s_flash_cfg, kFLASH_PropertyPflashSectorSize, &sector_size) != kStatus_FLASH_Success)
+        return false;
+    if (sector_size < EDGEAI_LEARN_FLASH_PROGRAM_BYTES || pflash_size < sector_size) return false;
+
+    s_flash_sector_size = sector_size;
+    s_flash_store_addr = (pflash_base + pflash_size) - sector_size;
+    s_flash_ready = true;
+    return true;
+}
+
+static bool ai_flash_read_store(ai_learn_store_t *out_store)
+{
+    if (!out_store) return false;
+    if (!ai_flash_init()) return false;
+
+    const ai_learn_store_t *flash_store = (const ai_learn_store_t *)(uintptr_t)s_flash_store_addr;
+    if (flash_store->magic != EDGEAI_LEARN_STORE_MAGIC) return false;
+    if (flash_store->version != EDGEAI_LEARN_STORE_VERSION) return false;
+    if (ai_store_checksum(flash_store) != flash_store->crc32) return false;
+
+    *out_store = *flash_store;
+    return true;
+}
+
+static bool ai_flash_write_store(const ai_learn_store_t *store)
+{
+    if (!store) return false;
+    if (!ai_flash_init()) return false;
+
+    ai_learn_store_t write_buf;
+    memset(&write_buf, 0xFF, sizeof(write_buf));
+    write_buf = *store;
+    write_buf.crc32 = 0u;
+    write_buf.crc32 = ai_store_checksum(&write_buf);
+
+    if (FLASH_Erase(&s_flash_cfg, s_flash_store_addr, s_flash_sector_size, kFLASH_ApiEraseKey) != kStatus_FLASH_Success)
+        return false;
+    if (FLASH_Program(&s_flash_cfg, s_flash_store_addr, (uint8_t *)&write_buf, sizeof(write_buf)) !=
+        kStatus_FLASH_Success)
+        return false;
+
+    const ai_learn_store_t *flash_store = (const ai_learn_store_t *)(uintptr_t)s_flash_store_addr;
+    return (memcmp(flash_store, &write_buf, sizeof(write_buf)) == 0);
+}
+
+static void ai_flash_clear_store(void)
+{
+    if (!ai_flash_init()) return;
+    (void)FLASH_Erase(&s_flash_cfg, s_flash_store_addr, s_flash_sector_size, kFLASH_ApiEraseKey);
+}
 
 static ai_learn_profile_t ai_profile_default(void)
 {
@@ -90,11 +184,12 @@ static bool ai_learning_side_selected(const pong_game_t *g, bool right_side)
     if (right_side)
     {
         if (!g->ai_right_active) return false;
+        if (g->ai_learn_mode == kAiLearnModeAiAlgo) return false;
         return true;
     }
 
     if (!g->ai_left_active) return false;
-    if (g->ai_learn_mode == kAiLearnModeVsClassic) return false;
+    if (g->ai_learn_mode == kAiLearnModeAlgoAi) return false;
     return true;
 }
 
@@ -102,14 +197,32 @@ static void ai_learning_commit_store(const pong_game_t *g)
 {
     if (!g || !g->persistent_learning) return;
     s_learn_store.magic = EDGEAI_LEARN_STORE_MAGIC;
+    s_learn_store.version = EDGEAI_LEARN_STORE_VERSION;
+    s_learn_store.crc32 = 0u;
     s_learn_store.left = g->ai_profile_left;
     s_learn_store.right = g->ai_profile_right;
+    s_learn_store.crc32 = ai_store_checksum(&s_learn_store);
+    s_learn_store_dirty = true;
 }
 
 static void ai_learning_load_store(pong_game_t *g)
 {
     if (!g || !g->persistent_learning) return;
-    if (s_learn_store.magic == EDGEAI_LEARN_STORE_MAGIC)
+
+    ai_learn_store_t flash_store;
+    if (ai_flash_read_store(&flash_store))
+    {
+        s_learn_store = flash_store;
+        s_learn_store_dirty = false;
+        g->ai_profile_left = s_learn_store.left;
+        g->ai_profile_right = s_learn_store.right;
+        ai_profile_clamp(&g->ai_profile_left);
+        ai_profile_clamp(&g->ai_profile_right);
+        return;
+    }
+
+    if (s_learn_store.magic == EDGEAI_LEARN_STORE_MAGIC && s_learn_store.version == EDGEAI_LEARN_STORE_VERSION &&
+        ai_store_checksum(&s_learn_store) == s_learn_store.crc32)
     {
         g->ai_profile_left = s_learn_store.left;
         g->ai_profile_right = s_learn_store.right;
@@ -119,8 +232,12 @@ static void ai_learning_load_store(pong_game_t *g)
     else
     {
         s_learn_store.magic = EDGEAI_LEARN_STORE_MAGIC;
+        s_learn_store.version = EDGEAI_LEARN_STORE_VERSION;
+        s_learn_store.crc32 = 0u;
         s_learn_store.left = g->ai_profile_left;
         s_learn_store.right = g->ai_profile_right;
+        s_learn_store.crc32 = ai_store_checksum(&s_learn_store);
+        s_learn_store_dirty = false;
     }
 }
 
@@ -135,7 +252,17 @@ void ai_learning_reset_session(pong_game_t *g)
 void ai_learning_set_mode(pong_game_t *g, ai_learn_mode_t mode)
 {
     if (!g) return;
-    g->ai_learn_mode = (mode == kAiLearnModeVsClassic) ? kAiLearnModeVsClassic : kAiLearnModeBoth;
+    switch (mode)
+    {
+        case kAiLearnModeBoth:
+        case kAiLearnModeAiAlgo:
+        case kAiLearnModeAlgoAi:
+            g->ai_learn_mode = mode;
+            break;
+        default:
+            g->ai_learn_mode = kAiLearnModeBoth;
+            break;
+    }
 }
 
 void ai_learning_set_persistent(pong_game_t *g, bool enabled)
@@ -154,6 +281,18 @@ void ai_learning_set_persistent(pong_game_t *g, bool enabled)
     g->persistent_learning = false;
     ai_learning_reset_session(g);
     memset(&s_learn_store, 0, sizeof(s_learn_store));
+    s_learn_store_dirty = false;
+    ai_flash_clear_store();
+}
+
+void ai_learning_sync_store(pong_game_t *g)
+{
+    if (!g || !g->persistent_learning) return;
+    if (!s_learn_store_dirty) return;
+    if (ai_flash_write_store(&s_learn_store))
+    {
+        s_learn_store_dirty = false;
+    }
 }
 
 void ai_learning_on_paddle_hit(pong_game_t *g, bool left_side)

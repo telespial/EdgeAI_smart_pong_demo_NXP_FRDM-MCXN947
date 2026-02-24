@@ -4,19 +4,18 @@
 - Workspace: `mcuxsdk_ws/` (created by `./tools/setup_mcuxsdk_ws.sh`)
 
 ## Last Run
-- Date: 2026-02-11
+- Date: 2026-02-24
 - Result: ok (build + flash)
 - Binary: `mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.bin`
 - Flash: `west flash -d mcuxsdk_ws/build -r linkserver`
-- Notes (runtime): `CONFIG_EDGEAI_USE_NPU=y`, TFLM + eIQ Neutron path active with CPU fallback.
-- Notes (AI tuning): AI update cadence tightened, noise reduced, paddle response increased.
-- Notes (NPU path): direct NPU intercept path uses confidence-gated analytic blending.
-- Notes (telemetry): bottom overlay format updated to clearer rate/latency fields.
-- Notes (AI lag pass): NPU inference cadence now adapts to measured average inference latency to protect render pacing.
-- Notes (telemetry refresh): NPU/fallback rates are sampled over rolling windows and invoke count is shown so values visibly change.
-- Notes (UI): `NEW GAME?` popup moved to lower-third placement.
-- Notes (P0 win loop): post-win restart delay uses real elapsed time; confetti progression is real-time and tuned.
-- Notes (mode default): startup mode is `P0`.
-- Notes (touch): paddle control uses left/right edge strips; no visual touch-guide overlays.
+- Notes (persistence): match reset now explicitly reloads the learned persistence snapshot when `PERSIST` is enabled.
+- Notes (settings UI): added `SPEED++` toggle row and moved `NEW GAME` to the next row.
+- Notes (speed progression): when `SPEED++` is enabled, each side hitting `11, 22, 33, ...` raises serve-speed target by `5%` (compounding), clamped by runtime limits.
+- Notes (flash persistence): `PERSIST ON` now restores AI learning profiles from onboard flash (`fsl_flash` ROM API) after reboot/power cycle.
+- Notes (flash write policy): profile snapshot is synced to flash on match reset/new game to limit flash wear; `PERSIST OFF` clears stored snapshot.
+- Notes (SPEED++ tuning): milestone boost updated to `+5%` per side-specific multiple-of-11 score event (`11, 22, 33, ...`).
+- Notes (settings label render): added `+` support to the 5x7 font so `SPEED++` displays correctly (previously rendered as `SPEED`).
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260211_1309_final_release_score999_golden.elf`
 - Restore point: current build is the active Golden + Failsafe snapshot.
+- Notes (SKILL setting): learn-mode selector now supports `2AI`, `AI/ALGO`, and `ALGO/AI` so EdgeAI can run on either side.
+- Notes (docs refresh): updated README and project description to match current settings, SKILL modes, SPEED++, and side-independent persistence behavior.

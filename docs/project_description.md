@@ -5,7 +5,7 @@ Goal:
 
 Targets:
 - 0P / 1P / 2P: AI vs AI, 1P vs AI, 2P local
-- In-game settings UI (`P`, `D`, `A`, `N`)
+- In-game settings UI (`PLAYERS`, `LEVEL`, `NPU`, `SKILL`, `PERSIST`, `MATCH`, `TARGET`, `SPEED++`, `NEW GAME`)
 - Touch-first control (GT911 multi-touch) with alternate inputs supported via platform HAL
 - Clean separation between platform bring-up, game logic, AI, and rendering
 
@@ -101,6 +101,11 @@ NPU-assisted path:
 - Build-time enable: `CONFIG_EDGEAI_USE_NPU=y`.
 - NPU prediction path is integrated with CPU fallback for robustness.
 - `AI ON/OFF` in settings toggles NPU-assisted behavior.
+- `SKILL` in settings controls side assignment:
+  - `2AI`: both paddles use adaptive AI.
+  - `AI/ALGO`: left adaptive AI, right fixed ALGO.
+  - `ALGO/AI`: left fixed ALGO, right adaptive AI.
+- Persistent learning stores left/right AI profiles independently in flash when `PERSIST` is enabled.
 
 ## Repo Architecture
 - `src/platform/`: display, input, time, touch, accelerometer, NPU runtime hooks

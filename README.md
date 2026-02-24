@@ -11,9 +11,12 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
    - `EdgeAI`: NPU-assisted predictor with adaptive runtime tuning
 2. Observe online learning in live play:
    - The adaptive controller updates from rally outcomes (hits/misses), then changes paddle speed, anticipation, and tracking noise.
-   - In `AI/ALGO` mode, one side stays fixed (ALGO) while the other side adapts (EdgeAI), so improvement is easy to see.
+   - `SKILL` modes allow direct side comparison:
+     - `AI/ALGO`: left uses adaptive EdgeAI, right uses fixed ALGO.
+     - `ALGO/AI`: left uses fixed ALGO, right uses adaptive EdgeAI.
+     - `2AI`: both sides use adaptive EdgeAI.
 3. Validate session learning vs persistent learning:
-   - `PERSIST ON`: learned profile carries across new matches in the running session.
+   - `PERSIST ON`: left/right learned profiles carry across new matches and are restored independently from onboard flash after reboot/power cycle.
    - `PERSIST OFF`: learned profile is cleared, forcing a cold-start behavior.
 4. Demonstrate deployment-style tradeoffs:
    - NPU path is used when enabled and available, with CPU fallback always present for robustness.
@@ -52,7 +55,17 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 ## Settings
 - `Players`: `0`, `1`, `2`
 - `Difficulty`: `1`, `2`, `3`
-- `AI`: `ON`, `OFF`
+- `NPU`: `ON`, `OFF`
+- `SKILL`: `2AI`, `AI/ALGO`, `ALGO/AI`
+  - `2AI`: both sides adaptive EdgeAI.
+  - `AI/ALGO`: left adaptive EdgeAI, right fixed ALGO baseline.
+  - `ALGO/AI`: left fixed ALGO baseline, right adaptive EdgeAI.
+- `PERSIST`: `ON`, `OFF`
+  - `ON`: keep and restore learned AI profiles from flash independently per side.
+  - `OFF`: clear learned profiles (including flash snapshot) for true cold-start behavior.
+- `MATCH`: `11`, `INF`
+- `TARGET`: `ON`, `OFF`
+- `SPEED++`: `ON`, `OFF`
 - `New Game`: immediate score reset
 
 ## AI and NPU Implementation
@@ -80,6 +93,8 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 - New-game countdown (`3`, `2`, `1`; red/yellow/green) on game start only
 - Fixed-timestep simulation
 - Real-time NPU telemetry overlay for performance tuning
+- `SKILL` setting for side-selectable adaptive AI vs baseline ALGO (`2AI`, `AI/ALGO`, `ALGO/AI`)
+- Optional `SPEED++` progression: whenever either side reaches `11, 22, 33, ...`, serve speed target increases by `5%` (compounding) and is capped by runtime speed limits
 
 ## Build and Flash
 1. Bootstrap tools:

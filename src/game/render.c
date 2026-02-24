@@ -619,7 +619,8 @@ static side_role_t render_side_role(const pong_game_t *g, bool right_side)
     if (!ai_side) return kSideRoleHuman;
 
     if (!g->ai_enabled) return kSideRoleAlgo;
-    if ((g->ai_learn_mode == kAiLearnModeVsClassic) && !right_side) return kSideRoleAlgo;
+    if ((g->ai_learn_mode == kAiLearnModeAiAlgo) && right_side) return kSideRoleAlgo;
+    if ((g->ai_learn_mode == kAiLearnModeAlgoAi) && !right_side) return kSideRoleAlgo;
     return kSideRoleEdgeAi;
 }
 
@@ -871,11 +872,12 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW0_Y + label_yoff, title_scale, "PLAYERS", c_opt_text);
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW1_Y + label_yoff, title_scale, "LEVEL", c_opt_text);
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW2_Y + label_yoff, title_scale, "NPU", c_opt_text);
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW3_Y + label_yoff, title_scale, "2AI AI/ALGO", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW3_Y + label_yoff, title_scale, "SKILL", c_opt_text);
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW4_Y + label_yoff, title_scale, "PERSIST", c_opt_text);
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW5_Y + label_yoff, title_scale, "MATCH", c_opt_text);
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW6_Y + label_yoff, title_scale, "TARGET", c_opt_text);
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW7_Y + label_yoff, title_scale, "NEW GAME", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW7_Y + label_yoff, title_scale, "SPEED++", c_opt_text);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, EDGEAI_UI_LABEL_X, EDGEAI_UI_ROW8_Y + label_yoff, title_scale, "NEW GAME", c_opt_text);
 
         /* Players: 0/1/2 */
         for (int i = 0; i < 3; i++)
@@ -933,20 +935,21 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
             edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, opt_scale, t, sel ? c_opt_text_sel : c_opt_text);
         }
 
-        /* Learn mode: BOTH AI adaptive vs VS (left classic, right adaptive). */
-        for (int i = 0; i < 2; i++)
+        /* Skill mode: 2AI, AI/ALGO (left AI), ALGO/AI (right AI). */
+        for (int i = 0; i < 3; i++)
         {
-            int32_t bx0 = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+            int32_t bx0 = EDGEAI_UI_OPT_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
             int32_t by0 = EDGEAI_UI_ROW3_Y + opt_yoff;
             int32_t bx1 = bx0 + EDGEAI_UI_OPT_W - 1;
             int32_t by1 = by0 + EDGEAI_UI_OPT_H - 1;
 
-            ai_learn_mode_t mode = (i == 0) ? kAiLearnModeBoth : kAiLearnModeVsClassic;
+            ai_learn_mode_t mode =
+                (i == 0) ? kAiLearnModeBoth : ((i == 1) ? kAiLearnModeAiAlgo : kAiLearnModeAlgoAi);
             bool sel = (g->ai_learn_mode == mode);
             render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
 
             const int32_t learn_scale = 1;
-            const char *t = (i == 0) ? "2AI" : "AI/ALGO";
+            const char *t = (i == 0) ? "2AI" : ((i == 1) ? "AI/ALGO" : "ALGO/AI");
             int32_t tw = edgeai_text5x7_width(learn_scale, t);
             int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
             int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * learn_scale) / 2;
@@ -1010,10 +1013,29 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
             edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, opt_scale, t, sel ? c_opt_text_sel : c_opt_text);
         }
 
+        /* SPEED++: ON/OFF */
+        for (int i = 0; i < 2; i++)
+        {
+            int32_t bx0 = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+            int32_t by0 = EDGEAI_UI_ROW7_Y + opt_yoff;
+            int32_t bx1 = bx0 + EDGEAI_UI_OPT_W - 1;
+            int32_t by1 = by0 + EDGEAI_UI_OPT_H - 1;
+
+            bool en = (i == 0);
+            bool sel = (g->speedpp_enabled == en);
+            render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
+
+            const char *t = en ? "ON" : "OFF";
+            int32_t tw = edgeai_text5x7_width(opt_scale, t);
+            int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
+            int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * opt_scale) / 2;
+            edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, opt_scale, t, sel ? c_opt_text_sel : c_opt_text);
+        }
+
         /* New game. */
         {
             int32_t bx0 = EDGEAI_UI_NEW_X;
-            int32_t by0 = EDGEAI_UI_ROW7_Y + new_yoff;
+            int32_t by0 = EDGEAI_UI_ROW8_Y + new_yoff;
             int32_t bx1 = bx0 + EDGEAI_UI_NEW_W - 1;
             int32_t by1 = by0 + EDGEAI_UI_NEW_H - 1;
 
@@ -1078,7 +1100,7 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "KNOB INPUT CAN MAP VIA PLATFORM HAL", c_body);
         y += lh;
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "2AI=BOTH LEARN AI/ALGO=VS", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "SKILL: 2AI AI/ALGO ALGO/AI", c_body);
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "P1 P2 TOUCH SPLIT CONTROL", c_body);
         y += lh + 4;

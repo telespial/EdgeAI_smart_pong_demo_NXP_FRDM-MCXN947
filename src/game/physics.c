@@ -1,5 +1,6 @@
 #include "game/physics.h"
 
+#include <math.h>
 #include <stddef.h>
 
 #include "game/ai.h"
@@ -35,6 +36,53 @@ static float rand_f01(pong_game_t *g)
 static float rand_f(pong_game_t *g, float lo, float hi)
 {
     return lo + (hi - lo) * rand_f01(g);
+}
+
+static float physics_ball_speed_mag(const pong_game_t *g)
+{
+    if (!g) return 0.0f;
+    float vx = g->ball.vx;
+    float vy = g->ball.vy;
+    float vz = g->ball.vz;
+    return sqrtf(vx * vx + vy * vy + vz * vz);
+}
+
+static void physics_speedpp_track_peak(pong_game_t *g)
+{
+    if (!g) return;
+    float s = physics_ball_speed_mag(g);
+    if (s > g->speedpp_peak_speed)
+    {
+        g->speedpp_peak_speed = s;
+    }
+}
+
+static void physics_speedpp_on_score(pong_game_t *g, bool point_to_left)
+{
+    if (!g || !g->speedpp_enabled) return;
+
+    uint16_t scored = point_to_left ? g->score.left : g->score.right;
+    if (scored == 0u || (scored % 11u) != 0u) return;
+
+    float base = g->speedpp_serve_speed_target;
+    if (base <= 0.0f)
+    {
+        float peak = g->speedpp_peak_speed;
+        if (peak > 0.0f)
+        {
+            base = peak;
+        }
+    }
+
+    if (base > 0.0f)
+    {
+        g->speedpp_serve_speed_target = base * 1.05f;
+    }
+
+    if (g->speedpp_stage < 255u)
+    {
+        g->speedpp_stage++;
+    }
 }
 
 static int physics_substeps(const pong_game_t *g, float dt)
@@ -123,10 +171,18 @@ void physics_reset_ball(pong_game_t *g, int serve_dir)
     g->ball.r = 0.040f;
 
     float serve_speed = 1.0f;
-    physics_get_tuning(g, &serve_speed, NULL, NULL);
+    float vlim = 1.0f;
+    physics_get_tuning(g, &serve_speed, NULL, &vlim);
+    if (g->speedpp_enabled && g->speedpp_serve_speed_target > 0.0f)
+    {
+        float max_serve = vlim * 0.95f;
+        if (max_serve < serve_speed) max_serve = serve_speed;
+        serve_speed = clampf(g->speedpp_serve_speed_target, serve_speed, max_serve);
+    }
     g->ball.vx = dir * serve_speed;
     g->ball.vy = rand_f(g, -0.28f, 0.28f);
     g->ball.vz = rand_f(g, -0.22f, 0.22f);
+    physics_speedpp_track_peak(g);
 }
 
 static void physics_wall_bounce(float *p, float *v, float r)
@@ -303,6 +359,7 @@ static bool physics_step_sub(pong_game_t *g, float dt)
     {
         g->score.right++;
         ai_learning_on_miss(g, true);
+        physics_speedpp_on_score(g, false);
         /* Serve toward the player who just conceded (left). */
         physics_reset_ball(g, -1);
         return true;
@@ -311,6 +368,7 @@ static bool physics_step_sub(pong_game_t *g, float dt)
     {
         g->score.left++;
         ai_learning_on_miss(g, false);
+        physics_speedpp_on_score(g, true);
         /* Serve toward the player who just conceded (right). */
         physics_reset_ball(g, +1);
         return true;
@@ -322,6 +380,8 @@ static bool physics_step_sub(pong_game_t *g, float dt)
 void physics_step(pong_game_t *g, float dt)
 {
     if (!g) return;
+
+    physics_speedpp_track_peak(g);
 
     int n = physics_substeps(g, dt);
     float h = dt / (float)n;
