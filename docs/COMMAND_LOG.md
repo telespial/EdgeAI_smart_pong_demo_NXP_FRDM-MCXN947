@@ -57,3 +57,4 @@
 2026-02-24T23:30:25Z | inspected README for TFLM/eIQ Neutron wording update
 2026-02-24T23:30:32Z | patched README with explicit embedded TFLM + eIQ Neutron statement
 2026-02-24T23:30:37Z | checked git status before commit for README NPU note
+2026-02-24T23:30:42Z | committed README NPU model/backend documentation update
