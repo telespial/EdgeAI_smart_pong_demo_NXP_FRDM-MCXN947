@@ -53,3 +53,7 @@
 2026-02-24T23:26:47Z | preparing follow-up commit to include latest command-log entries
 2026-02-24T23:26:51Z | pushing follow-up command-log commit to origin/main
 2026-02-24T23:27:03Z | final sync: commit and push command-log tail entry
+2026-02-24T23:28:34Z | verified NPU integration and runtime gating in source/config
+2026-02-24T23:30:25Z | inspected README for TFLM/eIQ Neutron wording update
+2026-02-24T23:30:32Z | patched README with explicit embedded TFLM + eIQ Neutron statement
+2026-02-24T23:30:37Z | checked git status before commit for README NPU note

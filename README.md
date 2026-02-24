@@ -69,6 +69,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 - `New Game`: immediate score reset
 
 ## AI and NPU Implementation
+- This firmware uses an embedded TensorFlow Lite Micro model run via the eIQ Neutron NPU backend.
 - Runtime has two AI paths:
   - CPU analytic intercept predictor (deterministic fallback)
   - NPU-assisted predictor path
