@@ -58,3 +58,8 @@
 2026-02-24T23:30:32Z | patched README with explicit embedded TFLM + eIQ Neutron statement
 2026-02-24T23:30:37Z | checked git status before commit for README NPU note
 2026-02-24T23:30:42Z | committed README NPU model/backend documentation update
+2026-02-24T23:30:47Z | pushed README TFLM/eIQ documentation commit(s) to origin/main
+2026-02-24T23:31:48Z | inspected ai.c and npu_hal_tflm_neutron.cpp for model workflow explanation
+2026-02-24T23:33:31Z | checked README for requested 'How it works in this project' section
+2026-02-24T23:33:43Z | added README section 'How It Works In This Project' with model workflow details
+2026-02-24T23:34:40Z | git status before commit/push for README how-it-works section

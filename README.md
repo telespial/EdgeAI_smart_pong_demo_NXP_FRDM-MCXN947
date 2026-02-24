@@ -86,6 +86,14 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
   - Telemetry is displayed in AI-controlled modes (`P0`, `P1`) when AI is enabled.
 - Current embedded NPU model artifact is integrated in `src/npu/` and linked into flash (`.model` section).
 
+## How It Works In This Project
+1. Build a 16-value feature vector from current game state (ball, paddles, score, recent hit info) in `ai.c`.
+2. Run an embedded TFLM model (`model_ds_cnn_s_npu_data.h`) through the eIQ Neutron backend in `npu_hal_tflm_neutron.cpp`.
+3. Decode model output into (`y_hit`, `z_hit`, `t_hit`) signals (via sigmoid), then blend with an analytic physics intercept predictor.
+4. Apply a confidence gate: if model output disagrees too much with physics, trust the analytic path more.
+5. If NPU is off or inference fails, it falls back fully to CPU analytic prediction.
+6. Important: runtime learning here does not retrain model weights; it adapts control parameters (speed/noise/lead) per side over time.
+
 ## Features
 - 3D-look arena with depth cues, wall shading, and segmented score digits
 - 0P / 1P / 2P modes
