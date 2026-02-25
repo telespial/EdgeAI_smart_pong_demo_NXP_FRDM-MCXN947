@@ -8,6 +8,7 @@ Reference material:
 - [x] Build/flash flow is reproducible in-project (`tools/setup_mcuxsdk_ws.sh`, `tools/build_frdmmcxn947.sh`, `tools/flash_frdmmcxn947.sh`).
 - [x] Golden restore point and failsafe restore point are aligned via `docs/failsafe.md`.
 - [x] Last known-good status is tracked in `STATUS.md`.
+- [x] Current golden/failsafe release artifact: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf`.
 
 ## Gameplay + Rendering
 - [x] 3D-look arena rendering aligned to style target (walls, floor, center dash, depth cues).
@@ -33,6 +34,7 @@ Reference material:
 - [x] TFLM + eIQ Neutron execution path verified.
 - [x] NPU path has CPU fallback behavior.
 - [x] In-game AI enable/disable setting integrated.
+- [x] Mixed `SKILL` fairness tuning: ALGO side stays CPU-only; EdgeAI side uses confidence-gated NPU+analytic blending with ALGO-like update cadence.
 
 ## Optional Backlog
 - [ ] Replace placeholder NeutronGraph model with a Pong-specific trained predictor model.

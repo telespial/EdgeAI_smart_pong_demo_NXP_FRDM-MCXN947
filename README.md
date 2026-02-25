@@ -86,6 +86,22 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
   - Telemetry is displayed in AI-controlled modes (`P0`, `P1`) when AI is enabled.
 - Current embedded NPU model artifact is integrated in `src/npu/` and linked into flash (`.model` section).
 
+## AI Design (ALGO vs EdgeAI)
+- Goal in mixed `SKILL` modes: compare a fixed analytic baseline (`ALGO`) against adaptive NPU-assisted control (`EdgeAI`) without hidden cadence bias.
+- Side assignment:
+  - `AI/ALGO`: left = EdgeAI, right = ALGO
+  - `ALGO/AI`: left = ALGO, right = EdgeAI
+  - `2AI`: both = EdgeAI
+- Control-path design:
+  - `ALGO` side uses CPU analytic intercept only.
+  - `EdgeAI` side uses TFLM+Neutron predictions with CPU analytic fallback.
+  - Mixed modes run EdgeAI target refresh at ALGO-like cadence for fairer side-to-side timing.
+  - A disagreement gate compares NPU output to analytic physics and reduces NPU weight when divergence is high.
+- Learning scope:
+  - Runtime adapts per-side control parameters (`speed_scale`, `noise_scale`, `lead_scale`).
+  - Model weights are fixed at runtime (no on-device retraining).
+  - With `PERSIST ON`, learned side profiles are restored independently from flash.
+
 ## How It Works In This Project
 1. Build a 16-value feature vector from current game state (ball, paddles, score, recent hit info) in `ai.c`.
 2. Run an embedded TFLM model (`model_ds_cnn_s_npu_data.h`) through the eIQ Neutron backend in `npu_hal_tflm_neutron.cpp`.

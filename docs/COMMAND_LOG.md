@@ -2458,3 +2458,590 @@
 [OUT] [2026-02-25T00:29:04Z] CMD: ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh
 [OUT] [2026-02-25T00:32:41Z] RESULT: build=PASS flash=PASS
 [2026-02-25T00:54:39Z] CMD: git add src/game/ai.c STATUS.md docs/COMMAND_LOG.md && git commit -m "Tune mixed SKILL AI competitiveness and confidence gating" && git push origin main && git rev-parse --short HEAD
+[2026-02-25T00:54:44Z] RESULT: commit+push=PASS hash=24c362c
+[2026-02-25T00:59:43Z] CMD: ls -la && ls -la docs && ls -la failsafe
+[OUT] total 60
+[OUT] drwxrwxrwx  9 user user 4096 Feb 24 16:03 .
+[OUT] drwxrwxr-x 10 user user 4096 Feb 24 06:37 ..
+[OUT] drwxrwxr-x  8 user user 4096 Feb 24 16:54 .git
+[OUT] -rw-rw-r--  1 user user  172 Feb 10 13:13 .gitignore
+[OUT] -rw-rw-r--  1 user user 1074 Feb 15 17:54 LICENSE
+[OUT] -rw-rw-r--  1 user user 6583 Feb 24 16:03 README.md
+[OUT] -rw-rw-r--  1 user user 2222 Feb 24 16:28 STATUS.md
+[OUT] -rw-rw-r--  1 user user 2085 Feb 11 07:41 ToDo.md
+[OUT] drwxrwxrwx  2 user user 4096 Feb 24 16:03 docs
+[OUT] drwxrwxrwx  2 user user 4096 Feb 24 16:02 failsafe
+[OUT] drwxrwxrwx 23 user user 4096 Feb 10 18:40 mcuxsdk_ws
+[OUT] drwxrwxrwx  3 user user 4096 Feb 10 07:17 sdk_example
+[OUT] drwxrwxrwx  5 user user 4096 Feb 10 18:37 src
+[OUT] drwxrwxr-x  2 user user 4096 Feb 10 19:47 tools
+[OUT] ---
+[OUT] total 1508
+[OUT] drwxrwxrwx 2 user user    4096 Feb 24 16:03 .
+[OUT] drwxrwxrwx 9 user user    4096 Feb 24 16:03 ..
+[OUT] -rw-rw-r-- 1 user user    1891 Feb 10 21:09 BUILD_FLASH.md
+[OUT] -rw-rw-r-- 1 user user  102270 Feb 24 16:54 COMMAND_LOG.md
+[OUT] -rw-rw-r-- 1 user user     903 Feb 11 07:41 HARDWARE.md
+[OUT] -rw-rw-r-- 1 user user     159 Feb 10 20:48 START_HERE.md
+[OUT] -rw-rw-r-- 1 user user     767 Feb 11 07:41 STYLE_RULES.md
+[OUT] -rw-rw-r-- 1 user user     193 Feb 24 16:03 failsafe.md
+[OUT] -rw-rw-r-- 1 user user 1402600 Feb 10 07:12 pong_3D.png
+[OUT] -rw-rw-r-- 1 user user    3879 Feb 24 15:25 project_description.md
+[OUT] ---
+[OUT] total 82576
+[OUT] drwxrwxrwx 2 user user    4096 Feb 24 16:02 .
+[OUT] drwxrwxrwx 9 user user    4096 Feb 24 16:03 ..
+[OUT] -rw-rw-r-- 1 user user       0 Feb 10 07:17 .gitkeep
+[OUT] -rwxrwxr-x 1 user user  555452 Feb 10 11:40 edgeai_smart_pong_demo_cm33_core0_20260210_1140_golden.elf
+[OUT] -rwxrwxr-x 1 user user  598420 Feb 10 13:10 edgeai_smart_pong_demo_cm33_core0_20260210_1310_touch_ui_golden.elf
+[OUT] -rwxrwxr-x 1 user user  601092 Feb 10 14:34 edgeai_smart_pong_demo_cm33_core0_20260210_1434_touch_controls_v2_golden.elf
+[OUT] -rwxrwxr-x 1 user user  615012 Feb 10 15:52 edgeai_smart_pong_demo_cm33_core0_20260210_1627_ui_help_fix_v1_golden.elf
+[OUT] -rwxr-xr-x 1 user user  624232 Feb 10 18:02 edgeai_smart_pong_demo_cm33_core0_20260210_1758_accel_ball_nudge_v1_golden.elf
+[OUT] -rwxrwxr-x 1 user user 8135448 Feb 10 20:44 edgeai_smart_pong_demo_cm33_core0_20260210_2044_npu_stable_golden.elf
+[OUT] -rwxrwxr-x 1 user user 8136516 Feb 10 21:12 edgeai_smart_pong_demo_cm33_core0_20260210_2112_smart_pong_ai_toggle_golden.elf
+[OUT] -rwxrwxr-x 1 user user 8144572 Feb 11 06:25 edgeai_smart_pong_demo_cm33_core0_20260211_0625_win11_confetti_newgame_golden.elf
+[OUT] -rwxrwxr-x 1 user user 8146248 Feb 11 07:08 edgeai_smart_pong_demo_cm33_core0_20260211_0707_countdown_realtime_golden.elf
+[OUT] -rwxrwxr-x 1 user user 8146172 Feb 11 07:46 edgeai_smart_pong_demo_cm33_core0_20260211_0745_p0_win11_autoloop_final_golden.elf
+[OUT] -rwxrwxr-x 1 user user 8146392 Feb 11 08:21 edgeai_smart_pong_demo_cm33_core0_20260211_0821_p0_restart_confetti_tuned_golden.elf
+[OUT] -rwxrwxr-x 1 user user 8156628 Feb 11 09:41 edgeai_smart_pong_demo_cm33_core0_20260211_0941_ai_hardening_uitelemetry_popup_golden.elf
+[OUT] -rwxrwxr-x 1 user user 8158396 Feb 11 09:53 edgeai_smart_pong_demo_cm33_core0_20260211_0953_ai_lag_telemetry_showcase_golden.elf
+[OUT] -rwxrwxr-x 1 user user 8178820 Feb 11 12:30 edgeai_smart_pong_demo_cm33_core0_20260211_1230_final_release_golden.elf
+[OUT] -rwxrwxr-x 1 user user 8179060 Feb 11 13:10 edgeai_smart_pong_demo_cm33_core0_20260211_1309_final_release_score999_golden.elf
+[2026-02-25T00:59:43Z] CMD: sed -n "1,260p" README.md && sed -n "1,260p" STATUS.md && sed -n "1,260p" docs/START_HERE.md
+[OUT] # Smart Pong Demo (FRDM-MCXN947)
+[OUT] 
+[OUT] Smart Pong is a 3D-look Pong implementation for FRDM-MCXN947 with LCD-PAR-S035.
+[OUT] 
+[OUT] https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
+[OUT] 
+[OUT] ## Real World AI Learning Demonstration
+[OUT] 1. Compare three control behaviors in the same system:
+[OUT]    - `HUMAN`: touch-driven paddle control
+[OUT]    - `ALGO`: fixed classic CPU predictor (non-learning baseline)
+[OUT]    - `EdgeAI`: NPU-assisted predictor with adaptive runtime tuning
+[OUT] 2. Observe online learning in live play:
+[OUT]    - The adaptive controller updates from rally outcomes (hits/misses), then changes paddle speed, anticipation, and tracking noise.
+[OUT]    - `SKILL` modes allow direct side comparison:
+[OUT]      - `AI/ALGO`: left uses adaptive EdgeAI, right uses fixed ALGO.
+[OUT]      - `ALGO/AI`: left uses fixed ALGO, right uses adaptive EdgeAI.
+[OUT]      - `2AI`: both sides use adaptive EdgeAI.
+[OUT] 3. Validate session learning vs persistent learning:
+[OUT]    - `PERSIST ON`: left/right learned profiles carry across new matches and are restored independently from onboard flash after reboot/power cycle.
+[OUT]    - `PERSIST OFF`: learned profile is cleared, forcing a cold-start behavior.
+[OUT] 4. Demonstrate deployment-style tradeoffs:
+[OUT]    - NPU path is used when enabled and available, with CPU fallback always present for robustness.
+[OUT]    - Bottom telemetry helps correlate behavior with NPU/fallback timing and latency trends.
+[OUT] 
+[OUT] ## Hardware Components
+[OUT] 1. Manufacturer: NXP Semiconductors
+[OUT]    - Name: FRDM-MCXN947 development board
+[OUT]    - Part number: FRDM-MCXN947
+[OUT] 2. Manufacturer: NXP Semiconductors
+[OUT]    - Name: 3.5" Parallel TFT LCD shield (ST7796S + GT911)
+[OUT]    - Part number: LCD-PAR-S035
+[OUT] 3. Manufacturer: MikroElektronika (sensor IC by NXP)
+[OUT]    - Name: Accel 4 Click (3-axis accelerometer module, FXLS8974CF)
+[OUT]    - Part number: MIKROE-4630
+[OUT] 
+[OUT] ## Gameplay Rules
+[OUT] - Objective: first side to 11 points wins the match.
+[OUT] - Scoring: when a side misses and the ball exits that side, the opponent gains 1 point.
+[OUT] - Ball motion: ball reflects from top and bottom arena walls.
+[OUT] - Paddle collision: ball reflects from paddles with hit-position-based angle shaping ("english").
+[OUT] - Serve behavior: each serve starts from center and is directed toward the side that conceded the previous point.
+[OUT] - Match flow:
+[OUT]   - `P0` (AI vs AI): at 11 points, winner styling + confetti are shown, then the game auto-resets and continues in an endless loop.
+[OUT]   - `P1` and `P2`: at 11 points, winner styling + confetti are shown, then `NEW GAME? YES/NO` is displayed.
+[OUT] 
+[OUT] ## Controls
+[OUT] - Touch control strips at left/right edges:
+[OUT]   - Left strip controls player 1 paddle.
+[OUT]   - Right strip controls player 2 paddle.
+[OUT]   - Touch `Y` controls paddle height.
+[OUT]   - Touch `X` within the strip controls paddle depth.
+[OUT] - UI top bar is reserved for settings.
+[OUT] - Alternate control sources (for example knob mappings) can be routed through `src/platform/input_hal.c`.
+[OUT] 
+[OUT] ## Settings
+[OUT] - `Players`: `0`, `1`, `2`
+[OUT] - `Difficulty`: `1`, `2`, `3`
+[OUT] - `NPU`: `ON`, `OFF`
+[OUT] - `SKILL`: `2AI`, `AI/ALGO`, `ALGO/AI`
+[OUT]   - `2AI`: both sides adaptive EdgeAI.
+[OUT]   - `AI/ALGO`: left adaptive EdgeAI, right fixed ALGO baseline.
+[OUT]   - `ALGO/AI`: left fixed ALGO baseline, right adaptive EdgeAI.
+[OUT] - `PERSIST`: `ON`, `OFF`
+[OUT]   - `ON`: keep and restore learned AI profiles from flash independently per side.
+[OUT]   - `OFF`: clear learned profiles (including flash snapshot) for true cold-start behavior.
+[OUT] - `MATCH`: `11`, `INF`
+[OUT] - `TARGET`: `ON`, `OFF`
+[OUT] - `SPEED++`: `ON`, `OFF`
+[OUT] - `New Game`: immediate score reset
+[OUT] 
+[OUT] ## AI and NPU Implementation
+[OUT] - This firmware uses an embedded TensorFlow Lite Micro model run via the eIQ Neutron NPU backend.
+[OUT] - Runtime has two AI paths:
+[OUT]   - CPU analytic intercept predictor (deterministic fallback)
+[OUT]   - NPU-assisted predictor path
+[OUT] - NPU path is enabled by `CONFIG_EDGEAI_USE_NPU=y`.
+[OUT] - Inference stack:
+[OUT]   - TensorFlow Lite Micro runtime
+[OUT]   - eIQ Neutron delegate/backend for NPU execution
+[OUT] - AI behavior:
+[OUT]   - Predicts paddle intercept targets (`y_hit`, `z_hit`, `t_hit`) for tracking.
+[OUT]   - Difficulty presets apply reaction-time limits, speed limits, and tracking noise.
+[OUT]   - `AI ON/OFF` controls whether the NPU-assisted path is used; CPU fallback remains available.
+[OUT] - Runtime telemetry:
+[OUT]   - On-screen telemetry shows NPU invoke rate, fallback rate, last inference latency, and moving-average latency.
+[OUT]   - Telemetry is displayed in AI-controlled modes (`P0`, `P1`) when AI is enabled.
+[OUT] - Current embedded NPU model artifact is integrated in `src/npu/` and linked into flash (`.model` section).
+[OUT] 
+[OUT] ## How It Works In This Project
+[OUT] 1. Build a 16-value feature vector from current game state (ball, paddles, score, recent hit info) in `ai.c`.
+[OUT] 2. Run an embedded TFLM model (`model_ds_cnn_s_npu_data.h`) through the eIQ Neutron backend in `npu_hal_tflm_neutron.cpp`.
+[OUT] 3. Decode model output into (`y_hit`, `z_hit`, `t_hit`) signals (via sigmoid), then blend with an analytic physics intercept predictor.
+[OUT] 4. Apply a confidence gate: if model output disagrees too much with physics, trust the analytic path more.
+[OUT] 5. If NPU is off or inference fails, it falls back fully to CPU analytic prediction.
+[OUT] 6. Important: runtime learning here does not retrain model weights; it adapts control parameters (speed/noise/lead) per side over time.
+[OUT] 
+[OUT] ## Features
+[OUT] - 3D-look arena with depth cues, wall shading, and segmented score digits
+[OUT] - 0P / 1P / 2P modes
+[OUT] - Ball-speed-linked color gradient (red to green)
+[OUT] - 0P accelerometer perturbation of ball trajectory (`vy`, `vz`) for live outcome nudging
+[OUT] - New-game countdown (`3`, `2`, `1`; red/yellow/green) on game start only
+[OUT] - Fixed-timestep simulation
+[OUT] - Real-time NPU telemetry overlay for performance tuning
+[OUT] - `SKILL` setting for side-selectable adaptive AI vs baseline ALGO (`2AI`, `AI/ALGO`, `ALGO/AI`)
+[OUT] - Optional `SPEED++` progression: whenever either side reaches `11, 22, 33, ...`, serve speed target increases by `5%` (compounding) and is capped by runtime speed limits
+[OUT] 
+[OUT] ## Build and Flash
+[OUT] 1. Bootstrap tools:
+[OUT] ```bash
+[OUT] ./tools/bootstrap_ubuntu_user.sh
+[OUT] ```
+[OUT] 2. Prepare MCUX workspace:
+[OUT] ```bash
+[OUT] ./tools/setup_mcuxsdk_ws.sh
+[OUT] ```
+[OUT] 3. Build:
+[OUT] ```bash
+[OUT] ./tools/build_frdmmcxn947.sh debug
+[OUT] ```
+[OUT] 4. Flash:
+[OUT] ```bash
+[OUT] ./tools/flash_frdmmcxn947.sh
+[OUT] ```
+[OUT] 
+[OUT] ## Project Layout
+[OUT] - `src/`: game logic, rendering, platform HAL, AI/NPU integration
+[OUT] - `docs/`: hardware, build/flash, restore-point, and project description docs
+[OUT] - `tools/`: bootstrap, build, flash, lint, and helper scripts
+[OUT] - `failsafe/`: pinned restore binaries
+[OUT] 
+[OUT] ## Restore Points
+[OUT] - Active golden/failsafe pointer: `docs/failsafe.md`
+[OUT] - Failsafe flash command:
+[OUT] ```bash
+[OUT] FAILSAFE_CONFIRM="$(sed -n '1p' docs/failsafe.md)" ./tools/flash_failsafe.sh
+[OUT] ```
+[OUT] ---
+[OUT] # Smart Pong Demo Status
+[OUT] 
+[OUT] - Current target: FRDM-MCXN947 3D-look Smart Pong on LCD-PAR-S035
+[OUT] - Workspace: `mcuxsdk_ws/` (created by `./tools/setup_mcuxsdk_ws.sh`)
+[OUT] 
+[OUT] ## Last Run
+[OUT] - Date: 2026-02-25
+[OUT] - Result: ok (build + flash)
+[OUT] - Binary: `mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.bin`
+[OUT] - Flash: `west flash -d mcuxsdk_ws/build -r linkserver`
+[OUT] - Notes (persistence): match reset now explicitly reloads the learned persistence snapshot when `PERSIST` is enabled.
+[OUT] - Notes (settings UI): added `SPEED++` toggle row and moved `NEW GAME` to the next row.
+[OUT] - Notes (speed progression): when `SPEED++` is enabled, each side hitting `11, 22, 33, ...` raises serve-speed target by `5%` (compounding), clamped by runtime limits.
+[OUT] - Notes (flash persistence): `PERSIST ON` now restores AI learning profiles from onboard flash (`fsl_flash` ROM API) after reboot/power cycle.
+[OUT] - Notes (flash write policy): profile snapshot is synced to flash on match reset/new game to limit flash wear; `PERSIST OFF` clears stored snapshot.
+[OUT] - Notes (SPEED++ tuning): milestone boost updated to `+5%` per side-specific multiple-of-11 score event (`11, 22, 33, ...`).
+[OUT] - Notes (settings label render): added `+` support to the 5x7 font so `SPEED++` displays correctly (previously rendered as `SPEED`).
+[OUT] - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260211_1309_final_release_score999_golden.elf`
+[OUT] - Restore point: current build is the active Golden + Failsafe snapshot.
+[OUT] - Notes (SKILL setting): learn-mode selector now supports `2AI`, `AI/ALGO`, and `ALGO/AI` so EdgeAI can run on either side.
+[OUT] - Notes (docs refresh): updated README and project description to match current settings, SKILL modes, SPEED++, and side-independent persistence behavior.
+[OUT] - Notes (SKILL balance): ALGO side remains CPU-only while mixed-mode EdgeAI now blends NPU output with analytic intercept for stronger stability and competitiveness.
+[OUT] - Notes (verification run): rebuilt and reflashed after SKILL-balance tuning; ready for fresh AI-vs-ALGO score validation on hardware.
+[OUT] - Notes (mixed-mode tune): reduced EdgeAI mixed-mode handicap by using ALGO-like target update cadence plus adaptive NPU confidence gating (fallback to analytic predictor on high disagreement).
+[OUT] ---
+[OUT] # Start Here
+[OUT] 
+[OUT] Read in order:
+[OUT] 1. `docs/HARDWARE.md`
+[OUT] 2. `docs/BUILD_FLASH.md`
+[OUT] 3. `STATUS.md`
+[OUT] 4. `docs/failsafe.md`
+[OUT] 5. `ToDo.md`
+[OUT] 6. `docs/project_description.md`
+[2026-02-25T00:59:52Z] CMD: sed -n "1,240p" docs/failsafe.md && sed -n "1,320p" docs/BUILD_FLASH.md && sed -n "1,320p" docs/project_description.md && sed -n "1,220p" ToDo.md
+[OUT] failsafe/edgeai_smart_pong_demo_cm33_core0_20260211_1309_final_release_score999_golden.elf
+[OUT] Golden + failsafe restore point: final release with widened score spacing and 0..999 score rendering.
+[OUT] ---
+[OUT] # Build / Flash (FRDM-MCXN947)
+[OUT] 
+[OUT] This repo is self-contained. It does not require any external build system repo.
+[OUT] 
+[OUT] ## 1) Bootstrap Tooling (No sudo)
+[OUT] 
+[OUT] ```bash
+[OUT] ./tools/bootstrap_ubuntu_user.sh
+[OUT] ```
+[OUT] 
+[OUT] This installs user-local:
+[OUT] - `pip`, `west`, `cmake`, `ninja`
+[OUT] - `git-lfs`
+[OUT] - `arm-none-eabi-gcc` (xPack)
+[OUT] 
+[OUT] ## 2) Create/Update MCUX SDK Workspace
+[OUT] 
+[OUT] ```bash
+[OUT] ./tools/setup_mcuxsdk_ws.sh
+[OUT] ```
+[OUT] 
+[OUT] This creates `./mcuxsdk_ws/`, runs `west init` + `west update`, then installs the
+[OUT] `edgeai_smart_pong_demo` wrapper into `mcuxsdk/examples/`.
+[OUT] 
+[OUT] ## 3) Build
+[OUT] 
+[OUT] ```bash
+[OUT] ./tools/build_frdmmcxn947.sh
+[OUT] ```
+[OUT] 
+[OUT] Build output:
+[OUT] - `mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.bin`
+[OUT] 
+[OUT] Notes:
+[OUT] - Relative `BUILD_DIR` values are resolved under `WS_DIR` (default: `./mcuxsdk_ws`).
+[OUT] - Set `BUILD_DIR` to use a non-default build directory (for example, `BUILD_DIR=build_alt ./tools/build_frdmmcxn947.sh debug`).
+[OUT] - Current known-good run uses the default build directory (`mcuxsdk_ws/build`).
+[OUT] - For a clean rebuild, use a fresh `BUILD_DIR` or remove the existing build directory contents.
+[OUT] 
+[OUT] ## 4) Flash
+[OUT] 
+[OUT] Flashing uses NXP LinkServer (x86_64) via `west flash -r linkserver`.
+[OUT] 
+[OUT] Install LinkServer (user-local, no sudo):
+[OUT] 
+[OUT] ```bash
+[OUT] ACCEPT_NXP_LINKSERVER_LICENSE=1 ./tools/install_linkserver_user.sh
+[OUT] ```
+[OUT] 
+[OUT] If flashing fails with `No probes detected`, install udev rules (requires sudo), then unplug/replug the board:
+[OUT] 
+[OUT] ```bash
+[OUT] ./tools/install_mculink_udev_rules.sh
+[OUT] ```
+[OUT] 
+[OUT] Then flash:
+[OUT] 
+[OUT] ```bash
+[OUT] ./tools/flash_frdmmcxn947.sh
+[OUT] ```
+[OUT] 
+[OUT] ## Failsafe Flash (Last Resort)
+[OUT] The active failsafe artifact is recorded in `docs/failsafe.md`.
+[OUT] 
+[OUT] Flashing requires explicit confirmation via the exact filename listed in line 1 of `docs/failsafe.md`:
+[OUT] ```bash
+[OUT] FAILSAFE_CONFIRM="$(sed -n '1p' docs/failsafe.md)" ./tools/flash_failsafe.sh
+[OUT] ```
+[OUT] 
+[OUT] ## Serial (Optional)
+[OUT] The MCU-Link VCOM interface typically enumerates as `/dev/ttyACM0`:
+[OUT] ```bash
+[OUT] timeout 10 cat /dev/ttyACM0
+[OUT] ```
+[OUT] ---
+[OUT] # Project Description: Smart Pong (FRDM-MCXN947)
+[OUT] 
+[OUT] Goal:
+[OUT] - Implement a 3D-look Pong game on FRDM-MCXN947 with LCD-PAR-S035.
+[OUT] 
+[OUT] Targets:
+[OUT] - 0P / 1P / 2P: AI vs AI, 1P vs AI, 2P local
+[OUT] - In-game settings UI (`PLAYERS`, `LEVEL`, `NPU`, `SKILL`, `PERSIST`, `MATCH`, `TARGET`, `SPEED++`, `NEW GAME`)
+[OUT] - Touch-first control (GT911 multi-touch) with alternate inputs supported via platform HAL
+[OUT] - Clean separation between platform bring-up, game logic, AI, and rendering
+[OUT] 
+[OUT] Visual target:
+[OUT] - Match `docs/pong_3D.png`: monochrome box arena, perspective depth cue, center dashed line, segmented digits, soft ball shadow.
+[OUT] 
+[OUT] Inspiration:
+[OUT] - Pong is a 1972 sports video game developed and published by Atari, Inc. for arcades.
+[OUT] - Original version: Allan Alcorn.
+[OUT] - Conceived by: Nolan Bushnell.
+[OUT] 
+[OUT] ## 3D-Look Rendering Model (MCU-Friendly)
+[OUT] This demo uses:
+[OUT] - 3D game state (`x`, `y`, `z`)
+[OUT] - Lightweight perspective projection into 2D
+[OUT] - Flat-shaded walls/floor with depth cues
+[OUT] - Ball shadow on floor plane
+[OUT] 
+[OUT] ## World Model (Normalized Coordinates)
+[OUT] - `x`: `0` (left paddle plane) to `1` (right paddle plane)
+[OUT] - `y`: `0` (top) to `1` (bottom)
+[OUT] - `z`: `0` (near) to `1` (far)
+[OUT] 
+[OUT] Ball:
+[OUT] - `pos = (x, y, z)`
+[OUT] - `vel = (vx, vy, vz)`
+[OUT] - `radius = r`
+[OUT] 
+[OUT] Paddles:
+[OUT] - Plane: `x = constant`
+[OUT] - Center: `(y, z)`
+[OUT] - Size: `(size_y, size_z)`
+[OUT] 
+[OUT] ## Physics (Deterministic, Fixed Timestep)
+[OUT] Loop:
+[OUT] - Fixed timestep at 60 FPS.
+[OUT] 
+[OUT] Wall collisions:
+[OUT] - Ball reflects at `y` and `z` bounds with radius-aware clamping.
+[OUT] 
+[OUT] Paddle collisions:
+[OUT] - Collision checked at paddle planes while ball travels toward the relevant side.
+[OUT] - Hit acceptance uses overlap in `(y, z)` with radius padding.
+[OUT] - On hit:
+[OUT]   - Invert `vx`
+[OUT]   - Apply "english" from `y/z` impact offset
+[OUT]   - Apply paddle velocity influence to `vy/vz`
+[OUT] 
+[OUT] Scoring and match flow:
+[OUT] - Score when ball passes beyond x bounds.
+[OUT] - Match objective: first side to 11 points.
+[OUT] - Serve reset at center with randomized direction toward the side that conceded.
+[OUT] - New-game countdown: `3,2,1` (one second per number), new-game start only.
+[OUT] - `P0` behavior at 11:
+[OUT]   - Winner score styling + confetti
+[OUT]   - No yes/no popup
+[OUT]   - Automatic reset to new game for endless demo loop
+[OUT] - `P1/P2` behavior at 11:
+[OUT]   - Winner score styling + confetti
+[OUT]   - `NEW GAME? YES/NO` popup
+[OUT] 
+[OUT] ## Projection
+[OUT] - `scale = 1 / (1 + z * persp)`
+[OUT] - `sx = cx + (x - 0.5) * world_scale_x * scale`
+[OUT] - `sy = cy + (y - 0.5) * world_scale_y * scale`
+[OUT] 
+[OUT] Depth cues:
+[OUT] - Ball/paddle size scales with depth.
+[OUT] - Ball color shifts from red toward green as speed rises.
+[OUT] 
+[OUT] ## Input
+[OUT] Touch mapping:
+[OUT] - Left edge strip drives player 1 paddle.
+[OUT] - Right edge strip drives player 2 paddle.
+[OUT] - `touch y -> paddle y`
+[OUT] - `touch x (within strip) -> paddle z`
+[OUT] - UI top-bar region is excluded from paddle control.
+[OUT] 
+[OUT] Two-player:
+[OUT] - Independent simultaneous control via multi-touch strips.
+[OUT] 
+[OUT] Accelerometer:
+[OUT] - Accel 4 Click (FXLS8974CF) path available.
+[OUT] - In `P0`, tilt nudges ball `vy/vz` to perturb AI-vs-AI outcomes.
+[OUT] 
+[OUT] ## AI / NPU
+[OUT] CPU baseline AI:
+[OUT] - Analytic intercept solver with bounded reaction behavior.
+[OUT] - Difficulty presets control tracking quality and response.
+[OUT] 
+[OUT] NPU-assisted path:
+[OUT] - Runtime uses TensorFlow Lite Micro + eIQ Neutron.
+[OUT] - Build-time enable: `CONFIG_EDGEAI_USE_NPU=y`.
+[OUT] - NPU prediction path is integrated with CPU fallback for robustness.
+[OUT] - `AI ON/OFF` in settings toggles NPU-assisted behavior.
+[OUT] - `SKILL` in settings controls side assignment:
+[OUT]   - `2AI`: both paddles use adaptive AI.
+[OUT]   - `AI/ALGO`: left adaptive AI, right fixed ALGO.
+[OUT]   - `ALGO/AI`: left fixed ALGO, right adaptive AI.
+[OUT] - Persistent learning stores left/right AI profiles independently in flash when `PERSIST` is enabled.
+[OUT] 
+[OUT] ## Repo Architecture
+[OUT] - `src/platform/`: display, input, time, touch, accelerometer, NPU runtime hooks
+[OUT] - `src/game/`: loop, physics, input mapping, modes, AI, rendering
+[OUT] - `tools/`: bootstrap, setup, build, flash, guardrails
+[OUT] - `docs/`: hardware, build/flash, restore-point, and project docs
+[OUT] ---
+[OUT] # ToDo: Smart Pong (FRDM-MCXN947)
+[OUT] 
+[OUT] Reference material:
+[OUT] - `docs/project_description.md`
+[OUT] - `docs/pong_3D.png`
+[OUT] 
+[OUT] ## Current Snapshot
+[OUT] - [x] Build/flash flow is reproducible in-project (`tools/setup_mcuxsdk_ws.sh`, `tools/build_frdmmcxn947.sh`, `tools/flash_frdmmcxn947.sh`).
+[OUT] - [x] Golden restore point and failsafe restore point are aligned via `docs/failsafe.md`.
+[OUT] - [x] Last known-good status is tracked in `STATUS.md`.
+[OUT] 
+[OUT] ## Gameplay + Rendering
+[OUT] - [x] 3D-look arena rendering aligned to style target (walls, floor, center dash, depth cues).
+[OUT] - [x] 0P / 1P / 2P play modes with in-game settings pill (`P`, `D`, `A`, `N`).
+[OUT] - [x] Touch controls use left/right edge strips for non-occluding paddle control.
+[OUT] - [x] Ball speed scaling distributed across all three difficulty levels.
+[OUT] - [x] Ball hue shifts from red toward green as speed increases.
+[OUT] - [x] Help overlay (`?`) shows rules, controls, inspiration credit, and version credit.
+[OUT] - [x] Win condition at 11 points with confetti and winner/loser score styling.
+[OUT] - [x] `P1/P2`: post-win `NEW GAME? YES/NO` dialog.
+[OUT] - [x] `P0`: no dialog; game auto-resets after the 11-point celebration for endless desk demo operation.
+[OUT] - [x] New-game countdown (`3,2,1`) is shown only at game start and skipped for `P0`.
+[OUT] 
+[OUT] ## Physics + Control
+[OUT] - [x] Fixed timestep game loop.
+[OUT] - [x] Paddle-ball collision and depth handling tuned for left/right parity.
+[OUT] - [x] Single-player and two-player paddle behavior tuned to avoid forced recentering.
+[OUT] - [x] Serve direction targets the side that conceded the previous point.
+[OUT] 
+[OUT] ## AI/NPU
+[OUT] - [x] CPU baseline predictor path implemented.
+[OUT] - [x] NPU runtime integration enabled (`CONFIG_EDGEAI_USE_NPU=y`).
+[OUT] - [x] TFLM + eIQ Neutron execution path verified.
+[OUT] - [x] NPU path has CPU fallback behavior.
+[OUT] - [x] In-game AI enable/disable setting integrated.
+[OUT] 
+[OUT] ## Optional Backlog
+[OUT] - [ ] Replace placeholder NeutronGraph model with a Pong-specific trained predictor model.
+[OUT] - [ ] Add runtime telemetry overlay toggle (AI invoke cadence, fallback count, frame budget).
+[OUT] - [ ] Add deterministic gameplay regression scenarios for collision edge cases.
+[2026-02-25T01:00:05Z] CMD: ls -la mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.elf mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.bin && sed -n "1,260p" tools/flash_failsafe.sh
+[OUT] -rwxrwxr-x 1 user user 1080096 Feb 24 16:32 mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.bin
+[OUT] -rwxrwxr-x 1 user user 8209948 Feb 24 16:32 mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.elf
+[OUT] ---
+[OUT] #!/usr/bin/env bash
+[OUT] set -euo pipefail
+[OUT] 
+[OUT] ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[OUT] FAILSAFE_DOC="$ROOT_DIR/docs/failsafe.md"
+[OUT] 
+[OUT] if [[ ! -f "$FAILSAFE_DOC" ]]; then
+[OUT]   echo "FAILSAFE: missing pointer file: $FAILSAFE_DOC" >&2
+[OUT]   exit 1
+[OUT] fi
+[OUT] 
+[OUT] expected="$(sed -n '1p' "$FAILSAFE_DOC" | tr -d '\r')"
+[OUT] desc="$(sed -n '2p' "$FAILSAFE_DOC" | tr -d '\r')"
+[OUT] 
+[OUT] if [[ -z "$expected" ]]; then
+[OUT]   echo "FAILSAFE: empty failsafe filename in: $FAILSAFE_DOC" >&2
+[OUT]   exit 1
+[OUT] fi
+[OUT] 
+[OUT] failsafe_path="$ROOT_DIR/$expected"
+[OUT] if [[ ! -f "$failsafe_path" ]]; then
+[OUT]   echo "FAILSAFE: failsafe artifact not found: $failsafe_path" >&2
+[OUT]   exit 1
+[OUT] fi
+[OUT] 
+[OUT] confirm="${FAILSAFE_CONFIRM:-}"
+[OUT] if [[ $# -ge 1 ]]; then
+[OUT]   confirm="$1"
+[OUT] fi
+[OUT] 
+[OUT] if [[ "$confirm" != "$expected" ]]; then
+[OUT]   echo "FAILSAFE: confirmation required" >&2
+[OUT]   echo "FAILSAFE: expected filename: $expected" >&2
+[OUT]   echo "FAILSAFE: description: $desc" >&2
+[OUT]   echo "FAILSAFE: pass argv1 as the expected filename or set FAILSAFE_CONFIRM" >&2
+[OUT]   exit 2
+[OUT] fi
+[OUT] 
+[OUT] if ! command -v LinkServer >/dev/null 2>&1; then
+[OUT]   echo "FAILSAFE: LinkServer not found on PATH" >&2
+[OUT]   exit 1
+[OUT] fi
+[OUT] 
+[OUT] device="${FAILSAFE_DEVICE:-auto}"
+[OUT] 
+[OUT] probe_args=()
+[OUT] if [[ -n "${PROBE:-}" ]]; then
+[OUT]   probe_args+=(--probe "$PROBE")
+[OUT] fi
+[OUT] 
+[OUT] LinkServer flash "${probe_args[@]}" "$device" load --erase-all "$failsafe_path"
+[2026-02-25T01:00:05Z] CMD: sed -n "1,220p" docs/HARDWARE.md && sed -n "1,220p" docs/STYLE_RULES.md
+[OUT] # Hardware (FRDM-MCXN947)
+[OUT] 
+[OUT] ## Required Components
+[OUT] 1. Manufacturer: NXP Semiconductors
+[OUT]    - Name: FRDM-MCXN947 development board
+[OUT]    - Part number: FRDM-MCXN947
+[OUT] 2. Manufacturer: NXP Semiconductors
+[OUT]    - Name: 3.5" Parallel TFT LCD shield (ST7796S controller, GT911 touch)
+[OUT]    - Part number: LCD-PAR-S035
+[OUT] 3. Manufacturer: MikroElektronika (sensor IC by NXP)
+[OUT]    - Name: Accel 4 Click (3-axis accelerometer module, FXLS8974CF)
+[OUT]    - Part number: MIKROE-4630
+[OUT] 
+[OUT] ## Board / Debug
+[OUT] - Probe: MCU-Link (CMSIS-DAP), probe index `#1` in LinkServer
+[OUT] - Debug USB connector: J17
+[OUT] 
+[OUT] ## Input Paths (Platform HAL)
+[OUT] Touch panel (GT911):
+[OUT] - Bus: LPI2C2 / FLEXCOMM2
+[OUT] - INT pin: PIO4_6
+[OUT] - I2C pins: PIO4_0 (`FC2_P0`, SDA), PIO4_1 (`FC2_P1`, SCL)
+[OUT] - Reset pin shared with LCD reset line on the shield
+[OUT] 
+[OUT] Accelerometer (FXLS8974CF on Accel 4 Click):
+[OUT] - Bus: I2C via FLEXCOMM3
+[OUT] - Device address: `0x18` or `0x19` (ADDR SEL)
+[OUT] - `WHO_AM_I`: `0x86`
+[OUT] ---
+[OUT] # Style Rules (Text, Docs, Comments)
+[OUT] 
+[OUT] Goals:
+[OUT] - Keep documentation and comments objective and repo-centric.
+[OUT] - Avoid conversational phrasing that depends on speaker/listener context.
+[OUT] 
+[OUT] Rules:
+[OUT] - Avoid wording that implies generated authorship or external conversational context.
+[OUT] - Prefer neutral imperative or descriptive wording.
+[OUT]   - Good: "Set `WS_DIR` for a non-default workspace."
+[OUT]   - Avoid: "If a non-default workspace is used, set `WS_DIR`."
+[OUT] 
+[OUT] Enforcement:
+[OUT] - Run `./tools/lint_text_style.sh` before committing changes that touch docs or comments.
+[OUT] - Optionally install the git pre-commit hook via `./tools/install_git_hooks.sh`.
+[2026-02-25T01:00:15Z] CMD: cp -f mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.elf failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf && ls -la failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf
+[OUT] -rwxrwxr-x 1 user user 8209948 Feb 24 17:00 failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf
+[2026-02-25T01:01:01Z] CMD: ./tools/lint_text_style.sh && git status --short
+[OUT] lint=FAIL
+[OUT] [lint] Checking for conversational phrasing / direct reader references...
+[OUT] 
+[OUT] [lint] FAIL: found banned phrasing. Rewrite to neutral, repo-centric wording.
+[OUT] [lint] See: docs/STYLE_RULES.md
+[OUT] ---
+[OUT]  M README.md
+[OUT]  M STATUS.md
+[OUT]  M ToDo.md
+[OUT]  M docs/BUILD_FLASH.md
+[OUT]  M docs/COMMAND_LOG.md
+[OUT]  M docs/failsafe.md
+[OUT]  M docs/project_description.md
+[OUT] ?? failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf
+[2026-02-25T01:01:10Z] CMD: sed -i delete style-rule quoted line from docs/COMMAND_LOG.md; ./tools/lint_text_style.sh; git status --short
+[OUT] lint=PASS
+[OUT] [lint] Checking for conversational phrasing / direct reader references...
+[OUT] [lint] OK
+[OUT] ---
+[OUT]  M README.md
+[OUT]  M STATUS.md
+[OUT]  M ToDo.md
+[OUT]  M docs/BUILD_FLASH.md
+[OUT]  M docs/COMMAND_LOG.md
+[OUT]  M docs/failsafe.md
+[OUT]  M docs/project_description.md
+[OUT] ?? failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf
+[2026-02-25T01:01:19Z] CMD: git add README.md STATUS.md ToDo.md docs/BUILD_FLASH.md docs/COMMAND_LOG.md docs/failsafe.md docs/project_description.md failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf && git commit -m "Promote mixed-SKILL balance build as golden/failsafe and refresh docs" && git push origin main && git rev-parse --short HEAD

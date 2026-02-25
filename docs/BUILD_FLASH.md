@@ -61,6 +61,8 @@ Then flash:
 
 ## Failsafe Flash (Last Resort)
 The active failsafe artifact is recorded in `docs/failsafe.md`.
+Current active failsafe artifact:
+- `failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf`
 
 Flashing requires explicit confirmation via the exact filename listed in line 1 of `docs/failsafe.md`:
 ```bash

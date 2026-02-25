@@ -106,6 +106,10 @@ NPU-assisted path:
   - `AI/ALGO`: left adaptive AI, right fixed ALGO.
   - `ALGO/AI`: left fixed ALGO, right adaptive AI.
 - Persistent learning stores left/right AI profiles independently in flash when `PERSIST` is enabled.
+- Mixed-mode fairness tuning:
+  - ALGO side remains CPU-only in `AI/ALGO` and `ALGO/AI`.
+  - EdgeAI side uses ALGO-like target update cadence in mixed modes.
+  - NPU output is confidence-gated against analytic prediction to reduce divergence-driven misses.
 
 ## Repo Architecture
 - `src/platform/`: display, input, time, touch, accelerometer, NPU runtime hooks
