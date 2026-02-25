@@ -3949,3 +3949,4 @@
 2026-02-25T02:08:25Z | starting build+flash for default-profile update
 2026-02-25T02:12:40Z | build_frdmmcxn947=PASS ; flash_frdmmcxn947=PASS (startup default profile update)
 2026-02-25T02:12:55Z | updated STATUS.md with startup default profile note
+2026-02-25T02:13:10Z | committed+pushed c9a0c79 (startup defaults + high-speed lead tuning)
