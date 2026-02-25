@@ -110,6 +110,11 @@ NPU-assisted path:
   - ALGO side remains CPU-only in `AI/ALGO` and `ALGO/AI`.
   - EdgeAI side uses ALGO-like target update cadence in mixed modes.
   - NPU output is confidence-gated against analytic prediction to reduce divergence-driven misses.
+- Online tactical adaptation:
+  - Per-side profile adapts `speed_scale`, `noise_scale`, and `lead_scale` from rally outcomes.
+  - Per-side style learner tracks center/corner tactical tendencies (`style_trials`, `style_value_q8`, bias terms).
+  - Style influence is maturity-gated to avoid unstable early-game behavior.
+  - Current retune reduces exploration early and adds slight mixed-mode competitiveness bias (lower noise, modest speed increase) for fairer ALGO vs EdgeAI representation.
 
 ## Repo Architecture
 - `src/platform/`: display, input, time, touch, accelerometer, NPU runtime hooks

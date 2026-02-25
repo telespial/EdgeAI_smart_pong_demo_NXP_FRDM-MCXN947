@@ -3045,3 +3045,897 @@
 [OUT]  M docs/project_description.md
 [OUT] ?? failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf
 [2026-02-25T01:01:19Z] CMD: git add README.md STATUS.md ToDo.md docs/BUILD_FLASH.md docs/COMMAND_LOG.md docs/failsafe.md docs/project_description.md failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf && git commit -m "Promote mixed-SKILL balance build as golden/failsafe and refresh docs" && git push origin main && git rev-parse --short HEAD
+[2026-02-25T01:01:27Z] RESULT: commit+push=PASS hash=3040364
+[2026-02-25T01:04:57Z] CMD: rg -n "paddle|collision|english|physics_step|wall_bounce|score|vx|vy|vz" src/game/physics.c && sed -n "220,520p" src/game/physics.c
+[OUT] 44:    float vx = g->ball.vx;
+[OUT] 45:    float vy = g->ball.vy;
+[OUT] 46:    float vz = g->ball.vz;
+[OUT] 47:    return sqrtf(vx * vx + vy * vy + vz * vz);
+[OUT] 60:static void physics_speedpp_on_score(pong_game_t *g, bool point_to_left)
+[OUT] 64:    uint16_t scored = point_to_left ? g->score.left : g->score.right;
+[OUT] 65:    if (scored == 0u || (scored % 11u) != 0u) return;
+[OUT] 93:    float vmax = absf(g->ball.vx);
+[OUT] 94:    float avy = absf(g->ball.vy);
+[OUT] 95:    float avz = absf(g->ball.vz);
+[OUT] 96:    if (avy > vmax) vmax = avy;
+[OUT] 97:    if (avz > vmax) vmax = avz;
+[OUT] 99:    /* Keep per-substep motion small to avoid tunneling through paddles at higher speeds. */
+[OUT] 182:    g->ball.vx = dir * serve_speed;
+[OUT] 183:    g->ball.vy = rand_f(g, -0.28f, 0.28f);
+[OUT] 184:    g->ball.vz = rand_f(g, -0.22f, 0.22f);
+[OUT] 188:static void physics_wall_bounce(float *p, float *v, float r)
+[OUT] 228:static bool physics_paddle_overlap_yz(const pong_paddle_t *p, float y, float z, float ball_r, float slop)
+[OUT] 232:    /* Sphere vs paddle-rect overlap, evaluated in the paddle plane (y/z).
+[OUT] 249:static void physics_paddle_hit(pong_game_t *g, pong_paddle_t *p, bool left_side)
+[OUT] 264:    ai_learning_on_paddle_hit(g, left_side);
+[OUT] 266:    const float english = 0.55f;
+[OUT] 269:    g->ball.vy += dy * english;
+[OUT] 270:    g->ball.vz += dz * english;
+[OUT] 272:    /* Touch control can produce very large paddle velocities; clamp to keep hits stable. */
+[OUT] 273:    float pvy = clampf(p->vy, -vlim, vlim);
+[OUT] 274:    float pvz = clampf(p->vz, -vlim, vlim);
+[OUT] 275:    g->ball.vy += pvy * p_influence;
+[OUT] 276:    g->ball.vz += pvz * p_influence;
+[OUT] 278:    g->ball.vx = (left_side ? absf(g->ball.vx) : -absf(g->ball.vx)) * speed_up;
+[OUT] 281:    g->ball.vx = clampf(g->ball.vx, -vlim, vlim);
+[OUT] 282:    g->ball.vy = clampf(g->ball.vy, -vlim, vlim);
+[OUT] 283:    g->ball.vz = clampf(g->ball.vz, -vlim, vlim);
+[OUT] 286:    if (absf(g->ball.vx) < 0.24f)
+[OUT] 288:        g->ball.vx = (g->ball.vx < 0.0f) ? -0.24f : 0.24f;
+[OUT] 292:static bool physics_step_sub(pong_game_t *g, float dt)
+[OUT] 300:    float start_vy = g->ball.vy;
+[OUT] 301:    float start_vz = g->ball.vz;
+[OUT] 303:    g->ball.x += g->ball.vx * dt;
+[OUT] 304:    g->ball.y += g->ball.vy * dt;
+[OUT] 305:    g->ball.z += g->ball.vz * dt;
+[OUT] 308:    physics_wall_bounce(&g->ball.y, &g->ball.vy, g->ball.r);
+[OUT] 309:    physics_wall_bounce(&g->ball.z, &g->ball.vz, g->ball.r);
+[OUT] 311:    /* Paddle collisions. */
+[OUT] 314:    const float x_hit_l = g->paddle_l.x_plane + g->ball.r;
+[OUT] 315:    if (g->ball.vx < 0.0f && prev_x > x_hit_l && g->ball.x <= x_hit_l)
+[OUT] 322:        float y_at = physics_axis_reflect(prev_y, start_vy, tau, g->ball.r);
+[OUT] 323:        float z_at = physics_axis_reflect(prev_z, start_vz, tau, g->ball.r);
+[OUT] 325:        bool hit = physics_paddle_overlap_yz(&g->paddle_l, y_at, z_at, g->ball.r, slop);
+[OUT] 331:            physics_paddle_hit(g, &g->paddle_l, true);
+[OUT] 335:    const float x_hit_r = g->paddle_r.x_plane - g->ball.r;
+[OUT] 336:    if (g->ball.vx > 0.0f && prev_x < x_hit_r && g->ball.x >= x_hit_r)
+[OUT] 343:        float y_at = physics_axis_reflect(prev_y, start_vy, tau, g->ball.r);
+[OUT] 344:        float z_at = physics_axis_reflect(prev_z, start_vz, tau, g->ball.r);
+[OUT] 346:        bool hit = physics_paddle_overlap_yz(&g->paddle_r, y_at, z_at, g->ball.r, slop);
+[OUT] 352:            physics_paddle_hit(g, &g->paddle_r, false);
+[OUT] 360:        g->score.right++;
+[OUT] 362:        physics_speedpp_on_score(g, false);
+[OUT] 369:        g->score.left++;
+[OUT] 371:        physics_speedpp_on_score(g, true);
+[OUT] 380:void physics_step(pong_game_t *g, float dt)
+[OUT] 390:        if (physics_step_sub(g, h))
+[OUT] ---
+[OUT]             continue;
+[OUT]         }
+[OUT]         break;
+[OUT]     }
+[OUT] 
+[OUT]     return clampf(p, lo, hi);
+[OUT] }
+[OUT] 
+[OUT] static bool physics_paddle_overlap_yz(const pong_paddle_t *p, float y, float z, float ball_r, float slop)
+[OUT] {
+[OUT]     if (!p) return false;
+[OUT] 
+[OUT]     /* Sphere vs paddle-rect overlap, evaluated in the paddle plane (y/z).
+[OUT]      * Use a circle-rectangle distance test to avoid "ghost" corner bounces
+[OUT]      * from the overly-permissive AABB expansion.
+[OUT]      */
+[OUT]     float hy = p->size_y * 0.5f;
+[OUT]     float hz = p->size_z * 0.5f;
+[OUT]     float rr = ball_r + slop;
+[OUT] 
+[OUT]     float dy = absf(y - p->y) - hy;
+[OUT]     float dz = absf(z - p->z) - hz;
+[OUT]     if (dy <= 0.0f && dz <= 0.0f) return true;
+[OUT] 
+[OUT]     if (dy < 0.0f) dy = 0.0f;
+[OUT]     if (dz < 0.0f) dz = 0.0f;
+[OUT]     return (dy * dy + dz * dz) <= (rr * rr);
+[OUT] }
+[OUT] 
+[OUT] static void physics_paddle_hit(pong_game_t *g, pong_paddle_t *p, bool left_side)
+[OUT] {
+[OUT]     if (!g || !p) return;
+[OUT] 
+[OUT]     float speed_up = 1.02f;
+[OUT]     float vlim = 1.6f;
+[OUT]     physics_get_tuning(g, NULL, &speed_up, &vlim);
+[OUT] 
+[OUT]     float dy = (g->ball.y - p->y) / (p->size_y * 0.5f);
+[OUT]     float dz = (g->ball.z - p->z) / (p->size_z * 0.5f);
+[OUT]     dy = clampf(dy, -1.0f, 1.0f);
+[OUT]     dz = clampf(dz, -1.0f, 1.0f);
+[OUT] 
+[OUT]     g->last_hit_dy = dy;
+[OUT]     g->last_hit_dz = dz;
+[OUT]     ai_learning_on_paddle_hit(g, left_side);
+[OUT] 
+[OUT]     const float english = 0.55f;
+[OUT]     const float p_influence = 0.12f;
+[OUT] 
+[OUT]     g->ball.vy += dy * english;
+[OUT]     g->ball.vz += dz * english;
+[OUT] 
+[OUT]     /* Touch control can produce very large paddle velocities; clamp to keep hits stable. */
+[OUT]     float pvy = clampf(p->vy, -vlim, vlim);
+[OUT]     float pvz = clampf(p->vz, -vlim, vlim);
+[OUT]     g->ball.vy += pvy * p_influence;
+[OUT]     g->ball.vz += pvz * p_influence;
+[OUT] 
+[OUT]     g->ball.vx = (left_side ? absf(g->ball.vx) : -absf(g->ball.vx)) * speed_up;
+[OUT] 
+[OUT]     /* Clamp speeds. */
+[OUT]     g->ball.vx = clampf(g->ball.vx, -vlim, vlim);
+[OUT]     g->ball.vy = clampf(g->ball.vy, -vlim, vlim);
+[OUT]     g->ball.vz = clampf(g->ball.vz, -vlim, vlim);
+[OUT] 
+[OUT]     /* Ensure x motion does not stall. */
+[OUT]     if (absf(g->ball.vx) < 0.24f)
+[OUT]     {
+[OUT]         g->ball.vx = (g->ball.vx < 0.0f) ? -0.24f : 0.24f;
+[OUT]     }
+[OUT] }
+[OUT] 
+[OUT] static bool physics_step_sub(pong_game_t *g, float dt)
+[OUT] {
+[OUT]     if (!g) return false;
+[OUT]     if (dt <= 0.0f) return false;
+[OUT] 
+[OUT]     float prev_x = g->ball.x;
+[OUT]     float prev_y = g->ball.y;
+[OUT]     float prev_z = g->ball.z;
+[OUT]     float start_vy = g->ball.vy;
+[OUT]     float start_vz = g->ball.vz;
+[OUT] 
+[OUT]     g->ball.x += g->ball.vx * dt;
+[OUT]     g->ball.y += g->ball.vy * dt;
+[OUT]     g->ball.z += g->ball.vz * dt;
+[OUT] 
+[OUT]     /* Walls (y and z). */
+[OUT]     physics_wall_bounce(&g->ball.y, &g->ball.vy, g->ball.r);
+[OUT]     physics_wall_bounce(&g->ball.z, &g->ball.vz, g->ball.r);
+[OUT] 
+[OUT]     /* Paddle collisions. */
+[OUT]     const float slop = g->ball.r * 0.02f;
+[OUT] 
+[OUT]     const float x_hit_l = g->paddle_l.x_plane + g->ball.r;
+[OUT]     if (g->ball.vx < 0.0f && prev_x > x_hit_l && g->ball.x <= x_hit_l)
+[OUT]     {
+[OUT]         float denom = (prev_x - g->ball.x);
+[OUT]         float t = (denom != 0.0f) ? ((prev_x - x_hit_l) / denom) : 0.0f;
+[OUT]         t = clampf(t, 0.0f, 1.0f);
+[OUT] 
+[OUT]         float tau = dt * t;
+[OUT]         float y_at = physics_axis_reflect(prev_y, start_vy, tau, g->ball.r);
+[OUT]         float z_at = physics_axis_reflect(prev_z, start_vz, tau, g->ball.r);
+[OUT] 
+[OUT]         bool hit = physics_paddle_overlap_yz(&g->paddle_l, y_at, z_at, g->ball.r, slop);
+[OUT]         if (hit)
+[OUT]         {
+[OUT]             g->ball.x = x_hit_l;
+[OUT]             g->ball.y = y_at;
+[OUT]             g->ball.z = z_at;
+[OUT]             physics_paddle_hit(g, &g->paddle_l, true);
+[OUT]         }
+[OUT]     }
+[OUT] 
+[OUT]     const float x_hit_r = g->paddle_r.x_plane - g->ball.r;
+[OUT]     if (g->ball.vx > 0.0f && prev_x < x_hit_r && g->ball.x >= x_hit_r)
+[OUT]     {
+[OUT]         float denom = (g->ball.x - prev_x);
+[OUT]         float t = (denom != 0.0f) ? ((x_hit_r - prev_x) / denom) : 0.0f;
+[OUT]         t = clampf(t, 0.0f, 1.0f);
+[OUT] 
+[OUT]         float tau = dt * t;
+[OUT]         float y_at = physics_axis_reflect(prev_y, start_vy, tau, g->ball.r);
+[OUT]         float z_at = physics_axis_reflect(prev_z, start_vz, tau, g->ball.r);
+[OUT] 
+[OUT]         bool hit = physics_paddle_overlap_yz(&g->paddle_r, y_at, z_at, g->ball.r, slop);
+[OUT]         if (hit)
+[OUT]         {
+[OUT]             g->ball.x = x_hit_r;
+[OUT]             g->ball.y = y_at;
+[OUT]             g->ball.z = z_at;
+[OUT]             physics_paddle_hit(g, &g->paddle_r, false);
+[OUT]         }
+[OUT]     }
+[OUT] 
+[OUT]     /* Scoring. */
+[OUT]     const float margin = 0.10f;
+[OUT]     if (g->ball.x < -margin)
+[OUT]     {
+[OUT]         g->score.right++;
+[OUT]         ai_learning_on_miss(g, true);
+[OUT]         physics_speedpp_on_score(g, false);
+[OUT]         /* Serve toward the player who just conceded (left). */
+[OUT]         physics_reset_ball(g, -1);
+[OUT]         return true;
+[OUT]     }
+[OUT]     else if (g->ball.x > 1.0f + margin)
+[OUT]     {
+[OUT]         g->score.left++;
+[OUT]         ai_learning_on_miss(g, false);
+[OUT]         physics_speedpp_on_score(g, true);
+[OUT]         /* Serve toward the player who just conceded (right). */
+[OUT]         physics_reset_ball(g, +1);
+[OUT]         return true;
+[OUT]     }
+[OUT] 
+[OUT]     return false;
+[OUT] }
+[OUT] 
+[OUT] void physics_step(pong_game_t *g, float dt)
+[OUT] {
+[OUT]     if (!g) return;
+[OUT] 
+[OUT]     physics_speedpp_track_peak(g);
+[OUT] 
+[OUT]     int n = physics_substeps(g, dt);
+[OUT]     float h = dt / (float)n;
+[OUT]     for (int i = 0; i < n; i++)
+[OUT]     {
+[OUT]         if (physics_step_sub(g, h))
+[OUT]         {
+[OUT]             return;
+[OUT]         }
+[OUT]     }
+[OUT] }
+[2026-02-25T01:05:24Z] CMD: patched physics.c corner deflection + STATUS update; git status --short; rg -n "corner|six bounce walls|edge_y|edge_z" src/game/physics.c STATUS.md
+[OUT]  M STATUS.md
+[OUT]  M docs/COMMAND_LOG.md
+[OUT]  M src/game/physics.c
+[OUT] ---
+[OUT] STATUS.md:27:- Notes (physics tuning): paddle corner/edge hits now apply a slight outward Y/Z deflection, increasing natural wall-ricochet rallies.
+[OUT] src/game/physics.c:238:     * Use a circle-rectangle distance test to avoid "ghost" corner bounces
+[OUT] src/game/physics.c:273:    const float corner_kick = 0.26f;
+[OUT] src/game/physics.c:279:     * more naturally. Y/Z walls plus both paddle planes act as six bounce walls.
+[OUT] src/game/physics.c:282:        float edge_y = clampf((absf(dy) - 0.62f) / 0.38f, 0.0f, 1.0f);
+[OUT] src/game/physics.c:283:        float edge_z = clampf((absf(dz) - 0.62f) / 0.38f, 0.0f, 1.0f);
+[OUT] src/game/physics.c:284:        float kick_y = corner_kick * edge_y * signf(dy);
+[OUT] src/game/physics.c:285:        float kick_z = corner_kick * edge_z * signf(dz);
+[2026-02-25T01:05:31Z] CMD: ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh
+[2026-02-25T01:08:53Z] RESULT: build=PASS flash=PASS
+[2026-02-25T01:09:00Z] CMD: git status --short
+[OUT]  M STATUS.md
+[OUT]  M docs/COMMAND_LOG.md
+[OUT]  M src/game/physics.c
+[2026-02-25T01:16:07Z] CMD: patched stronger corner ricochet in physics.c + STATUS update; git status --short; rg -n "edge_kick|corner_bonus|corner > 0.72|min_side|physics tuning v2" src/game/physics.c STATUS.md
+[OUT]  M STATUS.md
+[OUT]  M docs/COMMAND_LOG.md
+[OUT]  M src/game/physics.c
+[OUT] ---
+[OUT] STATUS.md:28:- Notes (physics tuning v2): near-true paddle-corner hits now get stronger Y/Z deflection plus a minimum side-velocity gate to create clearly visible extreme ricochets.
+[OUT] src/game/physics.c:273:    const float edge_kick = 0.40f;
+[OUT] src/game/physics.c:274:    const float corner_bonus = 0.72f;
+[OUT] src/game/physics.c:290:        float kick_y = (edge_kick * edge_y + corner_bonus * corner) * signf(dy);
+[OUT] src/game/physics.c:291:        float kick_z = (edge_kick * edge_z + corner_bonus * corner) * signf(dz);
+[OUT] src/game/physics.c:296:        if (corner > 0.72f)
+[OUT] src/game/physics.c:298:            float min_side = vlim * 0.46f;
+[OUT] src/game/physics.c:299:            if (absf(g->ball.vy) < min_side) g->ball.vy = min_side * signf(dy);
+[OUT] src/game/physics.c:300:            if (absf(g->ball.vz) < min_side) g->ball.vz = min_side * signf(dz);
+[2026-02-25T01:16:16Z] CMD: ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh
+[2026-02-25T01:19:53Z] RESULT: build=PASS flash=PASS
+[2026-02-25T01:20:05Z] CMD: git status --short
+[OUT]  M STATUS.md
+[OUT]  M docs/COMMAND_LOG.md
+[OUT]  M src/game/physics.c
+[2026-02-25T01:26:56Z] CMD: sed -n "1,40p" docs/failsafe.md && sed -n "1,80p" STATUS.md
+[OUT] failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf
+[OUT] Golden + failsafe restore point: mixed-SKILL fairness tuning with ALGO-side CPU-only behavior and adaptive NPU confidence gating.
+[OUT] ---
+[OUT] # Smart Pong Demo Status
+[OUT] 
+[OUT] - Current target: FRDM-MCXN947 3D-look Smart Pong on LCD-PAR-S035
+[OUT] - Workspace: `mcuxsdk_ws/` (created by `./tools/setup_mcuxsdk_ws.sh`)
+[OUT] 
+[OUT] ## Last Run
+[OUT] - Date: 2026-02-25
+[OUT] - Result: ok (build + flash)
+[OUT] - Binary: `mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.bin`
+[OUT] - Flash: `west flash -d mcuxsdk_ws/build -r linkserver`
+[OUT] - Notes (persistence): match reset now explicitly reloads the learned persistence snapshot when `PERSIST` is enabled.
+[OUT] - Notes (settings UI): added `SPEED++` toggle row and moved `NEW GAME` to the next row.
+[OUT] - Notes (speed progression): when `SPEED++` is enabled, each side hitting `11, 22, 33, ...` raises serve-speed target by `5%` (compounding), clamped by runtime limits.
+[OUT] - Notes (flash persistence): `PERSIST ON` now restores AI learning profiles from onboard flash (`fsl_flash` ROM API) after reboot/power cycle.
+[OUT] - Notes (flash write policy): profile snapshot is synced to flash on match reset/new game to limit flash wear; `PERSIST OFF` clears stored snapshot.
+[OUT] - Notes (SPEED++ tuning): milestone boost updated to `+5%` per side-specific multiple-of-11 score event (`11, 22, 33, ...`).
+[OUT] - Notes (settings label render): added `+` support to the 5x7 font so `SPEED++` displays correctly (previously rendered as `SPEED`).
+[OUT] - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260211_1309_final_release_score999_golden.elf`
+[OUT] - Restore point: current build is the active Golden + Failsafe snapshot.
+[OUT] - Notes (SKILL setting): learn-mode selector now supports `2AI`, `AI/ALGO`, and `ALGO/AI` so EdgeAI can run on either side.
+[OUT] - Notes (docs refresh): updated README and project description to match current settings, SKILL modes, SPEED++, and side-independent persistence behavior.
+[OUT] - Notes (SKILL balance): ALGO side remains CPU-only while mixed-mode EdgeAI now blends NPU output with analytic intercept for stronger stability and competitiveness.
+[OUT] - Notes (verification run): rebuilt and reflashed after SKILL-balance tuning; ready for fresh AI-vs-ALGO score validation on hardware.
+[OUT] - Notes (mixed-mode tune): reduced EdgeAI mixed-mode handicap by using ALGO-like target update cadence plus adaptive NPU confidence gating (fallback to analytic predictor on high disagreement).
+[OUT] - Notes (release marker): current mixed-SKILL fairness tuning is promoted as Golden + Failsafe restore point.
+[OUT] - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf`
+[OUT] - Notes (physics tuning): paddle corner/edge hits now apply a slight outward Y/Z deflection, increasing natural wall-ricochet rallies.
+[OUT] - Notes (physics tuning v2): near-true paddle-corner hits now get stronger Y/Z deflection plus a minimum side-velocity gate to create clearly visible extreme ricochets.
+[2026-02-25T01:27:15Z] CMD: marked pre-extreme-bounce golden/failsafe in STATUS.md and docs/failsafe.md; git status --short; sed -n "1,4p" docs/failsafe.md
+[OUT]  M STATUS.md
+[OUT]  M docs/COMMAND_LOG.md
+[OUT]  M docs/failsafe.md
+[OUT]  M src/game/physics.c
+[OUT] ---
+[OUT] failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf
+[OUT] Golden + failsafe restore point: pre-extreme-bounce build with mixed-SKILL fairness tuning (ALGO-side CPU-only + adaptive NPU confidence gating).
+[2026-02-25T01:32:10Z] CMD: sed -n "1,260p" src/game/game.h && sed -n "1,220p" src/game/ai.h
+[OUT] #pragma once
+[OUT] 
+[OUT] #include <stdbool.h>
+[OUT] #include <stdint.h>
+[OUT] 
+[OUT] #include "game/modes.h"
+[OUT] #include "platform/input_hal.h"
+[OUT] #include "platform/npu_hal.h"
+[OUT] 
+[OUT] typedef struct
+[OUT] {
+[OUT]     float x;
+[OUT]     float y;
+[OUT]     float z;
+[OUT]     float vx;
+[OUT]     float vy;
+[OUT]     float vz;
+[OUT]     float r;
+[OUT] } pong_ball_t;
+[OUT] 
+[OUT] typedef struct
+[OUT] {
+[OUT]     float x_plane;
+[OUT]     float y;
+[OUT]     float z;
+[OUT]     float vy;
+[OUT]     float vz;
+[OUT]     float size_y;
+[OUT]     float size_z;
+[OUT]     float target_y;
+[OUT]     float target_z;
+[OUT] } pong_paddle_t;
+[OUT] 
+[OUT] typedef struct
+[OUT] {
+[OUT]     uint16_t left;
+[OUT]     uint16_t right;
+[OUT] } pong_score_t;
+[OUT] 
+[OUT] typedef enum
+[OUT] {
+[OUT]     kAiLearnModeBoth = 0,
+[OUT]     kAiLearnModeAiAlgo = 1,
+[OUT]     kAiLearnModeAlgoAi = 2,
+[OUT] } ai_learn_mode_t;
+[OUT] 
+[OUT] typedef struct
+[OUT] {
+[OUT]     float speed_scale;
+[OUT]     float noise_scale;
+[OUT]     float lead_scale;
+[OUT]     uint16_t hits;
+[OUT]     uint16_t misses;
+[OUT] } ai_learn_profile_t;
+[OUT] 
+[OUT] typedef struct
+[OUT] {
+[OUT]     game_mode_t mode;
+[OUT]     uint8_t difficulty; /* 1..3 */
+[OUT]     bool ai_enabled;
+[OUT]     bool perpetual_play;
+[OUT]     bool persistent_learning;
+[OUT]     bool speedpp_enabled;
+[OUT]     bool target_overlay_enabled;
+[OUT]     bool menu_open;
+[OUT]     bool help_open;
+[OUT]     bool ui_block_touch;
+[OUT]     bool match_over;
+[OUT]     bool winner_left;
+[OUT]     bool end_prompt_dismissed;
+[OUT]     bool countdown_active;
+[OUT] 
+[OUT]     pong_ball_t ball;
+[OUT]     pong_paddle_t paddle_l;
+[OUT]     pong_paddle_t paddle_r;
+[OUT]     pong_score_t score;
+[OUT] 
+[OUT]     uint32_t rng;
+[OUT]     uint32_t frame;
+[OUT]     uint32_t match_over_frame;
+[OUT]     uint32_t match_over_start_cycles;
+[OUT]     uint32_t countdown_us_left;
+[OUT]     uint32_t countdown_start_cycles;
+[OUT] 
+[OUT]     float last_hit_dy;
+[OUT]     float last_hit_dz;
+[OUT] 
+[OUT]     float serve_vx;
+[OUT]     float serve_vy;
+[OUT]     float serve_vz;
+[OUT]     float speedpp_peak_speed;
+[OUT]     float speedpp_serve_speed_target;
+[OUT]     uint8_t speedpp_stage;
+[OUT]     uint16_t speedpp_next_threshold;
+[OUT] 
+[OUT]     /* Latest accel sample (for UI/debug + optional game effects). */
+[OUT]     bool accel_active;
+[OUT]     float accel_ax;
+[OUT]     float accel_ay;
+[OUT] 
+[OUT]     /* Runtime AI/NPU telemetry. */
+[OUT]     uint32_t ai_telemetry_start_cycles;
+[OUT]     uint32_t ai_npu_attempts_window;
+[OUT]     uint32_t ai_fallback_window;
+[OUT]     uint16_t ai_npu_rate_hz;
+[OUT]     uint16_t ai_fallback_rate_hz;
+[OUT] 
+[OUT]     ai_learn_mode_t ai_learn_mode;
+[OUT]     bool ai_left_active;
+[OUT]     bool ai_right_active;
+[OUT]     ai_learn_profile_t ai_profile_left;
+[OUT]     ai_learn_profile_t ai_profile_right;
+[OUT] 
+[OUT]     npu_hal_t npu;
+[OUT] } pong_game_t;
+[OUT] 
+[OUT] void game_init(pong_game_t *g);
+[OUT] void game_reset(pong_game_t *g);
+[OUT] void game_step(pong_game_t *g, const platform_input_t *in, float dt);
+[OUT] ---
+[OUT] #pragma once
+[OUT] 
+[OUT] #include <stdbool.h>
+[OUT] 
+[OUT] #include "game/game.h"
+[OUT] 
+[OUT] void ai_init(pong_game_t *g);
+[OUT] void ai_step(pong_game_t *g, float dt, bool ai_left, bool ai_right);
+[OUT] void ai_learning_reset_session(pong_game_t *g);
+[OUT] void ai_learning_set_mode(pong_game_t *g, ai_learn_mode_t mode);
+[OUT] void ai_learning_set_persistent(pong_game_t *g, bool enabled);
+[OUT] void ai_learning_sync_store(pong_game_t *g);
+[OUT] void ai_learning_on_paddle_hit(pong_game_t *g, bool left_side);
+[OUT] void ai_learning_on_miss(pong_game_t *g, bool left_side);
+[2026-02-25T01:32:10Z] CMD: rg -n "ai_profile_default|ai_profile_clamp|ai_learning_on_paddle_hit|ai_learning_on_miss|target_y|target_z|rand_f|ai_step_one" src/game/ai.c && sed -n "130,370p" src/game/ai.c && sed -n "620,770p" src/game/ai.c
+[OUT] 34:static float rand_f01(pong_game_t *g)
+[OUT] 41:static float rand_f(pong_game_t *g, float lo, float hi)
+[OUT] 43:    return lo + (hi - lo) * rand_f01(g);
+[OUT] 150:static ai_learn_profile_t ai_profile_default(void)
+[OUT] 161:static void ai_profile_clamp(ai_learn_profile_t *p)
+[OUT] 219:        ai_profile_clamp(&g->ai_profile_left);
+[OUT] 220:        ai_profile_clamp(&g->ai_profile_right);
+[OUT] 229:        ai_profile_clamp(&g->ai_profile_left);
+[OUT] 230:        ai_profile_clamp(&g->ai_profile_right);
+[OUT] 247:    g->ai_profile_left = ai_profile_default();
+[OUT] 248:    g->ai_profile_right = ai_profile_default();
+[OUT] 298:void ai_learning_on_paddle_hit(pong_game_t *g, bool left_side)
+[OUT] 313:    ai_profile_clamp(p);
+[OUT] 317:void ai_learning_on_miss(pong_game_t *g, bool left_side)
+[OUT] 332:    ai_profile_clamp(p);
+[OUT] 656:static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_side)
+[OUT] 765:            y_hit += rand_f(g, -noise, noise);
+[OUT] 766:            z_hit += rand_f(g, -noise, noise);
+[OUT] 774:        p->target_y = clampf(y_hit, 0.0f, 1.0f);
+[OUT] 775:        p->target_z = clampf(z_hit, 0.0f, 1.0f);
+[OUT] 785:    float dy = p->target_y - p->y;
+[OUT] 786:    float dz = p->target_z - p->z;
+[OUT] 808:        ai_step_one(g, dt, &g->paddle_l, false);
+[OUT] 812:        ai_step_one(g, dt, &g->paddle_r, true);
+[OUT] 822:        ai_profile_clamp(p);
+[OUT] 830:        ai_profile_clamp(p);
+[OUT] ---
+[OUT]     write_buf = *store;
+[OUT]     write_buf.crc32 = 0u;
+[OUT]     write_buf.crc32 = ai_store_checksum(&write_buf);
+[OUT] 
+[OUT]     if (FLASH_Erase(&s_flash_cfg, s_flash_store_addr, s_flash_sector_size, kFLASH_ApiEraseKey) != kStatus_FLASH_Success)
+[OUT]         return false;
+[OUT]     if (FLASH_Program(&s_flash_cfg, s_flash_store_addr, (uint8_t *)&write_buf, sizeof(write_buf)) !=
+[OUT]         kStatus_FLASH_Success)
+[OUT]         return false;
+[OUT] 
+[OUT]     const ai_learn_store_t *flash_store = (const ai_learn_store_t *)(uintptr_t)s_flash_store_addr;
+[OUT]     return (memcmp(flash_store, &write_buf, sizeof(write_buf)) == 0);
+[OUT] }
+[OUT] 
+[OUT] static void ai_flash_clear_store(void)
+[OUT] {
+[OUT]     if (!ai_flash_init()) return;
+[OUT]     (void)FLASH_Erase(&s_flash_cfg, s_flash_store_addr, s_flash_sector_size, kFLASH_ApiEraseKey);
+[OUT] }
+[OUT] 
+[OUT] static ai_learn_profile_t ai_profile_default(void)
+[OUT] {
+[OUT]     ai_learn_profile_t p;
+[OUT]     p.speed_scale = 1.0f;
+[OUT]     p.noise_scale = 1.0f;
+[OUT]     p.lead_scale = 1.0f;
+[OUT]     p.hits = 0u;
+[OUT]     p.misses = 0u;
+[OUT]     return p;
+[OUT] }
+[OUT] 
+[OUT] static void ai_profile_clamp(ai_learn_profile_t *p)
+[OUT] {
+[OUT]     if (!p) return;
+[OUT]     p->speed_scale = clampf(p->speed_scale, 0.75f, 1.85f);
+[OUT]     p->noise_scale = clampf(p->noise_scale, 0.40f, 2.20f);
+[OUT]     p->lead_scale = clampf(p->lead_scale, 0.70f, 2.00f);
+[OUT] }
+[OUT] 
+[OUT] static ai_learn_profile_t *ai_profile_side(pong_game_t *g, bool right_side)
+[OUT] {
+[OUT]     if (!g) return NULL;
+[OUT]     return right_side ? &g->ai_profile_right : &g->ai_profile_left;
+[OUT] }
+[OUT] 
+[OUT] static const ai_learn_profile_t *ai_profile_side_const(const pong_game_t *g, bool right_side)
+[OUT] {
+[OUT]     if (!g) return NULL;
+[OUT]     return right_side ? &g->ai_profile_right : &g->ai_profile_left;
+[OUT] }
+[OUT] 
+[OUT] static bool ai_learning_side_selected(const pong_game_t *g, bool right_side)
+[OUT] {
+[OUT]     if (!g) return false;
+[OUT]     if (right_side)
+[OUT]     {
+[OUT]         if (!g->ai_right_active) return false;
+[OUT]         if (g->ai_learn_mode == kAiLearnModeAiAlgo) return false;
+[OUT]         return true;
+[OUT]     }
+[OUT] 
+[OUT]     if (!g->ai_left_active) return false;
+[OUT]     if (g->ai_learn_mode == kAiLearnModeAlgoAi) return false;
+[OUT]     return true;
+[OUT] }
+[OUT] 
+[OUT] static void ai_learning_commit_store(const pong_game_t *g)
+[OUT] {
+[OUT]     if (!g || !g->persistent_learning) return;
+[OUT]     s_learn_store.magic = EDGEAI_LEARN_STORE_MAGIC;
+[OUT]     s_learn_store.version = EDGEAI_LEARN_STORE_VERSION;
+[OUT]     s_learn_store.crc32 = 0u;
+[OUT]     s_learn_store.left = g->ai_profile_left;
+[OUT]     s_learn_store.right = g->ai_profile_right;
+[OUT]     s_learn_store.crc32 = ai_store_checksum(&s_learn_store);
+[OUT]     s_learn_store_dirty = true;
+[OUT] }
+[OUT] 
+[OUT] static void ai_learning_load_store(pong_game_t *g)
+[OUT] {
+[OUT]     if (!g || !g->persistent_learning) return;
+[OUT] 
+[OUT]     ai_learn_store_t flash_store;
+[OUT]     if (ai_flash_read_store(&flash_store))
+[OUT]     {
+[OUT]         s_learn_store = flash_store;
+[OUT]         s_learn_store_dirty = false;
+[OUT]         g->ai_profile_left = s_learn_store.left;
+[OUT]         g->ai_profile_right = s_learn_store.right;
+[OUT]         ai_profile_clamp(&g->ai_profile_left);
+[OUT]         ai_profile_clamp(&g->ai_profile_right);
+[OUT]         return;
+[OUT]     }
+[OUT] 
+[OUT]     if (s_learn_store.magic == EDGEAI_LEARN_STORE_MAGIC && s_learn_store.version == EDGEAI_LEARN_STORE_VERSION &&
+[OUT]         ai_store_checksum(&s_learn_store) == s_learn_store.crc32)
+[OUT]     {
+[OUT]         g->ai_profile_left = s_learn_store.left;
+[OUT]         g->ai_profile_right = s_learn_store.right;
+[OUT]         ai_profile_clamp(&g->ai_profile_left);
+[OUT]         ai_profile_clamp(&g->ai_profile_right);
+[OUT]     }
+[OUT]     else
+[OUT]     {
+[OUT]         s_learn_store.magic = EDGEAI_LEARN_STORE_MAGIC;
+[OUT]         s_learn_store.version = EDGEAI_LEARN_STORE_VERSION;
+[OUT]         s_learn_store.crc32 = 0u;
+[OUT]         s_learn_store.left = g->ai_profile_left;
+[OUT]         s_learn_store.right = g->ai_profile_right;
+[OUT]         s_learn_store.crc32 = ai_store_checksum(&s_learn_store);
+[OUT]         s_learn_store_dirty = false;
+[OUT]     }
+[OUT] }
+[OUT] 
+[OUT] void ai_learning_reset_session(pong_game_t *g)
+[OUT] {
+[OUT]     if (!g) return;
+[OUT]     g->ai_profile_left = ai_profile_default();
+[OUT]     g->ai_profile_right = ai_profile_default();
+[OUT]     ai_learning_load_store(g);
+[OUT] }
+[OUT] 
+[OUT] void ai_learning_set_mode(pong_game_t *g, ai_learn_mode_t mode)
+[OUT] {
+[OUT]     if (!g) return;
+[OUT]     switch (mode)
+[OUT]     {
+[OUT]         case kAiLearnModeBoth:
+[OUT]         case kAiLearnModeAiAlgo:
+[OUT]         case kAiLearnModeAlgoAi:
+[OUT]             g->ai_learn_mode = mode;
+[OUT]             break;
+[OUT]         default:
+[OUT]             g->ai_learn_mode = kAiLearnModeBoth;
+[OUT]             break;
+[OUT]     }
+[OUT] }
+[OUT] 
+[OUT] void ai_learning_set_persistent(pong_game_t *g, bool enabled)
+[OUT] {
+[OUT]     if (!g) return;
+[OUT]     if (enabled)
+[OUT]     {
+[OUT]         g->persistent_learning = true;
+[OUT]         ai_learning_load_store(g);
+[OUT]         return;
+[OUT]     }
+[OUT] 
+[OUT]     /* Persistence OFF means no carry-over advantage:
+[OUT]      * clear current learned profiles and wipe stored snapshot.
+[OUT]      */
+[OUT]     g->persistent_learning = false;
+[OUT]     ai_learning_reset_session(g);
+[OUT]     memset(&s_learn_store, 0, sizeof(s_learn_store));
+[OUT]     s_learn_store_dirty = false;
+[OUT]     ai_flash_clear_store();
+[OUT] }
+[OUT] 
+[OUT] void ai_learning_sync_store(pong_game_t *g)
+[OUT] {
+[OUT]     if (!g || !g->persistent_learning) return;
+[OUT]     if (!s_learn_store_dirty) return;
+[OUT]     if (ai_flash_write_store(&s_learn_store))
+[OUT]     {
+[OUT]         s_learn_store_dirty = false;
+[OUT]     }
+[OUT] }
+[OUT] 
+[OUT] void ai_learning_on_paddle_hit(pong_game_t *g, bool left_side)
+[OUT] {
+[OUT]     if (!g) return;
+[OUT]     bool right_side = !left_side;
+[OUT]     if (!ai_learning_side_selected(g, right_side)) return;
+[OUT] 
+[OUT]     ai_learn_profile_t *p = ai_profile_side(g, right_side);
+[OUT]     if (!p) return;
+[OUT] 
+[OUT]     p->hits = clampu16((uint32_t)p->hits + 1u, 65535u);
+[OUT] 
+[OUT]     /* Successful return: slightly cleaner and quicker tracking, with mild anticipation. */
+[OUT]     p->noise_scale *= 0.987f;
+[OUT]     p->speed_scale += 0.008f;
+[OUT]     p->lead_scale += 0.005f;
+[OUT]     ai_profile_clamp(p);
+[OUT]     ai_learning_commit_store(g);
+[OUT] }
+[OUT] 
+[OUT] void ai_learning_on_miss(pong_game_t *g, bool left_side)
+[OUT] {
+[OUT]     if (!g) return;
+[OUT]     bool right_side = !left_side;
+[OUT]     if (!ai_learning_side_selected(g, right_side)) return;
+[OUT] 
+[OUT]     ai_learn_profile_t *p = ai_profile_side(g, right_side);
+[OUT]     if (!p) return;
+[OUT] 
+[OUT]     p->misses = clampu16((uint32_t)p->misses + 1u, 65535u);
+[OUT] 
+[OUT]     /* Missed return: make AI react faster and reduce wander so it recovers over the session. */
+[OUT]     p->noise_scale *= 0.94f;
+[OUT]     p->speed_scale += 0.045f;
+[OUT]     p->lead_scale += 0.030f;
+[OUT]     ai_profile_clamp(p);
+[OUT]     ai_learning_commit_store(g);
+[OUT] }
+[OUT] 
+[OUT] static void ai_sim_wall(float *p, float *v, float r)
+[OUT] {
+[OUT]     if (!p || !v) return;
+[OUT]     if ((*p - r) < 0.0f)
+[OUT]     {
+[OUT]         *p = r;
+[OUT]         *v = absf(*v);
+[OUT]     }
+[OUT]     if ((*p + r) > 1.0f)
+[OUT]     {
+[OUT]         *p = 1.0f - r;
+[OUT]         *v = -absf(*v);
+[OUT]     }
+[OUT] }
+[OUT] 
+[OUT] static void ai_predict_right(const pong_game_t *g, float dt, float *out_y, float *out_z, float *out_t)
+[OUT] {
+[OUT]     if (!out_y || !out_z || !out_t)
+[OUT]         return;
+[OUT] 
+[OUT]     *out_y = 0.5f;
+[OUT]     *out_z = 0.5f;
+[OUT]     *out_t = 0.0f;
+[OUT]     if (!g) return;
+[OUT] 
+[OUT]     if (g->ball.vx <= 0.0f)
+[OUT]     {
+[OUT]         *out_y = 0.5f;
+[OUT]         *out_z = 0.5f;
+[OUT]         *out_t = 0.0f;
+[OUT]         return;
+[OUT]     }
+[OUT] 
+[OUT]     float x = g->ball.x;
+[OUT]     float y = g->ball.y;
+[OUT] ---
+[OUT]     if (!g) return 1.0f;
+[OUT]     if (!ai_learning_side_selected(g, right_side)) return 1.0f;
+[OUT]     const ai_learn_profile_t *p = ai_profile_side_const(g, right_side);
+[OUT]     if (!p) return 1.0f;
+[OUT]     return clampf(p->lead_scale, 0.70f, 2.00f);
+[OUT] }
+[OUT] 
+[OUT] static void ai_update_telemetry_window(pong_game_t *g)
+[OUT] {
+[OUT]     if (!g) return;
+[OUT] 
+[OUT]     if (g->ai_telemetry_start_cycles == 0u)
+[OUT]     {
+[OUT]         g->ai_telemetry_start_cycles = time_hal_cycles();
+[OUT]         return;
+[OUT]     }
+[OUT] 
+[OUT]     uint32_t elapsed_us = time_hal_elapsed_us(g->ai_telemetry_start_cycles);
+[OUT]     if (elapsed_us < 1000000u) return;
+[OUT] 
+[OUT]     uint32_t npu_hz = 0u;
+[OUT]     uint32_t fb_hz = 0u;
+[OUT] 
+[OUT]     if (elapsed_us > 0u)
+[OUT]     {
+[OUT]         npu_hz = (uint32_t)(((uint64_t)g->ai_npu_attempts_window * 1000000ull) / (uint64_t)elapsed_us);
+[OUT]         fb_hz = (uint32_t)(((uint64_t)g->ai_fallback_window * 1000000ull) / (uint64_t)elapsed_us);
+[OUT]     }
+[OUT] 
+[OUT]     g->ai_npu_rate_hz = clampu16(npu_hz, 999u);
+[OUT]     g->ai_fallback_rate_hz = clampu16(fb_hz, 999u);
+[OUT]     g->ai_npu_attempts_window = 0u;
+[OUT]     g->ai_fallback_window = 0u;
+[OUT]     g->ai_telemetry_start_cycles = time_hal_cycles();
+[OUT] }
+[OUT] 
+[OUT] static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_side)
+[OUT] {
+[OUT]     if (!g || !p) return;
+[OUT] 
+[OUT]     bool ball_toward = right_side ? (g->ball.vx > 0.0f) : (g->ball.vx < 0.0f);
+[OUT]     bool side_edgeai = ai_learning_side_selected(g, right_side);
+[OUT]     bool use_npu = g->ai_enabled && side_edgeai && ball_toward;
+[OUT] 
+[OUT]     /* Refresh AI target at a lower rate for difficulty and lower CPU. */
+[OUT]     uint32_t div = ai_update_div(g, use_npu);
+[OUT]     if (div == 0u) div = 1u;
+[OUT]     if ((g->frame % div) == 0u)
+[OUT]     {
+[OUT]         float y_hit = 0.5f;
+[OUT]         float z_hit = 0.5f;
+[OUT]         float t_hit = 0.0f;
+[OUT]         bool used_npu = false;
+[OUT] 
+[OUT]         if (ball_toward)
+[OUT]         {
+[OUT]             if (use_npu)
+[OUT]             {
+[OUT]                 float feat[16];
+[OUT]                 float feat2[16];
+[OUT]                 ai_build_features(g, feat);
+[OUT] 
+[OUT]                 const float *use_feat = feat;
+[OUT]                 if (!right_side)
+[OUT]                 {
+[OUT]                     ai_mirror_features_x(feat, feat2);
+[OUT]                     use_feat = feat2;
+[OUT]                 }
+[OUT] 
+[OUT]                 g->ai_npu_attempts_window++;
+[OUT]                 npu_pred_t pred;
+[OUT]                 used_npu = npu_hal_predict(&g->npu, use_feat, &pred);
+[OUT]                 if (used_npu)
+[OUT]                 {
+[OUT]                     y_hit = pred.y_hit;
+[OUT]                     z_hit = pred.z_hit;
+[OUT]                     t_hit = pred.t_hit;
+[OUT] 
+[OUT]                     /* In mixed SKILL modes, blend NPU with analytic prediction to
+[OUT]                      * keep EdgeAI competitive against fixed ALGO baseline.
+[OUT]                      */
+[OUT]                     if (g->ai_learn_mode != kAiLearnModeBoth)
+[OUT]                     {
+[OUT]                         float y_ref = 0.5f;
+[OUT]                         float z_ref = 0.5f;
+[OUT]                         float t_ref = 0.0f;
+[OUT]                         if (right_side)
+[OUT]                         {
+[OUT]                             ai_predict_right(g, dt, &y_ref, &z_ref, &t_ref);
+[OUT]                         }
+[OUT]                         else
+[OUT]                         {
+[OUT]                             ai_predict_left(g, dt, &y_ref, &z_ref, &t_ref);
+[OUT]                         }
+[OUT] 
+[OUT]                         /* Confidence gate: when NPU diverges from analytic physics, bias heavily
+[OUT]                          * toward the analytic path to preserve competitiveness.
+[OUT]                          */
+[OUT]                         float dy = absf(y_hit - y_ref);
+[OUT]                         float dz = absf(z_hit - z_ref);
+[OUT]                         float dtau = absf(t_hit - t_ref);
+[OUT]                         float disagreement = dy + dz + (0.60f * dtau);
+[OUT] 
+[OUT]                         float npu_w = 0.16f;
+[OUT]                         if (disagreement >= 0.22f)
+[OUT]                         {
+[OUT]                             npu_w = 0.0f;
+[OUT]                         }
+[OUT]                         else if (disagreement > 0.0f)
+[OUT]                         {
+[OUT]                             float trust = 1.0f - (disagreement / 0.22f);
+[OUT]                             npu_w *= clampf(trust, 0.0f, 1.0f);
+[OUT]                         }
+[OUT] 
+[OUT]                         const float ref_w = 1.0f - npu_w;
+[OUT]                         y_hit = (ref_w * y_ref) + (npu_w * y_hit);
+[OUT]                         z_hit = (ref_w * z_ref) + (npu_w * z_hit);
+[OUT]                         t_hit = (ref_w * t_ref) + (npu_w * t_hit);
+[OUT]                     }
+[OUT]                 }
+[OUT]             }
+[OUT] 
+[OUT]             if (!used_npu)
+[OUT]             {
+[OUT]                 if (right_side)
+[OUT]                 {
+[OUT]                     ai_predict_right(g, dt, &y_hit, &z_hit, &t_hit);
+[OUT]                 }
+[OUT]                 else
+[OUT]                 {
+[OUT]                     ai_predict_left(g, dt, &y_hit, &z_hit, &t_hit);
+[OUT]                 }
+[OUT]             }
+[OUT] 
+[OUT]             /* Learned anticipation: shift target along projected travel based on side profile. */
+[OUT]             {
+[OUT]                 float lead = ai_lead_scale(g, right_side);
+[OUT]                 float t_use = clampf(t_hit, 0.0f, 0.80f);
+[OUT]                 float k = (lead - 1.0f) * 0.45f;
+[OUT]                 y_hit += g->ball.vy * t_use * k;
+[OUT]                 z_hit += g->ball.vz * t_use * k;
+[OUT]             }
+[OUT] 
+[OUT]             /* Add small noise to avoid perfect play. */
+[OUT]             float noise = ai_noise(g, right_side);
+[OUT]             y_hit += rand_f(g, -noise, noise);
+[OUT]             z_hit += rand_f(g, -noise, noise);
+[OUT]         }
+[OUT] 
+[OUT]         if (!used_npu)
+[OUT]         {
+2026-02-25T00:00:00Z | session: verified root runbook docs (START_HERE/PROJECT_STATE/OPS_RUNBOOK) and inspected smart-pong working tree/state
+2026-02-25T00:00:00Z | session: inspected online-learning symbols in src/game/ai.c and src/game/game.h
+2026-02-25T01:37:46Z | date -u +%Y-%m-%dT%H:%M:%SZ ; git status --short ; git diff -- src/game/game.h src/game/ai.c
+2026-02-25T01:38:31Z | ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh (online tactical learning pass)
+2026-02-25T01:38:31Z | result: build=PASS flash=PASS
+2026-02-25T01:38:55Z | viewed STATUS.md to update last-run notes for online tactical learning
+2026-02-25T01:39:15Z | updated STATUS.md with online tactical learning note
+2026-02-25T01:40:20Z | tuned ai.c for early-match stability and mixed-mode competitiveness (lower style epsilon, maturity-gated style effect, reduced noise, slight speed bias)
+2026-02-25T01:40:20Z | starting build+flash for AI competitiveness retune
+2026-02-25T01:45:10Z | build_frdmmcxn947=PASS ; flash_frdmmcxn947=PASS (AI competitiveness retune)
+2026-02-25T01:50:05Z | updated STATUS.md with AI competitiveness retune note
+2026-02-25T01:59:49Z | date stamp for restore artifact naming
+2026-02-25T01:59:49Z | copied current build ELF to failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_015949_online_tactical_ai_retune_golden.elf
+2026-02-25T02:00:10Z | reviewed README.md, docs/project_description.md, docs/failsafe.md, STATUS.md for doc refresh
+2026-02-25T02:01:20Z | updated README with detailed AI runtime flow and online tactical learning behavior
+2026-02-25T02:01:20Z | updated docs/project_description.md AI section with online tactical adaptation details
+2026-02-25T02:01:20Z | updated docs/failsafe.md to new Golden/Failsafe restore artifact
+2026-02-25T02:01:20Z | updated STATUS.md with new restore-marker note and failsafe path

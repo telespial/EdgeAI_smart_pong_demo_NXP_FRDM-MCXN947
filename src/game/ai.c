@@ -23,6 +23,11 @@ static inline float absf(float v)
     return (v < 0.0f) ? -v : v;
 }
 
+static inline float signf_nonzero(float v)
+{
+    return (v < 0.0f) ? -1.0f : 1.0f;
+}
+
 static inline uint32_t xorshift32(uint32_t x)
 {
     x ^= x << 13;
@@ -150,11 +155,15 @@ static void ai_flash_clear_store(void)
 static ai_learn_profile_t ai_profile_default(void)
 {
     ai_learn_profile_t p;
-    p.speed_scale = 1.0f;
-    p.noise_scale = 1.0f;
-    p.lead_scale = 1.0f;
+    memset(&p, 0, sizeof(p));
+    p.speed_scale = 1.06f;
+    p.noise_scale = 0.92f;
+    p.lead_scale = 1.05f;
+    p.center_bias = 0.0f;
+    p.corner_bias = 0.0f;
     p.hits = 0u;
     p.misses = 0u;
+    p.last_style = 0u;
     return p;
 }
 
@@ -164,6 +173,107 @@ static void ai_profile_clamp(ai_learn_profile_t *p)
     p->speed_scale = clampf(p->speed_scale, 0.75f, 1.85f);
     p->noise_scale = clampf(p->noise_scale, 0.40f, 2.20f);
     p->lead_scale = clampf(p->lead_scale, 0.70f, 2.00f);
+    p->center_bias = clampf(p->center_bias, -0.35f, 0.35f);
+    p->corner_bias = clampf(p->corner_bias, 0.00f, 0.45f);
+    if (p->last_style > 3u) p->last_style = 0u;
+}
+
+static uint8_t ai_style_select(pong_game_t *g, const ai_learn_profile_t *p)
+{
+    if (!g || !p) return 0u;
+
+    uint32_t n_trials = (uint32_t)p->style_trials[0] + (uint32_t)p->style_trials[1] +
+                        (uint32_t)p->style_trials[2] + (uint32_t)p->style_trials[3];
+    float eps = (n_trials < 20u) ? 0.05f : 0.02f;
+
+    /* Keep exploration low so early rallies stay stable. */
+    if (rand_f01(g) < eps)
+    {
+        float r = rand_f01(g);
+        uint8_t s = (uint8_t)(r * 4.0f);
+        if (s > 3u) s = 3u;
+        return s;
+    }
+
+    float best_score = -1000000.0f;
+    uint8_t best_style = 0u;
+    for (uint8_t s = 0u; s < 4u; s++)
+    {
+        float q = (float)p->style_value_q8[s] * (1.0f / 256.0f);
+        float prior = 0.0f;
+        switch (s)
+        {
+            case 0u: prior = p->center_bias; break;
+            case 1u:
+            case 2u: prior = 0.85f * p->corner_bias; break;
+            default: prior = 1.00f * p->corner_bias; break;
+        }
+        float explore = (p->style_trials[s] == 0u) ? 0.45f : (0.12f / (float)p->style_trials[s]);
+        float score = q + prior + explore;
+        if (score > best_score)
+        {
+            best_score = score;
+            best_style = s;
+        }
+    }
+
+    return best_style;
+}
+
+static void ai_style_update(ai_learn_profile_t *p, uint8_t style, int32_t reward_q8)
+{
+    if (!p || style > 3u) return;
+    if (p->style_trials[style] < 65535u) p->style_trials[style]++;
+
+    int32_t q = (int32_t)p->style_value_q8[style];
+    uint16_t n = p->style_trials[style];
+    int32_t den = (n < 24u) ? (int32_t)n : 24;
+    if (den < 1) den = 1;
+    q += (reward_q8 - q) / den;
+
+    if (q > 32767) q = 32767;
+    if (q < -32768) q = -32768;
+    p->style_value_q8[style] = (int16_t)q;
+}
+
+static void ai_style_apply(const pong_game_t *g,
+                           const ai_learn_profile_t *p,
+                           uint8_t style,
+                           float confidence,
+                           float *y_hit,
+                           float *z_hit)
+{
+    if (!g || !p || !y_hit || !z_hit) return;
+
+    confidence = clampf(confidence, 0.0f, 1.0f);
+    float k = 0.45f + (0.55f * confidence);
+    uint32_t n_hist = (uint32_t)p->hits + (uint32_t)p->misses;
+    float maturity = clampf((float)n_hist * (1.0f / 24.0f), 0.0f, 1.0f);
+    k *= (0.30f + 0.70f * maturity);
+
+    float edge = 0.07f + (0.28f * p->corner_bias);
+    float edge_y = edge + 0.08f * absf(g->ball.vy);
+    float edge_z = edge + 0.08f * absf(g->ball.vz);
+
+    if (style == 0u)
+    {
+        float hold = clampf(0.22f + 0.65f * p->center_bias, 0.00f, 0.70f) * k;
+        *y_hit += (0.5f - *y_hit) * hold;
+        *z_hit += (0.5f - *z_hit) * hold;
+    }
+    else if (style == 1u)
+    {
+        *y_hit += signf_nonzero(g->ball.y - 0.5f) * edge_y * k;
+    }
+    else if (style == 2u)
+    {
+        *z_hit += signf_nonzero(g->ball.z - 0.5f) * edge_z * k;
+    }
+    else
+    {
+        *y_hit += signf_nonzero(g->ball.y - 0.5f) * edge_y * k;
+        *z_hit += signf_nonzero(g->ball.z - 0.5f) * edge_z * k;
+    }
 }
 
 static ai_learn_profile_t *ai_profile_side(pong_game_t *g, bool right_side)
@@ -310,6 +420,39 @@ void ai_learning_on_paddle_hit(pong_game_t *g, bool left_side)
     p->noise_scale *= 0.987f;
     p->speed_scale += 0.008f;
     p->lead_scale += 0.005f;
+
+    {
+        uint8_t style = (p->last_style > 3u) ? 0u : p->last_style;
+        float ahy = absf(g->last_hit_dy);
+        float ahz = absf(g->last_hit_dz);
+        int32_t reward = 18 << 8;
+        if (style == 0u)
+        {
+            reward += ((ahy + ahz) < 0.60f) ? (6 << 8) : (-4 << 8);
+            p->center_bias += 0.012f;
+            p->corner_bias -= 0.003f;
+        }
+        else if (style == 1u)
+        {
+            reward += (ahy > 0.55f) ? (8 << 8) : (-3 << 8);
+            p->corner_bias += 0.010f;
+            p->center_bias -= 0.003f;
+        }
+        else if (style == 2u)
+        {
+            reward += (ahz > 0.55f) ? (8 << 8) : (-3 << 8);
+            p->corner_bias += 0.010f;
+            p->center_bias -= 0.003f;
+        }
+        else
+        {
+            reward += ((ahy + ahz) > 1.05f) ? (10 << 8) : (-4 << 8);
+            p->corner_bias += 0.012f;
+            p->center_bias -= 0.004f;
+        }
+        ai_style_update(p, style, reward);
+    }
+
     ai_profile_clamp(p);
     ai_learning_commit_store(g);
 }
@@ -329,6 +472,23 @@ void ai_learning_on_miss(pong_game_t *g, bool left_side)
     p->noise_scale *= 0.94f;
     p->speed_scale += 0.045f;
     p->lead_scale += 0.030f;
+
+    {
+        uint8_t style = (p->last_style > 3u) ? 0u : p->last_style;
+        int32_t penalty = -22 << 8;
+        ai_style_update(p, style, penalty);
+        if (style == 0u)
+        {
+            p->center_bias -= 0.014f;
+            p->corner_bias += 0.004f;
+        }
+        else
+        {
+            p->corner_bias -= 0.012f;
+            p->center_bias += 0.004f;
+        }
+    }
+
     ai_profile_clamp(p);
     ai_learning_commit_store(g);
 }
@@ -578,6 +738,10 @@ static float ai_noise(const pong_game_t *g, bool right_side)
         {
             n *= p->noise_scale;
         }
+        if (g->ai_learn_mode != kAiLearnModeBoth)
+        {
+            n *= 0.85f;
+        }
     }
 
     n = clampf(n, 0.002f, 0.08f);
@@ -608,6 +772,10 @@ static float ai_max_speed(const pong_game_t *g, bool right_side)
         if (p)
         {
             s *= p->speed_scale;
+        }
+        if (g->ai_learn_mode != kAiLearnModeBoth)
+        {
+            s *= 1.08f;
         }
     }
 
@@ -670,6 +838,7 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
         float z_hit = 0.5f;
         float t_hit = 0.0f;
         bool used_npu = false;
+        float npu_confidence = 1.0f;
 
         if (ball_toward)
         {
@@ -730,6 +899,7 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
                             float trust = 1.0f - (disagreement / 0.22f);
                             npu_w *= clampf(trust, 0.0f, 1.0f);
                         }
+                        npu_confidence = clampf(1.0f - (disagreement / 0.22f), 0.0f, 1.0f);
 
                         const float ref_w = 1.0f - npu_w;
                         y_hit = (ref_w * y_ref) + (npu_w * y_hit);
@@ -758,6 +928,17 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
                 float k = (lead - 1.0f) * 0.45f;
                 y_hit += g->ball.vy * t_use * k;
                 z_hit += g->ball.vz * t_use * k;
+            }
+
+            if (side_edgeai)
+            {
+                ai_learn_profile_t *lp = ai_profile_side(g, right_side);
+                if (lp)
+                {
+                    uint8_t style = ai_style_select(g, lp);
+                    lp->last_style = style;
+                    ai_style_apply(g, lp, style, used_npu ? npu_confidence : 0.80f, &y_hit, &z_hit);
+                }
             }
 
             /* Add small noise to avoid perfect play. */

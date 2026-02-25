@@ -110,6 +110,24 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 5. If NPU is off or inference fails, it falls back fully to CPU analytic prediction.
 6. Important: runtime learning here does not retrain model weights; it adapts control parameters (speed/noise/lead) per side over time.
 
+## Detailed AI Runtime Flow
+- Per side, the controller computes a paddle target (`target_y`, `target_z`) at a bounded update cadence, then moves with speed limits each frame.
+- In `AI/ALGO` and `ALGO/AI`:
+  - `ALGO` side uses CPU analytic intercept only.
+  - `EdgeAI` side uses NPU prediction plus analytic blend/fallback.
+- NPU confidence gating:
+  - NPU output is compared to analytic intercept (`y`, `z`, `t` disagreement metric).
+  - If disagreement is high, NPU weight is reduced to zero and control follows analytic prediction.
+  - This prevents unstable misses from outlier inferences.
+- Online tactical learning (per side):
+  - Maintains adaptive profile fields: `speed_scale`, `noise_scale`, `lead_scale`.
+  - Maintains tactical style state (`center/corner` bias, style trials, style value estimate, last style).
+  - Style selection is low-epsilon and reward-updated from hit/miss outcomes.
+  - Style influence is maturity-gated so early rallies stay stable and stronger effects appear after enough history.
+- Persistence behavior:
+  - With `PERSIST ON`, left/right profiles are stored independently in flash and restored on startup.
+  - With `PERSIST OFF`, persisted profile snapshot is cleared for cold-start operation.
+
 ## Features
 - 3D-look arena with depth cues, wall shading, and segmented score digits
 - 0P / 1P / 2P modes

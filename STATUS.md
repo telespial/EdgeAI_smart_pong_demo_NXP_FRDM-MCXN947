@@ -15,7 +15,6 @@
 - Notes (flash write policy): profile snapshot is synced to flash on match reset/new game to limit flash wear; `PERSIST OFF` clears stored snapshot.
 - Notes (SPEED++ tuning): milestone boost updated to `+5%` per side-specific multiple-of-11 score event (`11, 22, 33, ...`).
 - Notes (settings label render): added `+` support to the 5x7 font so `SPEED++` displays correctly (previously rendered as `SPEED`).
-- Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260211_1309_final_release_score999_golden.elf`
 - Restore point: current build is the active Golden + Failsafe snapshot.
 - Notes (SKILL setting): learn-mode selector now supports `2AI`, `AI/ALGO`, and `ALGO/AI` so EdgeAI can run on either side.
 - Notes (docs refresh): updated README and project description to match current settings, SKILL modes, SPEED++, and side-independent persistence behavior.
@@ -24,3 +23,10 @@
 - Notes (mixed-mode tune): reduced EdgeAI mixed-mode handicap by using ALGO-like target update cadence plus adaptive NPU confidence gating (fallback to analytic predictor on high disagreement).
 - Notes (release marker): current mixed-SKILL fairness tuning is promoted as Golden + Failsafe restore point.
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_0100_mixed_skill_balance_confidence_gate_golden.elf`
+- Notes (physics tuning): paddle corner/edge hits now apply a slight outward Y/Z deflection, increasing natural wall-ricochet rallies.
+- Notes (physics tuning v2): near-true paddle-corner hits now get stronger Y/Z deflection plus a minimum side-velocity gate to create clearly visible extreme ricochets.
+- Notes (restore selection): active Golden/Failsafe is pinned to the build before the extreme-bounce tuning for safe rollback while bounce tuning is under evaluation.
+- Notes (online learning): added lightweight per-side online tactical style learning (center/corner strategy bandit) that adapts target bias from hit/miss outcomes without retraining model weights.
+- Notes (AI retune): reduced early tactical exploration and scaled style influence by learning maturity; added slight mixed-mode edge (lower noise + modest speed boost) to improve early AI-vs-ALGO competitiveness.
+- Notes (restore marker): promoted current AI retune build as Golden + Failsafe restore point.
+- Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_015949_online_tactical_ai_retune_golden.elf`

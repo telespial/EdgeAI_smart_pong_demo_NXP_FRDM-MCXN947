@@ -17,6 +17,11 @@ static inline float absf(float v)
     return (v < 0.0f) ? -v : v;
 }
 
+static inline float signf(float v)
+{
+    return (v < 0.0f) ? -1.0f : 1.0f;
+}
+
 static inline uint32_t xorshift32(uint32_t x)
 {
     x ^= x << 13;
@@ -265,9 +270,36 @@ static void physics_paddle_hit(pong_game_t *g, pong_paddle_t *p, bool left_side)
 
     const float english = 0.55f;
     const float p_influence = 0.12f;
+    const float edge_kick = 0.40f;
+    const float corner_bonus = 0.72f;
 
     g->ball.vy += dy * english;
     g->ball.vz += dz * english;
+
+    /* Corner/edge contacts get a slight outward kick so wall ricochets happen
+     * more naturally. Y/Z walls plus both paddle planes act as six bounce walls.
+     */
+    {
+        /* Start bending earlier near paddle outer halves, then strongly amplify
+         * only when both axes are close to a true corner.
+         */
+        float edge_y = clampf((absf(dy) - 0.50f) / 0.50f, 0.0f, 1.0f);
+        float edge_z = clampf((absf(dz) - 0.50f) / 0.50f, 0.0f, 1.0f);
+        float corner = edge_y * edge_z;
+
+        float kick_y = (edge_kick * edge_y + corner_bonus * corner) * signf(dy);
+        float kick_z = (edge_kick * edge_z + corner_bonus * corner) * signf(dz);
+        g->ball.vy += kick_y;
+        g->ball.vz += kick_z;
+
+        /* Near true corners, force a visibly sharp wall-seeking angle. */
+        if (corner > 0.72f)
+        {
+            float min_side = vlim * 0.46f;
+            if (absf(g->ball.vy) < min_side) g->ball.vy = min_side * signf(dy);
+            if (absf(g->ball.vz) < min_side) g->ball.vz = min_side * signf(dz);
+        }
+    }
 
     /* Touch control can produce very large paddle velocities; clamp to keep hits stable. */
     float pvy = clampf(p->vy, -vlim, vlim);

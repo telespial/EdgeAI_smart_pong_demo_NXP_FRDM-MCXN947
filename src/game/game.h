@@ -49,8 +49,13 @@ typedef struct
     float speed_scale;
     float noise_scale;
     float lead_scale;
+    float center_bias;
+    float corner_bias;
     uint16_t hits;
     uint16_t misses;
+    uint16_t style_trials[4];
+    int16_t style_value_q8[4];
+    uint8_t last_style;
 } ai_learn_profile_t;
 
 typedef struct
