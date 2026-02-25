@@ -4,7 +4,7 @@
 - Workspace: `mcuxsdk_ws/` (created by `./tools/setup_mcuxsdk_ws.sh`)
 
 ## Last Run
-- Date: 2026-02-24
+- Date: 2026-02-25
 - Result: ok (build + flash)
 - Binary: `mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.bin`
 - Flash: `west flash -d mcuxsdk_ws/build -r linkserver`
@@ -19,3 +19,6 @@
 - Restore point: current build is the active Golden + Failsafe snapshot.
 - Notes (SKILL setting): learn-mode selector now supports `2AI`, `AI/ALGO`, and `ALGO/AI` so EdgeAI can run on either side.
 - Notes (docs refresh): updated README and project description to match current settings, SKILL modes, SPEED++, and side-independent persistence behavior.
+- Notes (SKILL balance): ALGO side remains CPU-only while mixed-mode EdgeAI now blends NPU output with analytic intercept for stronger stability and competitiveness.
+- Notes (verification run): rebuilt and reflashed after SKILL-balance tuning; ready for fresh AI-vs-ALGO score validation on hardware.
+- Notes (mixed-mode tune): reduced EdgeAI mixed-mode handicap by using ALGO-like target update cadence plus adaptive NPU confidence gating (fallback to analytic predictor on high disagreement).

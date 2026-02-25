@@ -519,6 +519,19 @@ static uint32_t ai_update_div(const pong_game_t *g, bool use_npu)
         }
     }
 
+    /* In mixed SKILL modes, keep EdgeAI control cadence near ALGO cadence so the
+     * selected AI side is not handicapped by slower NPU refresh.
+     */
+    if (g && (g->ai_learn_mode != kAiLearnModeBoth))
+    {
+        switch (d)
+        {
+            case 1: return 5u;
+            case 2: return 3u;
+            default: return 2u;
+        }
+    }
+
     /* NPU path: throttle updates to protect frame pacing, then adapt to observed latency. */
     uint32_t div = 4u;
     switch (d)
@@ -645,7 +658,8 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
     if (!g || !p) return;
 
     bool ball_toward = right_side ? (g->ball.vx > 0.0f) : (g->ball.vx < 0.0f);
-    bool use_npu = g->ai_enabled && ball_toward;
+    bool side_edgeai = ai_learning_side_selected(g, right_side);
+    bool use_npu = g->ai_enabled && side_edgeai && ball_toward;
 
     /* Refresh AI target at a lower rate for difficulty and lower CPU. */
     uint32_t div = ai_update_div(g, use_npu);
@@ -680,6 +694,48 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
                     y_hit = pred.y_hit;
                     z_hit = pred.z_hit;
                     t_hit = pred.t_hit;
+
+                    /* In mixed SKILL modes, blend NPU with analytic prediction to
+                     * keep EdgeAI competitive against fixed ALGO baseline.
+                     */
+                    if (g->ai_learn_mode != kAiLearnModeBoth)
+                    {
+                        float y_ref = 0.5f;
+                        float z_ref = 0.5f;
+                        float t_ref = 0.0f;
+                        if (right_side)
+                        {
+                            ai_predict_right(g, dt, &y_ref, &z_ref, &t_ref);
+                        }
+                        else
+                        {
+                            ai_predict_left(g, dt, &y_ref, &z_ref, &t_ref);
+                        }
+
+                        /* Confidence gate: when NPU diverges from analytic physics, bias heavily
+                         * toward the analytic path to preserve competitiveness.
+                         */
+                        float dy = absf(y_hit - y_ref);
+                        float dz = absf(z_hit - z_ref);
+                        float dtau = absf(t_hit - t_ref);
+                        float disagreement = dy + dz + (0.60f * dtau);
+
+                        float npu_w = 0.16f;
+                        if (disagreement >= 0.22f)
+                        {
+                            npu_w = 0.0f;
+                        }
+                        else if (disagreement > 0.0f)
+                        {
+                            float trust = 1.0f - (disagreement / 0.22f);
+                            npu_w *= clampf(trust, 0.0f, 1.0f);
+                        }
+
+                        const float ref_w = 1.0f - npu_w;
+                        y_hit = (ref_w * y_ref) + (npu_w * y_hit);
+                        z_hit = (ref_w * z_ref) + (npu_w * z_hit);
+                        t_hit = (ref_w * t_ref) + (npu_w * t_hit);
+                    }
                 }
             }
 
