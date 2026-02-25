@@ -3940,3 +3940,12 @@
 2026-02-25T02:01:20Z | updated docs/failsafe.md to new Golden/Failsafe restore artifact
 2026-02-25T02:01:20Z | updated STATUS.md with new restore-marker note and failsafe path
 2026-02-25T02:02:40Z | committed and pushed snapshot: Retune EdgeAI competitiveness and promote new golden/failsafe restore point (e9bc0b7)
+2026-02-25T02:03:30Z | tuned ai.c high-speed dynamic lead boost for EdgeAI anticipation
+2026-02-25T02:03:30Z | starting build+flash for high-speed lead retune
+2026-02-25T02:06:55Z | build_frdmmcxn947=PASS ; flash_frdmmcxn947=PASS (high-speed lead retune)
+2026-02-25T02:07:05Z | updated STATUS.md with high-speed lead retune note
+2026-02-25T02:08:10Z | inspected default settings in src/game/game.c and game.h for startup profile update
+2026-02-25T02:08:25Z | patched game_init defaults: P0, LEVEL3, NPU ON, SKILL AI/ALGO, PERSIST ON, MATCH INF, TARGET OFF, SPEED++ ON
+2026-02-25T02:08:25Z | starting build+flash for default-profile update
+2026-02-25T02:12:40Z | build_frdmmcxn947=PASS ; flash_frdmmcxn947=PASS (startup default profile update)
+2026-02-25T02:12:55Z | updated STATUS.md with startup default profile note

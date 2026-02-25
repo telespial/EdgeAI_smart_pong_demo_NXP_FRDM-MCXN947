@@ -379,13 +379,13 @@ void game_init(pong_game_t *g)
     memset(g, 0, sizeof(*g));
 
     g->mode = kGameModeZeroPlayer;
-    g->difficulty = 2;
+    g->difficulty = 3;
     g->ai_enabled = true;
-    g->perpetual_play = false;
+    g->perpetual_play = true;
     g->persistent_learning = true;
-    g->speedpp_enabled = false;
-    g->target_overlay_enabled = true;
-    g->ai_learn_mode = kAiLearnModeBoth;
+    g->speedpp_enabled = true;
+    g->target_overlay_enabled = false;
+    g->ai_learn_mode = kAiLearnModeAiAlgo;
     g->menu_open = false;
     g->help_open = false;
     g->ui_block_touch = false;

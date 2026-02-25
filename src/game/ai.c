@@ -23,6 +23,15 @@ static inline float absf(float v)
     return (v < 0.0f) ? -v : v;
 }
 
+static inline float sqrtf_approx(float x)
+{
+    if (x <= 0.0f) return 0.0f;
+    float r = x;
+    /* Small fixed-iteration Newton step is sufficient for lead scaling. */
+    for (int i = 0; i < 4; i++) r = 0.5f * (r + x / r);
+    return r;
+}
+
 static inline float signf_nonzero(float v)
 {
     return (v < 0.0f) ? -1.0f : 1.0f;
@@ -924,6 +933,18 @@ static void ai_step_one(pong_game_t *g, float dt, pong_paddle_t *p, bool right_s
             /* Learned anticipation: shift target along projected travel based on side profile. */
             {
                 float lead = ai_lead_scale(g, right_side);
+                /* Give EdgeAI a little more anticipation at high ball speed. */
+                if (side_edgeai)
+                {
+                    float vx = g->ball.vx;
+                    float vy = g->ball.vy;
+                    float vz = g->ball.vz;
+                    float vmag = sqrtf_approx((vx * vx) + (vy * vy) + (vz * vz));
+                    float hs = clampf((vmag - 1.10f) * (1.0f / 1.30f), 0.0f, 1.0f);
+                    float bonus = 0.10f + 0.12f * hs;
+                    if (g->ai_learn_mode != kAiLearnModeBoth) bonus += 0.05f;
+                    lead *= (1.0f + bonus * hs);
+                }
                 float t_use = clampf(t_hit, 0.0f, 0.80f);
                 float k = (lead - 1.0f) * 0.45f;
                 y_hit += g->ball.vy * t_use * k;

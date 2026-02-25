@@ -28,5 +28,7 @@
 - Notes (restore selection): active Golden/Failsafe is pinned to the build before the extreme-bounce tuning for safe rollback while bounce tuning is under evaluation.
 - Notes (online learning): added lightweight per-side online tactical style learning (center/corner strategy bandit) that adapts target bias from hit/miss outcomes without retraining model weights.
 - Notes (AI retune): reduced early tactical exploration and scaled style influence by learning maturity; added slight mixed-mode edge (lower noise + modest speed boost) to improve early AI-vs-ALGO competitiveness.
+- Notes (lead retune): added dynamic high-speed lead boost for EdgeAI so anticipation increases with ball velocity (extra mixed-mode bonus), improving top-speed rally tracking.
+- Notes (default startup profile): P0, LEVEL 3, NPU ON, SKILL AI/ALGO, PERSIST ON, MATCH INF, TARGET OFF, SPEED++ ON.
 - Notes (restore marker): promoted current AI retune build as Golden + Failsafe restore point.
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_015949_online_tactical_ai_retune_golden.elf`
