@@ -1352,10 +1352,13 @@ static void render_bottom_avg_scores(uint16_t *dst, uint32_t w, uint32_t h, int3
         total_l += (uint32_t)g->score.left;
         total_r += (uint32_t)g->score.right;
     }
-    if (games == 0u) return;
-
-    uint32_t avg_l = (total_l + (games / 2u)) / games;
-    uint32_t avg_r = (total_r + (games / 2u)) / games;
+    uint32_t avg_l = 0u;
+    uint32_t avg_r = 0u;
+    if (games > 0u)
+    {
+        avg_l = (total_l + (games / 2u)) / games;
+        avg_r = (total_r + (games / 2u)) / games;
+    }
     if (avg_l > 999u) avg_l = 999u;
     if (avg_r > 999u) avg_r = 999u;
 
@@ -1374,12 +1377,14 @@ static void render_bottom_avg_scores(uint16_t *dst, uint32_t w, uint32_t h, int3
     r_text[6] = r_digits[2];
 
     const int32_t scale = 1;
-    const int32_t bar_y = EDGEAI_LCD_H - 17;
-    const int32_t bar_h = 16;
+    /* Keep AVG row above bottom-right credit text and telemetry overlay area. */
+    const int32_t bar_y = EDGEAI_LCD_H - 29;
+    const int32_t bar_h = 12;
     const int32_t text_y = bar_y + ((bar_h - (7 * scale)) / 2);
-    const int32_t left_cx = EDGEAI_LCD_W / 4;
-    const int32_t right_cx = (EDGEAI_LCD_W * 3) / 4;
-    const uint16_t c = sw_pack_rgb565_u8(186, 188, 192);
+    const int32_t net_x = EDGEAI_LCD_W / 2;
+    const int32_t left_cx = net_x / 2;
+    const int32_t right_cx = net_x + (net_x / 2);
+    const uint16_t c = sw_pack_rgb565_u8(220, 222, 226);
     const uint16_t cs = sw_pack_rgb565_u8(8, 8, 10);
 
     int32_t lw = edgeai_text5x7_width(scale, l_text);

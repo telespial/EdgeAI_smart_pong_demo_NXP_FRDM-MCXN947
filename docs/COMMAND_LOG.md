@@ -4055,3 +4055,6 @@
 2026-02-26T21:24:34Z | git status --short (pre-commit avg-score HUD)
 2026-02-26T21:24:46Z | git add README.md STATUS.md docs/COMMAND_LOG.md src/game/game.c src/game/game.h src/game/render.c && git commit -m "Add per-side bottom-row running AVG score HUD"
 2026-02-26T21:24:46Z | git push origin main
+2026-02-26T21:27:10Z | patched src/game/render.c to always render AVG from 0-0 and move AVG row to avoid footer overlap
+2026-02-26T21:27:20Z | ./tools/build_frdmmcxn947.sh (avg HUD visibility follow-up)
+2026-02-26T21:28:15Z | updated root docs/PROJECT_STATE.md for avg HUD visibility fix
