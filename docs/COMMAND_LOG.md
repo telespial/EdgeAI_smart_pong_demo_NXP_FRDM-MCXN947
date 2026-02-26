@@ -4065,3 +4065,6 @@
 2026-02-26T21:30:32Z | ./tools/flash_frdmmcxn947.sh (deploy AVG HUD visibility fix)
 2026-02-26T21:30:38Z | result: flash=PASS (deploy AVG HUD visibility fix)
 2026-02-26T21:31:00Z | updated STATUS.md (record flash PASS for AVG visibility fix)
+2026-02-26T21:31:18Z | git status --short (pre-commit flash-verification docs update)
+2026-02-26T21:31:30Z | git add STATUS.md docs/COMMAND_LOG.md && git commit -m "Record AVG visibility flash verification"
+2026-02-26T21:31:30Z | git push origin main
