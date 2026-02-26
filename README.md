@@ -46,6 +46,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
   - Persistence on reset at the `999` cap follows the `PERSIST` setting:
     - `PERSIST OFF`: reset continues without persisted carry-over.
     - `PERSIST ON`: persisted profile remains active and is restored on reset.
+  - Bottom HUD now shows per-side running average score (`AVG`) centered on each side of the net line.
 
 ## Controls
 - Touch control strips at left/right edges:

@@ -4047,3 +4047,8 @@
 2026-02-26T21:16:12Z | git status --short (post-log-commit check)
 2026-02-26T21:16:20Z | git rev-parse golden/failsafe/main and git log --oneline -n 3 (release verification)
 2026-02-26T21:16:31Z | git rev-parse golden^{} failsafe^{} main && git status --short (tag target verification)
+2026-02-26T21:17:20Z | inspected render/game files via sed/rg for bottom-row HUD placement and score state fields
+2026-02-26T21:18:05Z | updated src/game/game.h src/game/game.c src/game/render.c for per-side running AVG score HUD
+2026-02-26T21:18:28Z | ./tools/build_frdmmcxn947.sh (avg-score HUD update)
+2026-02-26T21:18:28Z | result: build=PASS (avg-score HUD update)
+2026-02-26T21:24:05Z | updated README.md STATUS.md and root docs/PROJECT_STATE.md for avg-score HUD behavior

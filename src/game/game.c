@@ -451,6 +451,13 @@ void game_reset(pong_game_t *g)
 {
     if (!g) return;
 
+    if ((g->score.left > 0u || g->score.right > 0u) && g->score_avg_games < 65535u)
+    {
+        g->score_total_left += (uint32_t)g->score.left;
+        g->score_total_right += (uint32_t)g->score.right;
+        g->score_avg_games++;
+    }
+
     ai_learning_sync_store(g);
 
     g->score.left = 0;

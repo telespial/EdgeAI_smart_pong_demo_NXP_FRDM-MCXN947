@@ -1338,6 +1338,61 @@ static void render_corner_credit(uint16_t *dst, uint32_t w, uint32_t h, int32_t 
     edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, scale, credit, c);
 }
 
+static void render_bottom_avg_scores(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, int32_t tile_y0,
+                                     const pong_game_t *g)
+{
+    if (!dst || !g) return;
+
+    uint32_t games = (uint32_t)g->score_avg_games;
+    uint32_t total_l = g->score_total_left;
+    uint32_t total_r = g->score_total_right;
+    if (g->score.left > 0u || g->score.right > 0u)
+    {
+        games++;
+        total_l += (uint32_t)g->score.left;
+        total_r += (uint32_t)g->score.right;
+    }
+    if (games == 0u) return;
+
+    uint32_t avg_l = (total_l + (games / 2u)) / games;
+    uint32_t avg_r = (total_r + (games / 2u)) / games;
+    if (avg_l > 999u) avg_l = 999u;
+    if (avg_r > 999u) avg_r = 999u;
+
+    char l_digits[3];
+    char r_digits[3];
+    text_u3(l_digits, avg_l);
+    text_u3(r_digits, avg_r);
+
+    char l_text[] = "AVG 000";
+    char r_text[] = "AVG 000";
+    l_text[4] = l_digits[0];
+    l_text[5] = l_digits[1];
+    l_text[6] = l_digits[2];
+    r_text[4] = r_digits[0];
+    r_text[5] = r_digits[1];
+    r_text[6] = r_digits[2];
+
+    const int32_t scale = 1;
+    const int32_t bar_y = EDGEAI_LCD_H - 17;
+    const int32_t bar_h = 16;
+    const int32_t text_y = bar_y + ((bar_h - (7 * scale)) / 2);
+    const int32_t left_cx = EDGEAI_LCD_W / 4;
+    const int32_t right_cx = (EDGEAI_LCD_W * 3) / 4;
+    const uint16_t c = sw_pack_rgb565_u8(186, 188, 192);
+    const uint16_t cs = sw_pack_rgb565_u8(8, 8, 10);
+
+    int32_t lw = edgeai_text5x7_width(scale, l_text);
+    int32_t rw = edgeai_text5x7_width(scale, r_text);
+    int32_t lx = left_cx - (lw / 2);
+    int32_t rx = right_cx - (rw / 2);
+
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, lx + 1, text_y + 1, scale, l_text, cs);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, lx, text_y, scale, l_text, c);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, rx + 1, text_y + 1, scale, r_text, cs);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, rx, text_y, scale, r_text, c);
+}
+
 typedef struct
 {
     float z0; /* near */
@@ -1481,6 +1536,7 @@ void render_draw_frame(render_state_t *rs, const pong_game_t *g)
             render_confetti(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_ui(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_ai_telemetry(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
+            render_bottom_avg_scores(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_countdown(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_end_popup(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_corner_credit(s_tile, (uint32_t)w, (uint32_t)h, x0, y0);

@@ -5,7 +5,7 @@
 
 ## Last Run
 - Date: 2026-02-26
-- Result: ok (build + flash)
+- Result: ok (build)
 - Binary: `mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.bin`
 - Flash: `west flash -d mcuxsdk_ws/build -r linkserver`
 - Notes (persistence): match reset now explicitly reloads the learned persistence snapshot when `PERSIST` is enabled.
@@ -45,3 +45,5 @@
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_210104_anti_drift_all_modes_golden.elf`
 - Notes (restore marker 2026-02-26): promoted score-cap (`999`) + confetti + `30s` auto-reset build as Golden + Failsafe restore point.
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_211448_scorecap999_reset30s_golden.elf`
+- Notes (HUD update 2026-02-26): added bottom-row per-side `AVG` score labels, centered in each half around the net line, using running match-average points for left/right sides.
+- Notes (verification 2026-02-26): rebuilt after bottom-row avg-score HUD update (build PASS).
