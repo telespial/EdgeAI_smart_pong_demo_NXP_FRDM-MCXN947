@@ -370,7 +370,7 @@ static bool ai_learning_side_selected(const pong_game_t *g, bool right_side)
 
 static void ai_learning_commit_store(const pong_game_t *g)
 {
-    if (!g || !g->persistent_learning) return;
+    if (!g) return;
     s_learn_store.magic = EDGEAI_LEARN_STORE_MAGIC;
     s_learn_store.version = EDGEAI_LEARN_STORE_VERSION;
     s_learn_store.crc32 = 0u;
@@ -477,7 +477,7 @@ void ai_learning_set_persistent(pong_game_t *g, bool enabled)
 
 void ai_learning_sync_store(pong_game_t *g)
 {
-    if (!g || !g->persistent_learning) return;
+    if (!g) return;
     if (!s_learn_store_dirty) return;
 
     /* Apply light per-match decay to avoid stale-profile lock-in across long sessions. */
@@ -497,9 +497,12 @@ void ai_learning_sync_store(pong_game_t *g)
         if (s_last_good_valid && s_bad_sync_streak >= EDGEAI_LEARN_BAD_STREAK_ROLLBACK)
         {
             ai_learning_apply_store_to_game(g, &s_last_good_store);
-            s_learn_store = s_last_good_store;
-            s_learn_store_dirty = true;
-            if (ai_flash_write_store(&s_learn_store))
+            ai_learning_commit_store(g);
+            if (g->persistent_learning && ai_flash_write_store(&s_learn_store))
+            {
+                s_learn_store_dirty = false;
+            }
+            else if (!g->persistent_learning)
             {
                 s_learn_store_dirty = false;
             }
@@ -514,10 +517,18 @@ void ai_learning_sync_store(pong_game_t *g)
     bool right_good = ai_profile_is_good(&g->ai_profile_right);
     if (!(left_good || right_good)) return;
 
-    if (ai_flash_write_store(&s_learn_store))
+    s_last_good_store = s_learn_store;
+    s_last_good_valid = true;
+
+    if (g->persistent_learning)
     {
-        s_last_good_store = s_learn_store;
-        s_last_good_valid = true;
+        if (ai_flash_write_store(&s_learn_store))
+        {
+            s_learn_store_dirty = false;
+        }
+    }
+    else
+    {
         s_learn_store_dirty = false;
     }
 }

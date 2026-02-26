@@ -33,6 +33,8 @@
 - Notes (persistence default): firmware boots with persistence disabled; persisted flash profile is only restored after the user selects `PERSIST ON`.
 - Notes (verification 2026-02-26): rebuilt and reflashed after persistence-default update.
 - Notes (persistence safeguards 2026-02-26): added decay toward defaults, quality-gated persistence writes, and auto-rollback to last-good profile on sustained regression when `PERSIST ON`.
+- Notes (runtime safeguards 2026-02-26): extended decay and rollback safeguards to run in long `PERSIST OFF` sessions (in-memory), with flash write-gating still applied only when `PERSIST ON`.
+- Notes (verification 2026-02-26): rebuilt and reflashed after extending safeguards to `PERSIST OFF` long-session runtime behavior (build/flash PASS).
 - Notes (verification 2026-02-26): rebuilt and reflashed after persistence-safeguard runtime update (build/flash PASS).
 - Notes (restore marker): promoted current AI retune build as Golden + Failsafe restore point.
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_015949_online_tactical_ai_retune_golden.elf`

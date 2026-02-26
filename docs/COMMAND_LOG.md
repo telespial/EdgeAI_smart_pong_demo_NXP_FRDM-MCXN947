@@ -3996,3 +3996,14 @@
 2026-02-26T19:31:52Z | git status --short (pre-commit persistence safeguards)
 2026-02-26T19:31:57Z | git add src/game/ai.c README.md STATUS.md docs/COMMAND_LOG.md && git commit -m "Stabilize persistent learning with decay and rollback safeguards"
 2026-02-26T19:32:03Z | git status --short (post-commit pre-push persistence safeguards)
+2026-02-26T19:32:13Z | git add docs/COMMAND_LOG.md && git commit -m "Update command log for persistence safeguard flow"
+2026-02-26T19:32:22Z | git push origin main (persistence safeguards)
+2026-02-26T19:52:50Z | sed -n 1,260p src/game/ai.c (pre non-persist safeguard update)
+2026-02-26T19:52:50Z | sed -n 260,520p src/game/ai.c (pre non-persist safeguard update)
+2026-02-26T19:52:50Z | sed -n 520,760p src/game/ai.c (pre non-persist safeguard update)
+2026-02-26T19:53:13Z | updated src/game/ai.c to run decay+rollback in non-persistent sessions while keeping flash writes gated by PERSIST ON
+2026-02-26T19:53:28Z | updated README.md and STATUS.md for non-persistent safeguard extension
+2026-02-26T19:56:36Z | ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh (extend safeguards to non-persistent sessions)
+2026-02-26T19:56:36Z | result: build=PASS flash=PASS (extend safeguards to non-persistent sessions)
+2026-02-26T19:56:52Z | updated STATUS.md and root docs/PROJECT_STATE.md for non-persistent safeguard extension
+2026-02-26T19:56:58Z | git status --short (pre-commit non-persist safeguard extension)
