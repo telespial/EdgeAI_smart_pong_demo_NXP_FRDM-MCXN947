@@ -4104,3 +4104,7 @@
 2026-02-26T23:25:10Z | updated README.md and STATUS.md for AI serve variation feature
 2026-02-26T23:26:15Z | git add src/game/physics.c README.md STATUS.md docs/COMMAND_LOG.md && git commit -m "Add adaptive AI serve patterns for straight and angled launches"
 2026-02-26T23:26:19Z | git push origin main
+2026-02-26T23:31:20Z | updated src/game/game.c src/game/game.h src/game/render.c to replace bottom AVG HUD with per-side WINS counters and reset-on-new-game semantics
+2026-02-26T23:39:20Z | ./tools/build_frdmmcxn947.sh (WINS HUD replacement)
+2026-02-26T23:39:20Z | result: build=PASS (WINS HUD replacement)
+2026-02-26T23:39:45Z | updated README.md and STATUS.md for WINS HUD feature

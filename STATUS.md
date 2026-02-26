@@ -58,3 +58,5 @@
 - Notes (restore tags 2026-02-26): moved `golden` and `failsafe` tags to latest `main` commit after docs/log sync.
 - Notes (serve AI 2026-02-26): serve reset now uses adaptive launch patterns (straight, single-axis angle, diagonal angle) biased away from the receiver paddle position.
 - Notes (verification 2026-02-26): rebuilt after AI serve variation update (build PASS).
+- Notes (HUD switch 2026-02-26): replaced bottom `AVG` scoreboard with per-side `WINS` counters (`000-000` format), keeping centered near-net layout.
+- Notes (settings clear 2026-02-26): `NEW GAME` now resets both score and `WINS` totals.

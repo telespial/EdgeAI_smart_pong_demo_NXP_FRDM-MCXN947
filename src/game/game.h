@@ -81,7 +81,6 @@ typedef struct
     pong_score_t score;
     uint32_t score_total_left;
     uint32_t score_total_right;
-    uint16_t score_avg_games;
 
     uint32_t rng;
     uint32_t frame;

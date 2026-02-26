@@ -370,7 +370,6 @@ static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
         {
             g->score_total_left = 0u;
             g->score_total_right = 0u;
-            g->score_avg_games = 0u;
             game_reset(g);
             g->menu_open = false;
             return;
@@ -454,11 +453,13 @@ void game_reset(pong_game_t *g)
 {
     if (!g) return;
 
-    if ((g->score.left > 0u || g->score.right > 0u) && g->score_avg_games < 65535u)
+    if (g->score.left > g->score.right)
     {
-        g->score_total_left += (uint32_t)g->score.left;
-        g->score_total_right += (uint32_t)g->score.right;
-        g->score_avg_games++;
+        if (g->score_total_left < 999u) g->score_total_left++;
+    }
+    else if (g->score.right > g->score.left)
+    {
+        if (g->score_total_right < 999u) g->score_total_right++;
     }
 
     ai_learning_sync_store(g);

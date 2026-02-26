@@ -1338,36 +1338,22 @@ static void render_corner_credit(uint16_t *dst, uint32_t w, uint32_t h, int32_t 
     edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, scale, credit, c);
 }
 
-static void render_bottom_avg_scores(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, int32_t tile_y0,
+static void render_bottom_win_scores(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, int32_t tile_y0,
                                      const pong_game_t *g)
 {
     if (!dst || !g) return;
 
-    uint32_t games = (uint32_t)g->score_avg_games;
-    uint32_t total_l = g->score_total_left;
-    uint32_t total_r = g->score_total_right;
-    if (g->score.left > 0u || g->score.right > 0u)
-    {
-        games++;
-        total_l += (uint32_t)g->score.left;
-        total_r += (uint32_t)g->score.right;
-    }
-    uint32_t avg_l = 0u;
-    uint32_t avg_r = 0u;
-    if (games > 0u)
-    {
-        avg_l = (total_l + (games / 2u)) / games;
-        avg_r = (total_r + (games / 2u)) / games;
-    }
-    if (avg_l > 999u) avg_l = 999u;
-    if (avg_r > 999u) avg_r = 999u;
+    uint32_t wins_l = g->score_total_left;
+    uint32_t wins_r = g->score_total_right;
+    if (wins_l > 999u) wins_l = 999u;
+    if (wins_r > 999u) wins_r = 999u;
 
     char l_digits[3];
     char r_digits[3];
-    text_u3(l_digits, avg_l);
-    text_u3(r_digits, avg_r);
+    text_u3(l_digits, wins_l);
+    text_u3(r_digits, wins_r);
 
-    const char *l_label = "AVG";
+    const char *l_label = "WINS";
     char l_num[] = "000";
     char r_num[] = "000";
     l_num[0] = l_digits[0];
@@ -1377,7 +1363,7 @@ static void render_bottom_avg_scores(uint16_t *dst, uint32_t w, uint32_t h, int3
     r_num[1] = r_digits[1];
     r_num[2] = r_digits[2];
 
-    /* Place AVG text inside the bottom status row, close to each side of the net. */
+    /* Place WINS text inside the bottom status row, close to each side of the net. */
     const int32_t bar_y = EDGEAI_LCD_H - 17;
     const int32_t bar_h = 16;
     const int32_t net_x = EDGEAI_LCD_W / 2;
@@ -1548,7 +1534,7 @@ void render_draw_frame(render_state_t *rs, const pong_game_t *g)
             render_confetti(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_ui(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_ai_telemetry(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
-            render_bottom_avg_scores(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
+            render_bottom_win_scores(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_countdown(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_end_popup(s_tile, (uint32_t)w, (uint32_t)h, x0, y0, g);
             render_corner_credit(s_tile, (uint32_t)w, (uint32_t)h, x0, y0);
