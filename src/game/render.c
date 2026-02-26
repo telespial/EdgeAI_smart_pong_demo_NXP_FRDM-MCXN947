@@ -1376,21 +1376,20 @@ static void render_bottom_avg_scores(uint16_t *dst, uint32_t w, uint32_t h, int3
     r_text[5] = r_digits[1];
     r_text[6] = r_digits[2];
 
-    const int32_t scale = 1;
-    /* Keep AVG row above bottom-right credit text and telemetry overlay area. */
-    const int32_t bar_y = EDGEAI_LCD_H - 29;
-    const int32_t bar_h = 12;
-    const int32_t text_y = bar_y + ((bar_h - (7 * scale)) / 2);
+    /* Place AVG text inside the bottom status row, close to each side of the net. */
+    const int32_t bar_y = EDGEAI_LCD_H - 17;
+    const int32_t bar_h = 16;
     const int32_t net_x = EDGEAI_LCD_W / 2;
-    const int32_t left_cx = net_x / 2;
-    const int32_t right_cx = net_x + (net_x / 2);
-    const uint16_t c = sw_pack_rgb565_u8(220, 222, 226);
+    const int32_t scale = 2;
+    const int32_t text_y = bar_y + ((bar_h - (7 * scale)) / 2);
+    const uint16_t c = sw_pack_rgb565_u8(232, 234, 238);
     const uint16_t cs = sw_pack_rgb565_u8(8, 8, 10);
 
     int32_t lw = edgeai_text5x7_width(scale, l_text);
     int32_t rw = edgeai_text5x7_width(scale, r_text);
-    int32_t lx = left_cx - (lw / 2);
-    int32_t rx = right_cx - (rw / 2);
+    int32_t gap = 10;
+    int32_t lx = net_x - gap - lw;
+    int32_t rx = net_x + gap;
 
     edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, lx + 1, text_y + 1, scale, l_text, cs);
     edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, lx, text_y, scale, l_text, c);

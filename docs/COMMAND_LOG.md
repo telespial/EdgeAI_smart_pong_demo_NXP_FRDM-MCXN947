@@ -4068,3 +4068,4 @@
 2026-02-26T21:31:18Z | git status --short (pre-commit flash-verification docs update)
 2026-02-26T21:31:30Z | git add STATUS.md docs/COMMAND_LOG.md && git commit -m "Record AVG visibility flash verification"
 2026-02-26T21:31:30Z | git push origin main
+2026-02-26T21:33:10Z | adjusted AVG HUD layout in src/game/render.c: larger text, bottom-row placement, near-net anchors
