@@ -4108,3 +4108,5 @@
 2026-02-26T23:39:20Z | ./tools/build_frdmmcxn947.sh (WINS HUD replacement)
 2026-02-26T23:39:20Z | result: build=PASS (WINS HUD replacement)
 2026-02-26T23:39:45Z | updated README.md and STATUS.md for WINS HUD feature
+2026-02-26T23:40:50Z | git add src/game/game.c src/game/game.h src/game/render.c README.md STATUS.md docs/COMMAND_LOG.md && git commit -m "Replace AVG HUD with per-side WINS counters"
+2026-02-26T23:40:54Z | git push origin main
