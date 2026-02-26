@@ -3950,3 +3950,18 @@
 2026-02-25T02:12:40Z | build_frdmmcxn947=PASS ; flash_frdmmcxn947=PASS (startup default profile update)
 2026-02-25T02:12:55Z | updated STATUS.md with startup default profile note
 2026-02-25T02:13:10Z | committed+pushed c9a0c79 (startup defaults + high-speed lead tuning)
+2026-02-26T19:13:33Z | sed -n 330,540p src/game/game.c
+2026-02-26T19:13:33Z | sed -n 250,470p src/game/ai.c
+2026-02-26T19:13:33Z | rg -n persistence in README/project_description/STATUS
+2026-02-26T19:13:39Z | sed -n 240,340p src/game/game.c
+2026-02-26T19:13:47Z | rg+sed ai_init in src/game/ai.c
+2026-02-26T19:13:53Z | sed -n 590,680p src/game/ai.c
+2026-02-26T19:14:05Z | sed -n 1,220p README.md
+2026-02-26T19:14:05Z | rg -n default/startup persistence docs
+2026-02-26T19:14:28Z | git diff -- src/game/game.c README.md STATUS.md
+2026-02-26T19:17:43Z | ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh
+2026-02-26T19:17:43Z | result: build=PASS flash=PASS (persistence default OFF update)
+2026-02-26T19:18:02Z | updated root docs/PROJECT_STATE.md for smart pong persistence default OFF
+2026-02-26T19:18:10Z | updated STATUS.md with 2026-02-26 verification note
+2026-02-26T19:18:21Z | git remote -v
+2026-02-26T19:18:21Z | git status --short

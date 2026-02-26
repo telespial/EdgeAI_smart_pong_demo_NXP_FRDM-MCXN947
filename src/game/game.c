@@ -382,7 +382,7 @@ void game_init(pong_game_t *g)
     g->difficulty = 3;
     g->ai_enabled = true;
     g->perpetual_play = true;
-    g->persistent_learning = true;
+    g->persistent_learning = false;
     g->speedpp_enabled = true;
     g->target_overlay_enabled = false;
     g->ai_learn_mode = kAiLearnModeAiAlgo;

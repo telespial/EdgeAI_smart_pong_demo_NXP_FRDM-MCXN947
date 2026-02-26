@@ -63,6 +63,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 - `PERSIST`: `ON`, `OFF`
   - `ON`: keep and restore learned AI profiles from flash independently per side.
   - `OFF`: clear learned profiles (including flash snapshot) for true cold-start behavior.
+  - Startup default after flash/reboot: `OFF` (persistence is enabled only when user selects `ON`).
 - `MATCH`: `11`, `INF`
 - `TARGET`: `ON`, `OFF`
 - `SPEED++`: `ON`, `OFF`
@@ -125,6 +126,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
   - Style selection is low-epsilon and reward-updated from hit/miss outcomes.
   - Style influence is maturity-gated so early rallies stay stable and stronger effects appear after enough history.
 - Persistence behavior:
+  - Startup default is `PERSIST OFF`; flash snapshot is not loaded unless persistence is explicitly turned on in settings.
   - With `PERSIST ON`, left/right profiles are stored independently in flash and restored on startup.
   - With `PERSIST OFF`, persisted profile snapshot is cleared for cold-start operation.
 

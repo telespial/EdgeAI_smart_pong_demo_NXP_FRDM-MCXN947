@@ -4,7 +4,7 @@
 - Workspace: `mcuxsdk_ws/` (created by `./tools/setup_mcuxsdk_ws.sh`)
 
 ## Last Run
-- Date: 2026-02-25
+- Date: 2026-02-26
 - Result: ok (build + flash)
 - Binary: `mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.bin`
 - Flash: `west flash -d mcuxsdk_ws/build -r linkserver`
@@ -29,6 +29,8 @@
 - Notes (online learning): added lightweight per-side online tactical style learning (center/corner strategy bandit) that adapts target bias from hit/miss outcomes without retraining model weights.
 - Notes (AI retune): reduced early tactical exploration and scaled style influence by learning maturity; added slight mixed-mode edge (lower noise + modest speed boost) to improve early AI-vs-ALGO competitiveness.
 - Notes (lead retune): added dynamic high-speed lead boost for EdgeAI so anticipation increases with ball velocity (extra mixed-mode bonus), improving top-speed rally tracking.
-- Notes (default startup profile): P0, LEVEL 3, NPU ON, SKILL AI/ALGO, PERSIST ON, MATCH INF, TARGET OFF, SPEED++ ON.
+- Notes (default startup profile): P0, LEVEL 3, NPU ON, SKILL AI/ALGO, PERSIST OFF, MATCH INF, TARGET OFF, SPEED++ ON.
+- Notes (persistence default): firmware boots with persistence disabled; persisted flash profile is only restored after the user selects `PERSIST ON`.
+- Notes (verification 2026-02-26): rebuilt and reflashed after persistence-default update.
 - Notes (restore marker): promoted current AI retune build as Golden + Failsafe restore point.
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_015949_online_tactical_ai_retune_golden.elf`
