@@ -4019,3 +4019,6 @@
 2026-02-26T21:01:32Z | updated docs/failsafe.md docs/BUILD_FLASH.md STATUS.md for anti-drift-all-modes golden/failsafe
 2026-02-26T21:01:40Z | updated root docs/PROJECT_STATE.md for anti-drift-all-modes golden/failsafe promotion
 2026-02-26T21:01:46Z | git status --short (pre-commit anti-drift-all-modes restore-point promotion)
+2026-02-26T21:01:52Z | git add STATUS.md docs/BUILD_FLASH.md docs/failsafe.md failsafe/*anti_drift_all_modes_golden.elf docs/COMMAND_LOG.md && git commit -m "Promote anti-drift-all-modes build as golden failsafe"
+2026-02-26T21:02:02Z | git push origin main (anti-drift-all-modes golden/failsafe promotion)
+2026-02-26T21:02:10Z | git status --short (post-push check anti-drift-all-modes promotion)
