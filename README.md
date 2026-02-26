@@ -39,6 +39,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 - Ball motion: ball reflects from top and bottom arena walls.
 - Paddle collision: ball reflects from paddles with hit-position-based angle shaping ("english").
 - Serve behavior: each serve starts from center and is directed toward the side that conceded the previous point.
+  - Serve variation: serve launch now uses adaptive AI-style selection that mixes straight, single-axis angle, and diagonal angle patterns with directional bias away from the receiver paddle position.
 - Match flow:
   - `P0` (AI vs AI): at 11 points, winner styling + confetti are shown, then the game auto-resets and continues in an endless loop.
   - `P1` and `P2`: at 11 points, winner styling + confetti are shown, then `NEW GAME? YES/NO` is displayed.
@@ -149,6 +150,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 - `SKILL` setting for side-selectable adaptive AI vs baseline ALGO (`2AI`, `AI/ALGO`, `ALGO/AI`)
 - Optional `SPEED++` progression: whenever either side reaches `11, 22, 33, ...`, serve speed target increases by `5%` (compounding) and is capped by runtime speed limits
 - Settings `NEW GAME` now clears both score and AVG-history counters so bottom AVG values restart from `000`
+- AI-driven serve variation: each new serve can be straight or angled (single-axis/diagonal) with dynamic bias based on receiver paddle position
 
 ## Build and Flash
 1. Bootstrap tools:

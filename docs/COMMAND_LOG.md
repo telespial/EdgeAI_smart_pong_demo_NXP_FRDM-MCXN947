@@ -4097,3 +4097,8 @@
 2026-02-26T23:20:03Z | git push origin main
 2026-02-26T23:20:11Z | git tag -fa golden/failsafe && git push origin golden failsafe --force (promote latest docs commit as restore-point tags)
 2026-02-26T23:20:14Z | verified refs: main==golden==failsafe at 785616b
+2026-02-26T23:22:10Z | inspected serve/reset paths in src/game/game.c and src/game/physics.c
+2026-02-26T23:23:08Z | updated src/game/physics.c: adaptive AI serve selector for straight/single-axis/diagonal launches with receiver-position bias
+2026-02-26T23:24:00Z | ./tools/build_frdmmcxn947.sh (AI serve variation update)
+2026-02-26T23:24:00Z | result: build=PASS (AI serve variation update)
+2026-02-26T23:25:10Z | updated README.md and STATUS.md for AI serve variation feature

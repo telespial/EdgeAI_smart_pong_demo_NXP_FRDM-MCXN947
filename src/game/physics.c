@@ -43,6 +43,56 @@ static float rand_f(pong_game_t *g, float lo, float hi)
     return lo + (hi - lo) * rand_f01(g);
 }
 
+static float physics_biased_sign(pong_game_t *g, float bias)
+{
+    if (bias > 0.12f) return 1.0f;
+    if (bias < -0.12f) return -1.0f;
+    return (rand_f01(g) < 0.5f) ? -1.0f : 1.0f;
+}
+
+static void physics_pick_ai_serve_lateral(pong_game_t *g, float dir, float serve_speed, float *vy, float *vz)
+{
+    if (!g || !vy || !vz)
+    {
+        return;
+    }
+
+    const pong_paddle_t *recv = (dir < 0.0f) ? &g->paddle_l : &g->paddle_r;
+    float bias_y = clampf(0.5f - recv->y, -1.0f, 1.0f);
+    float bias_z = clampf(0.5f - recv->z, -1.0f, 1.0f);
+
+    float max_y = clampf(0.17f * serve_speed, 0.18f, 0.52f);
+    float max_z = clampf(0.14f * serve_speed, 0.14f, 0.44f);
+    float sy = physics_biased_sign(g, bias_y);
+    float sz = physics_biased_sign(g, bias_z);
+    float r = rand_f01(g);
+
+    /* Mix straight, single-axis, and diagonal serve styles. */
+    if (r < 0.28f)
+    {
+        *vy = 0.0f;
+        *vz = 0.0f;
+        return;
+    }
+    if (r < 0.66f)
+    {
+        if (absf(bias_y) >= absf(bias_z))
+        {
+            *vy = sy * rand_f(g, 0.42f * max_y, max_y);
+            *vz = rand_f(g, -0.10f * max_z, 0.10f * max_z);
+        }
+        else
+        {
+            *vy = rand_f(g, -0.10f * max_y, 0.10f * max_y);
+            *vz = sz * rand_f(g, 0.42f * max_z, max_z);
+        }
+        return;
+    }
+
+    *vy = sy * rand_f(g, 0.34f * max_y, 0.86f * max_y);
+    *vz = sz * rand_f(g, 0.34f * max_z, 0.86f * max_z);
+}
+
 static float physics_ball_speed_mag(const pong_game_t *g)
 {
     if (!g) return 0.0f;
@@ -185,8 +235,7 @@ void physics_reset_ball(pong_game_t *g, int serve_dir)
         serve_speed = clampf(g->speedpp_serve_speed_target, serve_speed, max_serve);
     }
     g->ball.vx = dir * serve_speed;
-    g->ball.vy = rand_f(g, -0.28f, 0.28f);
-    g->ball.vz = rand_f(g, -0.22f, 0.22f);
+    physics_pick_ai_serve_lateral(g, dir, serve_speed, &g->ball.vy, &g->ball.vz);
     physics_speedpp_track_peak(g);
 }
 
