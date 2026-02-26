@@ -40,3 +40,5 @@
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_015949_online_tactical_ai_retune_golden.elf`
 - Notes (restore marker 2026-02-26): promoted persistence-default-OFF build as Golden + Failsafe restore point.
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_192033_persist_default_off_golden.elf`
+- Notes (restore marker 2026-02-26): promoted anti-drift-all-modes build as Golden + Failsafe restore point.
+- Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_210104_anti_drift_all_modes_golden.elf`
