@@ -4007,3 +4007,5 @@
 2026-02-26T19:56:36Z | result: build=PASS flash=PASS (extend safeguards to non-persistent sessions)
 2026-02-26T19:56:52Z | updated STATUS.md and root docs/PROJECT_STATE.md for non-persistent safeguard extension
 2026-02-26T19:56:58Z | git status --short (pre-commit non-persist safeguard extension)
+2026-02-26T19:57:04Z | git add src/game/ai.c README.md STATUS.md docs/COMMAND_LOG.md && git commit -m "Extend anti-drift safeguards to non-persistent sessions"
+2026-02-26T19:57:09Z | git status --short (post-commit pre-push non-persist safeguard extension)
