@@ -4039,3 +4039,8 @@
 2026-02-26T21:14:48Z | sed -n docs/failsafe.md and docs/BUILD_FLASH.md (inspect active failsafe pointer)
 2026-02-26T21:14:48Z | cp mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.elf failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_211448_scorecap999_reset30s_golden.elf
 2026-02-26T21:14:58Z | updated docs/failsafe.md docs/BUILD_FLASH.md STATUS.md and root docs/PROJECT_STATE.md for scorecap999 golden/failsafe promotion
+2026-02-26T21:15:09Z | git status --short ; git tag --list ; git branch --list ; git remote -v (pre-push validation)
+2026-02-26T21:15:30Z | git add src/game/game.c src/game/render.c README.md STATUS.md docs/BUILD_FLASH.md docs/failsafe.md docs/COMMAND_LOG.md failsafe/*scorecap999_reset30s_golden.elf && git commit -m "Add 999 score cap auto-reset and promote golden failsafe"
+2026-02-26T21:15:38Z | git status --short (post-commit check)
+2026-02-26T21:15:46Z | git push origin main
+2026-02-26T21:15:55Z | git tag -fa golden/failsafe and push tags (restore points)
