@@ -52,3 +52,6 @@
 - Notes (verification 2026-02-26): rebuilt and reflashed after AVG label/spacing alignment update (build/flash PASS).
 - Notes (AVG reset 2026-02-26): `NEW GAME` from Settings now also clears AVG history counters, so both side AVG values reset to `000`.
 - Notes (verification 2026-02-26): rebuilt and reflashed after AVG reset-on-settings-clear update (build/flash PASS).
+- Notes (docs refresh 2026-02-26): updated project docs + GitHub README to include AVG reset-on-settings-clear behavior.
+- Notes (restore marker 2026-02-26): promoted AVG-reset-on-settings-clear firmware as Golden + Failsafe restore point.
+- Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_223333_avg_reset_newgame_golden.elf`

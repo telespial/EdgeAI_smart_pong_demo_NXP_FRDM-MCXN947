@@ -4085,3 +4085,5 @@
 2026-02-26T22:25:21Z | git diff/status checks for src/game/game.c STATUS.md docs/COMMAND_LOG.md (pre-commit AVG reset change)
 2026-02-26T22:26:07Z | git add src/game/game.c STATUS.md docs/COMMAND_LOG.md && git commit -m "Reset AVG counters when settings NEW GAME clears score"
 2026-02-26T22:26:16Z | git push origin main
+2026-02-26T22:33:33Z | cp mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.elf failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_223333_avg_reset_newgame_golden.elf
+2026-02-26T22:33:50Z | updated README.md docs/failsafe.md docs/BUILD_FLASH.md STATUS.md for AVG reset behavior + new golden/failsafe pointer

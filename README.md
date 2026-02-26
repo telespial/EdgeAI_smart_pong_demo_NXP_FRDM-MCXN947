@@ -73,6 +73,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 - `TARGET`: `ON`, `OFF`
 - `SPEED++`: `ON`, `OFF`
 - `New Game`: immediate score reset
+  - Also clears running AVG history on both sides to `000`.
 
 ## AI and NPU Implementation
 - This firmware uses an embedded TensorFlow Lite Micro model run via the eIQ Neutron NPU backend.
@@ -147,6 +148,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 - Real-time NPU telemetry overlay for performance tuning
 - `SKILL` setting for side-selectable adaptive AI vs baseline ALGO (`2AI`, `AI/ALGO`, `ALGO/AI`)
 - Optional `SPEED++` progression: whenever either side reaches `11, 22, 33, ...`, serve speed target increases by `5%` (compounding) and is capped by runtime speed limits
+- Settings `NEW GAME` now clears both score and AVG-history counters so bottom AVG values restart from `000`
 
 ## Build and Flash
 1. Bootstrap tools:
