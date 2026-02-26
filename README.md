@@ -42,6 +42,10 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 - Match flow:
   - `P0` (AI vs AI): at 11 points, winner styling + confetti are shown, then the game auto-resets and continues in an endless loop.
   - `P1` and `P2`: at 11 points, winner styling + confetti are shown, then `NEW GAME? YES/NO` is displayed.
+  - Absolute cap: at `999` points on either side, confetti/winner styling are shown and the game auto-resets to `0-0` after `30s`.
+  - Persistence on reset at the `999` cap follows the `PERSIST` setting:
+    - `PERSIST OFF`: reset continues without persisted carry-over.
+    - `PERSIST ON`: persisted profile remains active and is restored on reset.
 
 ## Controls
 - Touch control strips at left/right edges:

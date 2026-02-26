@@ -34,6 +34,7 @@
 - Notes (verification 2026-02-26): rebuilt and reflashed after persistence-default update.
 - Notes (persistence safeguards 2026-02-26): added decay toward defaults, quality-gated persistence writes, and auto-rollback to last-good profile on sustained regression when `PERSIST ON`.
 - Notes (runtime safeguards 2026-02-26): extended decay and rollback safeguards to run in long `PERSIST OFF` sessions (in-memory), with flash write-gating still applied only when `PERSIST ON`.
+- Notes (score-cap behavior 2026-02-26): match now hard-caps at `999` points on either side, shows confetti, then auto-resets after `30s`; reset persistence follows `PERSIST ON/OFF`.
 - Notes (verification 2026-02-26): rebuilt and reflashed after extending safeguards to `PERSIST OFF` long-session runtime behavior (build/flash PASS).
 - Notes (verification 2026-02-26): rebuilt and reflashed after persistence-safeguard runtime update (build/flash PASS).
 - Notes (restore marker): promoted current AI retune build as Golden + Failsafe restore point.
@@ -42,3 +43,5 @@
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_192033_persist_default_off_golden.elf`
 - Notes (restore marker 2026-02-26): promoted anti-drift-all-modes build as Golden + Failsafe restore point.
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_210104_anti_drift_all_modes_golden.elf`
+- Notes (restore marker 2026-02-26): promoted score-cap (`999`) + confetti + `30s` auto-reset build as Golden + Failsafe restore point.
+- Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_211448_scorecap999_reset30s_golden.elf`

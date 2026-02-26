@@ -1,2 +1,2 @@
-failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_210104_anti_drift_all_modes_golden.elf
-Golden + failsafe restore point: anti-drift safeguards active in both `PERSIST ON` and long `PERSIST OFF` sessions (with flash persistence gating only when `PERSIST ON`).
+failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_211448_scorecap999_reset30s_golden.elf
+Golden + failsafe restore point: hard score-cap at `999` (confetti + `30s` auto-reset) with persistence-aware reset behavior (`PERSIST OFF` clean reset, `PERSIST ON` persisted profile retained/restored).

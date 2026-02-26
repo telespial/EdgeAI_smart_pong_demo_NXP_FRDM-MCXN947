@@ -4022,3 +4022,20 @@
 2026-02-26T21:01:52Z | git add STATUS.md docs/BUILD_FLASH.md docs/failsafe.md failsafe/*anti_drift_all_modes_golden.elf docs/COMMAND_LOG.md && git commit -m "Promote anti-drift-all-modes build as golden failsafe"
 2026-02-26T21:02:02Z | git push origin main (anti-drift-all-modes golden/failsafe promotion)
 2026-02-26T21:02:10Z | git status --short (post-push check anti-drift-all-modes promotion)
+2026-02-26T21:02:15Z | git add docs/COMMAND_LOG.md && git commit -m "Update command log for golden failsafe promotion"
+2026-02-26T21:02:21Z | git push origin main (command-log sync after golden/failsafe promotion)
+2026-02-26T21:09:37Z | sed -n 1,260p src/game/game.c
+2026-02-26T21:09:37Z | rg -n score/match/confetti/reset in src/game
+2026-02-26T21:09:37Z | sed -n 260,560p src/game/game.c
+2026-02-26T21:09:42Z | sed -n 560,700p src/game/game.c
+2026-02-26T21:10:30Z | updated src/game/game.c and src/game/render.c for 999 cap + 30s reset behavior
+2026-02-26T21:10:43Z | rg -n target gameplay text in README.md
+2026-02-26T21:10:43Z | sed -n 32,86p README.md
+2026-02-26T21:10:43Z | sed -n 1,120p STATUS.md
+2026-02-26T21:10:59Z | updated README.md and STATUS.md for 999-cap auto-reset behavior
+2026-02-26T21:14:21Z | ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh (999 cap + 30s reset)
+2026-02-26T21:14:21Z | result: build=PASS flash=PASS (999 cap + 30s reset)
+2026-02-26T21:14:27Z | date -u ; git status --short ; git rev-parse --abbrev-ref HEAD (post-build/flash validation)
+2026-02-26T21:14:48Z | sed -n docs/failsafe.md and docs/BUILD_FLASH.md (inspect active failsafe pointer)
+2026-02-26T21:14:48Z | cp mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.elf failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_211448_scorecap999_reset30s_golden.elf
+2026-02-26T21:14:58Z | updated docs/failsafe.md docs/BUILD_FLASH.md STATUS.md and root docs/PROJECT_STATE.md for scorecap999 golden/failsafe promotion

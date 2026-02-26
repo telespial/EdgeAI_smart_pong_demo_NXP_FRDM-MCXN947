@@ -1080,6 +1080,8 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         y += 16;
 
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "FIRST TO 11 OR SET X TO INF", c_body);
+        y += 12 * s1;
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "AUTO RESET AT 999 (30S)", c_body);
         y += lh;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "MISS GIVES OPPONENT 1 POINT", c_body);
         y += lh;

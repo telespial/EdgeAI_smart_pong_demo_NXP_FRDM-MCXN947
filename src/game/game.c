@@ -12,8 +12,10 @@
 #include "platform/time_hal.h"
 
 #define EDGEAI_WIN_SCORE 11u
+#define EDGEAI_MAX_SCORE 999u
 #define EDGEAI_END_PROMPT_DELAY_FRAMES 120u
 #define EDGEAI_P0_DEMO_RESET_US 1300000u
+#define EDGEAI_MAX_SCORE_RESET_US 30000000u
 #define EDGEAI_COUNTDOWN_STEP_US 1000000u
 #define EDGEAI_COUNTDOWN_TOTAL_US (3u * EDGEAI_COUNTDOWN_STEP_US)
 
@@ -526,13 +528,19 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
 
     if (g->match_over)
     {
-        if (g->mode == kGameModeZeroPlayer)
+        uint32_t elapsed_us = time_hal_elapsed_us(g->match_over_start_cycles);
+        bool reached_max_score = (g->score.left >= EDGEAI_MAX_SCORE || g->score.right >= EDGEAI_MAX_SCORE);
+
+        if (reached_max_score)
         {
-            uint32_t elapsed_us = time_hal_elapsed_us(g->match_over_start_cycles);
-            if (elapsed_us >= EDGEAI_P0_DEMO_RESET_US)
+            if (elapsed_us >= EDGEAI_MAX_SCORE_RESET_US)
             {
                 game_reset(g);
             }
+        }
+        else if (g->mode == kGameModeZeroPlayer && elapsed_us >= EDGEAI_P0_DEMO_RESET_US)
+        {
+            game_reset(g);
         }
         g->frame++;
         return;
@@ -569,11 +577,13 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
         game_update_countdown(g);
     }
 
-    if (!g->perpetual_play && (g->score.left >= EDGEAI_WIN_SCORE || g->score.right >= EDGEAI_WIN_SCORE))
+    bool reached_match_score = (!g->perpetual_play && (g->score.left >= EDGEAI_WIN_SCORE || g->score.right >= EDGEAI_WIN_SCORE));
+    bool reached_max_score = (g->score.left >= EDGEAI_MAX_SCORE || g->score.right >= EDGEAI_MAX_SCORE);
+    if (reached_match_score || reached_max_score)
     {
         g->match_over = true;
-        g->winner_left = (g->score.left >= EDGEAI_WIN_SCORE);
-        g->end_prompt_dismissed = (g->mode == kGameModeZeroPlayer);
+        g->winner_left = (g->score.left >= g->score.right);
+        g->end_prompt_dismissed = reached_max_score || (g->mode == kGameModeZeroPlayer);
         g->match_over_frame = g->frame;
         g->match_over_start_cycles = time_hal_cycles();
 
