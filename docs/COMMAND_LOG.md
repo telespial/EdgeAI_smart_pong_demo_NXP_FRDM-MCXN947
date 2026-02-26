@@ -4082,3 +4082,6 @@
 2026-02-26T22:16:44Z | updated src/game/game.c: settings `NEW GAME` now clears AVG history (`score_total_left/right`, `score_avg_games`) before reset
 2026-02-26T22:17:02Z | ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh (AVG reset on settings score clear)
 2026-02-26T22:17:02Z | result: build=PASS flash=PASS (AVG reset on settings score clear)
+2026-02-26T22:25:21Z | git diff/status checks for src/game/game.c STATUS.md docs/COMMAND_LOG.md (pre-commit AVG reset change)
+2026-02-26T22:26:07Z | git add src/game/game.c STATUS.md docs/COMMAND_LOG.md && git commit -m "Reset AVG counters when settings NEW GAME clears score"
+2026-02-26T22:26:16Z | git push origin main
