@@ -128,6 +128,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 - Persistence behavior:
   - Startup default is `PERSIST OFF`; flash snapshot is not loaded unless persistence is explicitly turned on in settings.
   - With `PERSIST ON`, left/right profiles are stored independently in flash and restored on startup.
+  - Safeguards with `PERSIST ON`: match-level decay toward defaults, quality-gated flash writes, and auto-rollback to last-good persisted profile after sustained regression.
   - With `PERSIST OFF`, persisted profile snapshot is cleared for cold-start operation.
 
 ## Features

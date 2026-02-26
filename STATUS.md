@@ -32,6 +32,8 @@
 - Notes (default startup profile): P0, LEVEL 3, NPU ON, SKILL AI/ALGO, PERSIST OFF, MATCH INF, TARGET OFF, SPEED++ ON.
 - Notes (persistence default): firmware boots with persistence disabled; persisted flash profile is only restored after the user selects `PERSIST ON`.
 - Notes (verification 2026-02-26): rebuilt and reflashed after persistence-default update.
+- Notes (persistence safeguards 2026-02-26): added decay toward defaults, quality-gated persistence writes, and auto-rollback to last-good profile on sustained regression when `PERSIST ON`.
+- Notes (verification 2026-02-26): rebuilt and reflashed after persistence-safeguard runtime update (build/flash PASS).
 - Notes (restore marker): promoted current AI retune build as Golden + Failsafe restore point.
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260225_015949_online_tactical_ai_retune_golden.elf`
 - Notes (restore marker 2026-02-26): promoted persistence-default-OFF build as Golden + Failsafe restore point.

@@ -3980,3 +3980,17 @@
 2026-02-26T19:21:10Z | git status --short (pre-commit restore-point update)
 2026-02-26T19:21:10Z | sed -n 1,3p docs/failsafe.md (verify active failsafe pointer)
 2026-02-26T19:21:18Z | updated root docs/PROJECT_STATE.md for smart pong golden/failsafe promotion
+2026-02-26T19:21:27Z | git add STATUS.md docs/BUILD_FLASH.md docs/failsafe.md failsafe/*persist_default_off_golden.elf docs/COMMAND_LOG.md && git commit -m "Promote persistence-default-OFF build as golden failsafe"
+2026-02-26T19:21:42Z | git push origin main (golden/failsafe promotion)
+2026-02-26T19:26:51Z | sed -n 1,260p src/game/ai.h
+2026-02-26T19:26:51Z | sed -n 1,260p src/game/game.h
+2026-02-26T19:26:51Z | sed -n 1,280p src/game/ai.c
+2026-02-26T19:26:57Z | sed -n 280,520p src/game/ai.c
+2026-02-26T19:27:55Z | updated src/game/ai.c with decay, guarded persistence, and auto-rollback safeguards
+2026-02-26T19:28:04Z | sed -n 118,152p README.md
+2026-02-26T19:28:04Z | rg -n persistence section in README.md
+2026-02-26T19:28:20Z | updated README.md and STATUS.md with persistence safeguard notes
+2026-02-26T19:31:31Z | ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh (persistence safeguards)
+2026-02-26T19:31:31Z | result: build=PASS flash=PASS (persistence safeguards)
+2026-02-26T19:31:46Z | updated STATUS.md and root docs/PROJECT_STATE.md for persistence safeguard verification
+2026-02-26T19:31:52Z | git status --short (pre-commit persistence safeguards)

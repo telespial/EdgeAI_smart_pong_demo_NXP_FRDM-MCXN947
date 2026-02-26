@@ -60,6 +60,11 @@ static float rand_f(pong_game_t *g, float lo, float hi)
 #define EDGEAI_LEARN_STORE_MAGIC 0x4C524E31u /* "LRN1" */
 #define EDGEAI_LEARN_STORE_VERSION 0x00000002u
 #define EDGEAI_LEARN_FLASH_PROGRAM_BYTES 512u
+#define EDGEAI_LEARN_DECAY_ALPHA 0.04f
+#define EDGEAI_LEARN_EVAL_MIN_SAMPLES 10u
+#define EDGEAI_LEARN_GOOD_MISS_RATIO_MAX 0.44f
+#define EDGEAI_LEARN_BAD_MISS_RATIO_MIN 0.60f
+#define EDGEAI_LEARN_BAD_STREAK_ROLLBACK 2u
 
 typedef struct
 {
@@ -73,12 +78,15 @@ typedef struct
 } ai_learn_store_t;
 
 static ai_learn_store_t s_learn_store = {0u};
+static ai_learn_store_t s_last_good_store = {0u};
 static bool s_learn_store_dirty = false;
+static bool s_last_good_valid = false;
 static bool s_flash_ready = false;
 static bool s_flash_init_done = false;
 static uint32_t s_flash_store_addr = 0u;
 static uint32_t s_flash_sector_size = 0u;
 static flash_config_t s_flash_cfg;
+static uint8_t s_bad_sync_streak = 0u;
 
 static uint32_t ai_store_checksum(const ai_learn_store_t *store)
 {
@@ -185,6 +193,54 @@ static void ai_profile_clamp(ai_learn_profile_t *p)
     p->center_bias = clampf(p->center_bias, -0.35f, 0.35f);
     p->corner_bias = clampf(p->corner_bias, 0.00f, 0.45f);
     if (p->last_style > 3u) p->last_style = 0u;
+}
+
+static void ai_profile_decay_toward_default(ai_learn_profile_t *p, float alpha)
+{
+    if (!p) return;
+    ai_learn_profile_t d = ai_profile_default();
+
+    alpha = clampf(alpha, 0.0f, 1.0f);
+    p->speed_scale += (d.speed_scale - p->speed_scale) * alpha;
+    p->noise_scale += (d.noise_scale - p->noise_scale) * alpha;
+    p->lead_scale += (d.lead_scale - p->lead_scale) * alpha;
+    p->center_bias += (d.center_bias - p->center_bias) * alpha;
+    p->corner_bias += (d.corner_bias - p->corner_bias) * alpha;
+
+    p->hits = (uint16_t)(((uint32_t)p->hits * 99u) / 100u);
+    p->misses = (uint16_t)(((uint32_t)p->misses * 99u) / 100u);
+    for (uint32_t i = 0u; i < 4u; i++)
+    {
+        p->style_trials[i] = (uint16_t)(((uint32_t)p->style_trials[i] * 98u) / 100u);
+        p->style_value_q8[i] = (int16_t)((((int32_t)p->style_value_q8[i]) * 98) / 100);
+    }
+}
+
+static uint32_t ai_profile_sample_count(const ai_learn_profile_t *p)
+{
+    if (!p) return 0u;
+    return (uint32_t)p->hits + (uint32_t)p->misses;
+}
+
+static float ai_profile_miss_ratio(const ai_learn_profile_t *p)
+{
+    uint32_t n = ai_profile_sample_count(p);
+    if (n == 0u) return 0.5f;
+    return (float)p->misses / (float)n;
+}
+
+static bool ai_profile_is_bad(const ai_learn_profile_t *p)
+{
+    uint32_t n = ai_profile_sample_count(p);
+    if (n < EDGEAI_LEARN_EVAL_MIN_SAMPLES) return false;
+    return (ai_profile_miss_ratio(p) >= EDGEAI_LEARN_BAD_MISS_RATIO_MIN);
+}
+
+static bool ai_profile_is_good(const ai_learn_profile_t *p)
+{
+    uint32_t n = ai_profile_sample_count(p);
+    if (n < EDGEAI_LEARN_EVAL_MIN_SAMPLES) return false;
+    return (ai_profile_miss_ratio(p) <= EDGEAI_LEARN_GOOD_MISS_RATIO_MAX);
 }
 
 static uint8_t ai_style_select(pong_game_t *g, const ai_learn_profile_t *p)
@@ -324,6 +380,15 @@ static void ai_learning_commit_store(const pong_game_t *g)
     s_learn_store_dirty = true;
 }
 
+static void ai_learning_apply_store_to_game(pong_game_t *g, const ai_learn_store_t *store)
+{
+    if (!g || !store) return;
+    g->ai_profile_left = store->left;
+    g->ai_profile_right = store->right;
+    ai_profile_clamp(&g->ai_profile_left);
+    ai_profile_clamp(&g->ai_profile_right);
+}
+
 static void ai_learning_load_store(pong_game_t *g)
 {
     if (!g || !g->persistent_learning) return;
@@ -333,20 +398,20 @@ static void ai_learning_load_store(pong_game_t *g)
     {
         s_learn_store = flash_store;
         s_learn_store_dirty = false;
-        g->ai_profile_left = s_learn_store.left;
-        g->ai_profile_right = s_learn_store.right;
-        ai_profile_clamp(&g->ai_profile_left);
-        ai_profile_clamp(&g->ai_profile_right);
+        s_last_good_store = s_learn_store;
+        s_last_good_valid = true;
+        s_bad_sync_streak = 0u;
+        ai_learning_apply_store_to_game(g, &s_learn_store);
         return;
     }
 
     if (s_learn_store.magic == EDGEAI_LEARN_STORE_MAGIC && s_learn_store.version == EDGEAI_LEARN_STORE_VERSION &&
         ai_store_checksum(&s_learn_store) == s_learn_store.crc32)
     {
-        g->ai_profile_left = s_learn_store.left;
-        g->ai_profile_right = s_learn_store.right;
-        ai_profile_clamp(&g->ai_profile_left);
-        ai_profile_clamp(&g->ai_profile_right);
+        s_last_good_store = s_learn_store;
+        s_last_good_valid = true;
+        s_bad_sync_streak = 0u;
+        ai_learning_apply_store_to_game(g, &s_learn_store);
     }
     else
     {
@@ -356,6 +421,9 @@ static void ai_learning_load_store(pong_game_t *g)
         s_learn_store.left = g->ai_profile_left;
         s_learn_store.right = g->ai_profile_right;
         s_learn_store.crc32 = ai_store_checksum(&s_learn_store);
+        s_last_good_store = s_learn_store;
+        s_last_good_valid = true;
+        s_bad_sync_streak = 0u;
         s_learn_store_dirty = false;
     }
 }
@@ -400,7 +468,10 @@ void ai_learning_set_persistent(pong_game_t *g, bool enabled)
     g->persistent_learning = false;
     ai_learning_reset_session(g);
     memset(&s_learn_store, 0, sizeof(s_learn_store));
+    memset(&s_last_good_store, 0, sizeof(s_last_good_store));
     s_learn_store_dirty = false;
+    s_last_good_valid = false;
+    s_bad_sync_streak = 0u;
     ai_flash_clear_store();
 }
 
@@ -408,8 +479,45 @@ void ai_learning_sync_store(pong_game_t *g)
 {
     if (!g || !g->persistent_learning) return;
     if (!s_learn_store_dirty) return;
+
+    /* Apply light per-match decay to avoid stale-profile lock-in across long sessions. */
+    ai_profile_decay_toward_default(&g->ai_profile_left, EDGEAI_LEARN_DECAY_ALPHA);
+    ai_profile_decay_toward_default(&g->ai_profile_right, EDGEAI_LEARN_DECAY_ALPHA);
+    ai_profile_clamp(&g->ai_profile_left);
+    ai_profile_clamp(&g->ai_profile_right);
+    ai_learning_commit_store(g);
+
+    bool left_bad = ai_profile_is_bad(&g->ai_profile_left);
+    bool right_bad = ai_profile_is_bad(&g->ai_profile_right);
+    bool any_bad = (left_bad || right_bad);
+
+    if (any_bad)
+    {
+        if (s_bad_sync_streak < 255u) s_bad_sync_streak++;
+        if (s_last_good_valid && s_bad_sync_streak >= EDGEAI_LEARN_BAD_STREAK_ROLLBACK)
+        {
+            ai_learning_apply_store_to_game(g, &s_last_good_store);
+            s_learn_store = s_last_good_store;
+            s_learn_store_dirty = true;
+            if (ai_flash_write_store(&s_learn_store))
+            {
+                s_learn_store_dirty = false;
+            }
+            s_bad_sync_streak = 0u;
+        }
+        return;
+    }
+
+    s_bad_sync_streak = 0u;
+
+    bool left_good = ai_profile_is_good(&g->ai_profile_left);
+    bool right_good = ai_profile_is_good(&g->ai_profile_right);
+    if (!(left_good || right_good)) return;
+
     if (ai_flash_write_store(&s_learn_store))
     {
+        s_last_good_store = s_learn_store;
+        s_last_good_valid = true;
         s_learn_store_dirty = false;
     }
 }
