@@ -3994,3 +3994,5 @@
 2026-02-26T19:31:31Z | result: build=PASS flash=PASS (persistence safeguards)
 2026-02-26T19:31:46Z | updated STATUS.md and root docs/PROJECT_STATE.md for persistence safeguard verification
 2026-02-26T19:31:52Z | git status --short (pre-commit persistence safeguards)
+2026-02-26T19:31:57Z | git add src/game/ai.c README.md STATUS.md docs/COMMAND_LOG.md && git commit -m "Stabilize persistent learning with decay and rollback safeguards"
+2026-02-26T19:32:03Z | git status --short (post-commit pre-push persistence safeguards)
