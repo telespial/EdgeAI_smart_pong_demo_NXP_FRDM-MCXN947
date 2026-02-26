@@ -47,3 +47,4 @@
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_211448_scorecap999_reset30s_golden.elf`
 - Notes (HUD update 2026-02-26): added bottom-row per-side `AVG` score labels, centered in each half around the net line, using running match-average points for left/right sides.
 - Notes (verification 2026-02-26): rebuilt after bottom-row avg-score HUD update (build PASS).
+- Notes (verification 2026-02-26): flashed board after AVG visibility fix (flash PASS).
