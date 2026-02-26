@@ -1386,7 +1386,6 @@ static void render_bottom_avg_scores(uint16_t *dst, uint32_t w, uint32_t h, int3
     const uint16_t cs = sw_pack_rgb565_u8(8, 8, 10);
 
     int32_t lw = edgeai_text5x7_width(scale, l_text);
-    int32_t rw = edgeai_text5x7_width(scale, r_text);
     int32_t gap = 10;
     int32_t lx = net_x - gap - lw;
     int32_t rx = net_x + gap;

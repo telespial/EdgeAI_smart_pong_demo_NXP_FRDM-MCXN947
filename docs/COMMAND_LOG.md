@@ -4069,3 +4069,6 @@
 2026-02-26T21:31:30Z | git add STATUS.md docs/COMMAND_LOG.md && git commit -m "Record AVG visibility flash verification"
 2026-02-26T21:31:30Z | git push origin main
 2026-02-26T21:33:10Z | adjusted AVG HUD layout in src/game/render.c: larger text, bottom-row placement, near-net anchors
+2026-02-26T21:36:10Z | fixed compile warning in src/game/render.c (removed unused rw)
+2026-02-26T21:36:18Z | ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh
+2026-02-26T21:36:18Z | result: build=PASS flash=PASS
