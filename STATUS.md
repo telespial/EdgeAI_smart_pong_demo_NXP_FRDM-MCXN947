@@ -50,3 +50,5 @@
 - Notes (verification 2026-02-26): flashed board after AVG visibility fix (flash PASS).
 - Notes (HUD layout 2026-02-26): removed right-side `AVG` label, widened left/right numeric spacing by three character widths, and centered the two score numbers around the net.
 - Notes (verification 2026-02-26): rebuilt and reflashed after AVG label/spacing alignment update (build/flash PASS).
+- Notes (AVG reset 2026-02-26): `NEW GAME` from Settings now also clears AVG history counters, so both side AVG values reset to `000`.
+- Notes (verification 2026-02-26): rebuilt and reflashed after AVG reset-on-settings-clear update (build/flash PASS).

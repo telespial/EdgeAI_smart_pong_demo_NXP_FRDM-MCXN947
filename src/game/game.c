@@ -368,6 +368,9 @@ static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
         int32_t by = EDGEAI_UI_ROW8_Y + new_y0;
         if (hit_rect(px, py, bx, by, EDGEAI_UI_NEW_W, EDGEAI_UI_NEW_H))
         {
+            g->score_total_left = 0u;
+            g->score_total_right = 0u;
+            g->score_avg_games = 0u;
             game_reset(g);
             g->menu_open = false;
             return;

@@ -4079,3 +4079,6 @@
 2026-02-26T21:39:44Z | git status --short (pre-commit AVG layout tune)
 2026-02-26T21:39:56Z | git add src/game/render.c STATUS.md docs/COMMAND_LOG.md && git commit -m "Tune AVG HUD: single label, wider spacing, centered numbers"
 2026-02-26T21:39:56Z | git push origin main
+2026-02-26T22:16:44Z | updated src/game/game.c: settings `NEW GAME` now clears AVG history (`score_total_left/right`, `score_avg_games`) before reset
+2026-02-26T22:17:02Z | ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh (AVG reset on settings score clear)
+2026-02-26T22:17:02Z | result: build=PASS flash=PASS (AVG reset on settings score clear)
