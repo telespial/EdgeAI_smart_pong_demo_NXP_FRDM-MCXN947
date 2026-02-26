@@ -176,6 +176,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 
 ## Restore Points
 - Active golden/failsafe pointer: `docs/failsafe.md`
+- Current active artifact: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_223333_avg_reset_newgame_golden.elf`
 - Failsafe flash command:
 ```bash
 FAILSAFE_CONFIRM="$(sed -n '1p' docs/failsafe.md)" ./tools/flash_failsafe.sh

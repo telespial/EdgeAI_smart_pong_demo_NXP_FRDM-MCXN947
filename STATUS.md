@@ -55,3 +55,4 @@
 - Notes (docs refresh 2026-02-26): updated project docs + GitHub README to include AVG reset-on-settings-clear behavior.
 - Notes (restore marker 2026-02-26): promoted AVG-reset-on-settings-clear firmware as Golden + Failsafe restore point.
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_223333_avg_reset_newgame_golden.elf`
+- Notes (restore tags 2026-02-26): moved `golden` and `failsafe` tags to latest `main` commit after docs/log sync.
