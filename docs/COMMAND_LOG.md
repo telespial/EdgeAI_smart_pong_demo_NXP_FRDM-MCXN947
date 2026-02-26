@@ -4087,3 +4087,6 @@
 2026-02-26T22:26:16Z | git push origin main
 2026-02-26T22:33:33Z | cp mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.elf failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_223333_avg_reset_newgame_golden.elf
 2026-02-26T22:33:50Z | updated README.md docs/failsafe.md docs/BUILD_FLASH.md STATUS.md for AVG reset behavior + new golden/failsafe pointer
+2026-02-26T22:34:20Z | git add README.md STATUS.md docs/BUILD_FLASH.md docs/COMMAND_LOG.md docs/failsafe.md failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_223333_avg_reset_newgame_golden.elf && git commit -m "Update docs and promote AVG-reset build as golden failsafe"
+2026-02-26T22:34:24Z | git push origin main
+2026-02-26T22:34:42Z | git tag -fa golden/failsafe && git push origin golden failsafe --force (move restore-point tags)
