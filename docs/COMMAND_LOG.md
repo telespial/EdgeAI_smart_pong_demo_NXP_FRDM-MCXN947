@@ -4116,3 +4116,7 @@
 2026-02-26T23:46:00Z | result: build=PASS flash=PASS (MATCH 11/100/1K update)
 2026-02-26T23:49:20Z | git add src/game/game.h src/game/game.c src/game/render.c README.md STATUS.md docs/COMMAND_LOG.md && git commit -m "Add MATCH targets 11, 100, and 1K"
 2026-02-26T23:49:24Z | git push origin main
+2026-02-26T23:51:40Z | updated src/game/game.c default MATCH target from 1K to 100
+2026-02-26T23:52:00Z | ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh (default MATCH=100)
+2026-02-26T23:52:00Z | result: build=PASS flash=PASS (default MATCH=100)
+2026-02-26T23:57:16Z | updated STATUS.md for default MATCH=100 + verification

@@ -394,7 +394,7 @@ void game_init(pong_game_t *g)
     g->mode = kGameModeZeroPlayer;
     g->difficulty = 3;
     g->ai_enabled = true;
-    g->match_target = EDGEAI_MATCH_TARGET_1K;
+    g->match_target = EDGEAI_MATCH_TARGET_100;
     g->persistent_learning = false;
     g->speedpp_enabled = true;
     g->target_overlay_enabled = false;
