@@ -4093,3 +4093,7 @@
 2026-02-26T23:19:12Z | git tag -fa golden/failsafe && git push origin golden failsafe --force (align tags to latest main)
 2026-02-26T23:19:22Z | verified refs: main==golden==failsafe at 38b82a9
 2026-02-26T23:19:40Z | updated README.md and STATUS.md for active restore-point documentation + tag alignment note
+2026-02-26T23:20:00Z | git add README.md STATUS.md docs/COMMAND_LOG.md && git commit -m "Refresh README and align restore-point docs"
+2026-02-26T23:20:03Z | git push origin main
+2026-02-26T23:20:11Z | git tag -fa golden/failsafe && git push origin golden failsafe --force (promote latest docs commit as restore-point tags)
+2026-02-26T23:20:14Z | verified refs: main==golden==failsafe at 785616b
