@@ -29,7 +29,7 @@
 - Notes (online learning): added lightweight per-side online tactical style learning (center/corner strategy bandit) that adapts target bias from hit/miss outcomes without retraining model weights.
 - Notes (AI retune): reduced early tactical exploration and scaled style influence by learning maturity; added slight mixed-mode edge (lower noise + modest speed boost) to improve early AI-vs-ALGO competitiveness.
 - Notes (lead retune): added dynamic high-speed lead boost for EdgeAI so anticipation increases with ball velocity (extra mixed-mode bonus), improving top-speed rally tracking.
-- Notes (default startup profile): P0, LEVEL 3, NPU ON, SKILL AI/ALGO, PERSIST OFF, MATCH INF, TARGET OFF, SPEED++ ON.
+- Notes (default startup profile): P0, LEVEL 3, NPU ON, SKILL AI/ALGO, PERSIST OFF, MATCH 1K, TARGET OFF, SPEED++ ON.
 - Notes (persistence default): firmware boots with persistence disabled; persisted flash profile is only restored after the user selects `PERSIST ON`.
 - Notes (verification 2026-02-26): rebuilt and reflashed after persistence-default update.
 - Notes (persistence safeguards 2026-02-26): added decay toward defaults, quality-gated persistence writes, and auto-rollback to last-good profile on sustained regression when `PERSIST ON`.
@@ -60,3 +60,5 @@
 - Notes (verification 2026-02-26): rebuilt after AI serve variation update (build PASS).
 - Notes (HUD switch 2026-02-26): replaced bottom `AVG` scoreboard with per-side `WINS` counters (`000-000` format), keeping centered near-net layout.
 - Notes (settings clear 2026-02-26): `NEW GAME` now resets both score and `WINS` totals.
+- Notes (match options 2026-02-26): `MATCH` setting now offers `11`, `100`, and `1K` targets (`1K` maps to score target `999`).
+- Notes (verification 2026-02-26): rebuilt and reflashed after MATCH-option update (`11/100/1K`) (build/flash PASS).

@@ -34,15 +34,15 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
    - Part number: MIKROE-4630
 
 ## Gameplay Rules
-- Objective: first side to 11 points wins the match.
+- Objective: first side to the selected `MATCH` target (`11`, `100`, or `1K`) wins the match.
 - Scoring: when a side misses and the ball exits that side, the opponent gains 1 point.
 - Ball motion: ball reflects from top and bottom arena walls.
 - Paddle collision: ball reflects from paddles with hit-position-based angle shaping ("english").
 - Serve behavior: each serve starts from center and is directed toward the side that conceded the previous point.
   - Serve variation: serve launch now uses adaptive AI-style selection that mixes straight, single-axis angle, and diagonal angle patterns with directional bias away from the receiver paddle position.
 - Match flow:
-  - `P0` (AI vs AI): at 11 points, winner styling + confetti are shown, then the game auto-resets and continues in an endless loop.
-  - `P1` and `P2`: at 11 points, winner styling + confetti are shown, then `NEW GAME? YES/NO` is displayed.
+  - `P0` (AI vs AI): at the selected `MATCH` target, winner styling + confetti are shown, then the game auto-resets.
+  - `P1` and `P2`: at the selected `MATCH` target, winner styling + confetti are shown, then `NEW GAME? YES/NO` is displayed.
   - Absolute cap: at `999` points on either side, confetti/winner styling are shown and the game auto-resets to `0-0` after `30s`.
   - Persistence on reset at the `999` cap follows the `PERSIST` setting:
     - `PERSIST OFF`: reset continues without persisted carry-over.
@@ -70,7 +70,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
   - `ON`: keep and restore learned AI profiles from flash independently per side.
   - `OFF`: clear learned profiles (including flash snapshot) for true cold-start behavior.
   - Startup default after flash/reboot: `OFF` (persistence is enabled only when user selects `ON`).
-- `MATCH`: `11`, `INF`
+- `MATCH`: `11`, `100`, `1K` (`1K` uses a `999` target to match score-display and cap behavior)
 - `TARGET`: `ON`, `OFF`
 - `SPEED++`: `ON`, `OFF`
 - `New Game`: immediate score reset

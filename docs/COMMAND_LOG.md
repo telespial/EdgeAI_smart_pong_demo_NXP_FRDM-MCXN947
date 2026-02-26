@@ -4110,3 +4110,7 @@
 2026-02-26T23:39:45Z | updated README.md and STATUS.md for WINS HUD feature
 2026-02-26T23:40:50Z | git add src/game/game.c src/game/game.h src/game/render.c README.md STATUS.md docs/COMMAND_LOG.md && git commit -m "Replace AVG HUD with per-side WINS counters"
 2026-02-26T23:40:54Z | git push origin main
+2026-02-26T23:44:10Z | updated src/game/game.h src/game/game.c src/game/render.c: MATCH options changed from 11/INF to 11/100/1K(999 target)
+2026-02-26T23:45:40Z | updated README.md and STATUS.md for MATCH setting change (11/100/1K)
+2026-02-26T23:46:00Z | ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh (MATCH 11/100/1K update)
+2026-02-26T23:46:00Z | result: build=PASS flash=PASS (MATCH 11/100/1K update)

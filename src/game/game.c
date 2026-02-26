@@ -11,7 +11,9 @@
 #include "game/ui_layout.h"
 #include "platform/time_hal.h"
 
-#define EDGEAI_WIN_SCORE 11u
+#define EDGEAI_MATCH_TARGET_11 11u
+#define EDGEAI_MATCH_TARGET_100 100u
+#define EDGEAI_MATCH_TARGET_1K 999u
 #define EDGEAI_MAX_SCORE 999u
 #define EDGEAI_END_PROMPT_DELAY_FRAMES 120u
 #define EDGEAI_P0_DEMO_RESET_US 1300000u
@@ -58,6 +60,13 @@ static bool game_end_prompt_visible(const pong_game_t *g)
 
     uint32_t elapsed = g->frame - g->match_over_frame;
     return (elapsed >= EDGEAI_END_PROMPT_DELAY_FRAMES);
+}
+
+static uint16_t game_match_target_from_index(int32_t idx)
+{
+    if (idx <= 0) return EDGEAI_MATCH_TARGET_11;
+    if (idx == 1) return EDGEAI_MATCH_TARGET_100;
+    return EDGEAI_MATCH_TARGET_1K;
 }
 
 static void game_start_countdown(pong_game_t *g)
@@ -310,17 +319,17 @@ static void ui_handle_press(pong_game_t *g, float touch_x, float touch_y)
         }
     }
 
-    /* Perpetual play: 11, INF */
-    for (int32_t i = 0; i < 2; i++)
+    /* Match target: 11, 100, 1K(999). */
+    for (int32_t i = 0; i < 3; i++)
     {
-        int32_t bx = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+        int32_t bx = EDGEAI_UI_OPT_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
         int32_t by = EDGEAI_UI_ROW5_Y + opt_y0;
         if (hit_rect(px, py, bx, by, EDGEAI_UI_OPT_W, EDGEAI_UI_OPT_H))
         {
-            bool inf = (i == 1);
-            if (g->perpetual_play != inf)
+            uint16_t tgt = game_match_target_from_index(i);
+            if (g->match_target != tgt)
             {
-                g->perpetual_play = inf;
+                g->match_target = tgt;
             }
             return;
         }
@@ -385,7 +394,7 @@ void game_init(pong_game_t *g)
     g->mode = kGameModeZeroPlayer;
     g->difficulty = 3;
     g->ai_enabled = true;
-    g->perpetual_play = true;
+    g->match_target = EDGEAI_MATCH_TARGET_1K;
     g->persistent_learning = false;
     g->speedpp_enabled = true;
     g->target_overlay_enabled = false;
@@ -588,7 +597,7 @@ void game_step(pong_game_t *g, const platform_input_t *in, float dt)
         game_update_countdown(g);
     }
 
-    bool reached_match_score = (!g->perpetual_play && (g->score.left >= EDGEAI_WIN_SCORE || g->score.right >= EDGEAI_WIN_SCORE));
+    bool reached_match_score = (g->score.left >= g->match_target || g->score.right >= g->match_target);
     bool reached_max_score = (g->score.left >= EDGEAI_MAX_SCORE || g->score.right >= EDGEAI_MAX_SCORE);
     if (reached_match_score || reached_max_score)
     {

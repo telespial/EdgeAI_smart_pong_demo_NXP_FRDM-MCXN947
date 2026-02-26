@@ -975,19 +975,19 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
             edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx0, ty0, opt_scale, t, sel ? c_opt_text_sel : c_opt_text);
         }
 
-        /* Perpetual play: first to 11 vs endless. */
-        for (int i = 0; i < 2; i++)
+        /* Match target: 11, 100, 1K(999). */
+        for (int i = 0; i < 3; i++)
         {
-            int32_t bx0 = EDGEAI_UI_OPT2_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
+            int32_t bx0 = EDGEAI_UI_OPT_BLOCK_X + i * (EDGEAI_UI_OPT_W + EDGEAI_UI_OPT_GAP);
             int32_t by0 = EDGEAI_UI_ROW5_Y + opt_yoff;
             int32_t bx1 = bx0 + EDGEAI_UI_OPT_W - 1;
             int32_t by1 = by0 + EDGEAI_UI_OPT_H - 1;
 
-            bool inf = (i == 1);
-            bool sel = (g->perpetual_play == inf);
+            uint16_t tgt = (i == 0) ? 11u : ((i == 1) ? 100u : 999u);
+            bool sel = (g->match_target == tgt);
             render_fill_round_rect(dst, w, h, tile_x0, tile_y0, bx0, by0, bx1, by1, EDGEAI_UI_OPT_H / 2, sel ? c_opt_sel : c_opt);
 
-            const char *t = inf ? "INF" : "11";
+            const char *t = (i == 0) ? "11" : ((i == 1) ? "100" : "1K");
             int32_t tw = edgeai_text5x7_width(opt_scale, t);
             int32_t tx0 = bx0 + (EDGEAI_UI_OPT_W - tw) / 2;
             int32_t ty0 = by0 + (EDGEAI_UI_OPT_H - 7 * opt_scale) / 2;
@@ -1079,7 +1079,7 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, 2, "GAME RULES", c_body);
         y += 16;
 
-        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "FIRST TO 11 OR SET X TO INF", c_body);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "MATCH TARGET: 11 100 1K", c_body);
         y += 12 * s1;
         edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, x, y, s1, "AUTO RESET AT 999 (30S)", c_body);
         y += lh;

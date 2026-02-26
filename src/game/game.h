@@ -63,7 +63,7 @@ typedef struct
     game_mode_t mode;
     uint8_t difficulty; /* 1..3 */
     bool ai_enabled;
-    bool perpetual_play;
+    uint16_t match_target;
     bool persistent_learning;
     bool speedpp_enabled;
     bool target_overlay_enabled;
