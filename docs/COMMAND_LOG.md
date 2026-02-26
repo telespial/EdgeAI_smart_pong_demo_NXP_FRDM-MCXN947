@@ -3965,3 +3965,18 @@
 2026-02-26T19:18:10Z | updated STATUS.md with 2026-02-26 verification note
 2026-02-26T19:18:21Z | git remote -v
 2026-02-26T19:18:21Z | git status --short
+2026-02-26T19:18:29Z | git add src/game/game.c README.md STATUS.md docs/COMMAND_LOG.md && git commit -m "Set persistence default OFF until user enables it"
+2026-02-26T19:18:44Z | git push origin main
+2026-02-26T19:18:51Z | git status --short (post-push)
+2026-02-26T19:18:51Z | git show --name-only --oneline -1
+2026-02-26T19:20:14Z | sed -n 1,220p docs/failsafe.md
+2026-02-26T19:20:14Z | sed -n 1,240p tools/flash_failsafe.sh
+2026-02-26T19:20:14Z | ls -la failsafe
+2026-02-26T19:20:33Z | cp mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.elf failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_192033_persist_default_off_golden.elf
+2026-02-26T19:20:44Z | sed -n 1,120p docs/failsafe.md (before update)
+2026-02-26T19:20:44Z | sed -n 1,120p STATUS.md (before restore-point update)
+2026-02-26T19:20:44Z | rg -n failsafe/golden in STATUS.md docs/BUILD_FLASH.md
+2026-02-26T19:21:10Z | updated docs/failsafe.md docs/BUILD_FLASH.md STATUS.md for new golden/failsafe artifact
+2026-02-26T19:21:10Z | git status --short (pre-commit restore-point update)
+2026-02-26T19:21:10Z | sed -n 1,3p docs/failsafe.md (verify active failsafe pointer)
+2026-02-26T19:21:18Z | updated root docs/PROJECT_STATE.md for smart pong golden/failsafe promotion
