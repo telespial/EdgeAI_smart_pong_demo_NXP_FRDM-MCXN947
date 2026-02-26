@@ -4072,3 +4072,7 @@
 2026-02-26T21:36:10Z | fixed compile warning in src/game/render.c (removed unused rw)
 2026-02-26T21:36:18Z | ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh
 2026-02-26T21:36:18Z | result: build=PASS flash=PASS
+2026-02-26T21:39:10Z | updated src/game/render.c: remove right AVG label, +3-char inter-number spacing, centered numeric layout
+2026-02-26T21:39:18Z | ./tools/build_frdmmcxn947.sh && ./tools/flash_frdmmcxn947.sh
+2026-02-26T21:39:18Z | result: build=PASS flash=PASS
+2026-02-26T21:39:30Z | updated STATUS.md and root docs/PROJECT_STATE.md for AVG layout adjustment

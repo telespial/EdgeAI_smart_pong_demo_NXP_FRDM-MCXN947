@@ -1367,14 +1367,15 @@ static void render_bottom_avg_scores(uint16_t *dst, uint32_t w, uint32_t h, int3
     text_u3(l_digits, avg_l);
     text_u3(r_digits, avg_r);
 
-    char l_text[] = "AVG 000";
-    char r_text[] = "AVG 000";
-    l_text[4] = l_digits[0];
-    l_text[5] = l_digits[1];
-    l_text[6] = l_digits[2];
-    r_text[4] = r_digits[0];
-    r_text[5] = r_digits[1];
-    r_text[6] = r_digits[2];
+    const char *l_label = "AVG";
+    char l_num[] = "000";
+    char r_num[] = "000";
+    l_num[0] = l_digits[0];
+    l_num[1] = l_digits[1];
+    l_num[2] = l_digits[2];
+    r_num[0] = r_digits[0];
+    r_num[1] = r_digits[1];
+    r_num[2] = r_digits[2];
 
     /* Place AVG text inside the bottom status row, close to each side of the net. */
     const int32_t bar_y = EDGEAI_LCD_H - 17;
@@ -1385,15 +1386,23 @@ static void render_bottom_avg_scores(uint16_t *dst, uint32_t w, uint32_t h, int3
     const uint16_t c = sw_pack_rgb565_u8(232, 234, 238);
     const uint16_t cs = sw_pack_rgb565_u8(8, 8, 10);
 
-    int32_t lw = edgeai_text5x7_width(scale, l_text);
-    int32_t gap = 10;
-    int32_t lx = net_x - gap - lw;
-    int32_t rx = net_x + gap;
+    int32_t char_w = edgeai_text5x7_width(scale, "0");
+    int32_t num_w = edgeai_text5x7_width(scale, l_num);
+    int32_t label_w = edgeai_text5x7_width(scale, l_label);
+    int32_t inter_num_gap = 3 * char_w;
 
-    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, lx + 1, text_y + 1, scale, l_text, cs);
-    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, lx, text_y, scale, l_text, c);
-    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, rx + 1, text_y + 1, scale, r_text, cs);
-    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, rx, text_y, scale, r_text, c);
+    int32_t left_num_cx = net_x - (inter_num_gap / 2) - (num_w / 2);
+    int32_t right_num_cx = net_x + (inter_num_gap / 2) + (num_w / 2);
+    int32_t left_num_x = left_num_cx - (num_w / 2);
+    int32_t right_num_x = right_num_cx - (num_w / 2);
+    int32_t left_label_x = left_num_x - (char_w / 2) - label_w;
+
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, left_label_x + 1, text_y + 1, scale, l_label, cs);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, left_label_x, text_y, scale, l_label, c);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, left_num_x + 1, text_y + 1, scale, l_num, cs);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, left_num_x, text_y, scale, l_num, c);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, right_num_x + 1, text_y + 1, scale, r_num, cs);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, right_num_x, text_y, scale, r_num, c);
 }
 
 typedef struct
