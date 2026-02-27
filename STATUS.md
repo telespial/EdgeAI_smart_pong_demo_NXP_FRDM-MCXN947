@@ -64,3 +64,6 @@
 - Notes (verification 2026-02-26): rebuilt and reflashed after MATCH-option update (`11/100/1K`) (build/flash PASS).
 - Notes (default update 2026-02-26): firmware startup default for `MATCH` is now `100`.
 - Notes (verification 2026-02-26): rebuilt and reflashed after changing default `MATCH` to `100` (build/flash PASS).
+- Notes (docs refresh 2026-02-26): updated GitHub README and build/failsafe docs for `MATCH` options and default `100` startup behavior.
+- Notes (restore marker 2026-02-26): promoted default-`MATCH 100` firmware as Golden + Failsafe restore point.
+- Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_235942_match100_default_golden.elf`

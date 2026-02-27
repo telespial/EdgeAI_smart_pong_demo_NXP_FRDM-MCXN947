@@ -4122,3 +4122,6 @@
 2026-02-26T23:57:16Z | updated STATUS.md for default MATCH=100 + verification
 2026-02-26T23:57:50Z | git add src/game/game.c STATUS.md docs/COMMAND_LOG.md && git commit -m "Set default MATCH target to 100"
 2026-02-26T23:57:54Z | git push origin main
+2026-02-26T23:59:42Z | prepared restore promotion timestamp and verified current build ELF
+2026-02-26T23:59:50Z | cp mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.elf failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_235942_match100_default_golden.elf
+2026-02-27T00:00:30Z | updated README.md STATUS.md docs/failsafe.md docs/BUILD_FLASH.md for default-MATCH-100 golden/failsafe promotion
