@@ -6,8 +6,14 @@
 ## Last Run
 - Date: 2026-03-24
 - Result: ok (build/flash)
-- Binary: `mcuxsdk_ws/build_speedup_20260324/edgeai_smart_pong_demo_cm33_core0.bin`
-- Flash: `BUILD_DIR=mcuxsdk_ws/build_speedup_20260324 ./tools/flash_frdmmcxn947.sh`
+- Binary: `mcuxsdk_ws/mcuxsdk_ws/build_ui_dx_spacing_20260324/edgeai_smart_pong_demo_cm33_core0.bin`
+- Build: `BUILD_DIR=mcuxsdk_ws/build_ui_dx_spacing_20260324 ./tools/build_frdmmcxn947.sh`
+- Flash: `BUILD_DIR=mcuxsdk_ws/build_ui_dx_spacing_20260324 ./tools/flash_frdmmcxn947.sh`
+- Notes (UI spacing 2026-03-24): moved `D?` right by ~1.5 character cells while keeping `?` position unchanged, creating a clearer gap between `x` (1/2/3) and `?`.
+- Notes (restore marker 2026-03-24): promoted `D?` spacing firmware as Golden + Failsafe restore point.
+- Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260324_073456_ui_dx_spacing_golden.elf`
+- Notes (UI fit 2026-03-24): reverted top pill control typography/layout to compact sizing so `P? D? ?` fits as originally intended.
+- Notes (UI fit 2026-03-24): restored original label ordering/placement (`P? D?` before `?`) and reduced help-icon glyph scale.
 - Notes (game pace 2026-03-24): increased startup serve speed by 14% so matches feel faster from first rally.
 - Notes (game pace 2026-03-24): once either side reaches `6+` points, serve pace now ramps progressively (clamped) to keep late-game rallies visually energetic.
 - Notes (visual style 2026-03-24): updated arena colors, world scaling, and HUD styling to more closely match the Infineon Smart Pong visual direction.

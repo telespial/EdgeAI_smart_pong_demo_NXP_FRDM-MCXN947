@@ -4174,3 +4174,31 @@
 2026-03-24T06:55:30-07:00 | run docs/style lint | ./tools/lint_text_style.sh
 2026-03-24T06:55:45-07:00 | review release changes | git status --short; git diff --stat
 2026-03-24T06:55:52-07:00 | release actions | git add/commit/push and move golden+failsafe tags to release commit
+2026-03-24T07:18:03-07:00 | inspect render_ui top-pill block | rg/nl src/game/render.c around render_ui
+2026-03-24T07:18:26-07:00 | fix top-pill UI fit regression | restore compact render_ui icon/label/? sizing and P? D? order in src/game/render.c
+2026-03-24T07:23:23-07:00 | build top-pill ui fix | BUILD_DIR=mcuxsdk_ws/build_ui_topbar_fix_20260324 ./tools/build_frdmmcxn947.sh
+2026-03-24T07:23:30-07:00 | read state files before ui-fit update note | sed -n STATUS.md and docs/PROJECT_STATE.md
+2026-03-24T07:23:55-07:00 | update STATUS and project state for top-pill UI rollback | edited STATUS.md and docs/PROJECT_STATE.md with build_ui_topbar_fix_20260324 result
+2026-03-24T07:24:29-07:00 | flash top-pill UI fit fix | BUILD_DIR=mcuxsdk_ws/build_ui_topbar_fix_20260324 ./tools/flash_frdmmcxn947.sh
+2026-03-24T07:24:47-07:00 | update state docs after flash | edited STATUS.md and docs/PROJECT_STATE.md to mark build_ui_topbar_fix_20260324 flash PASS
+2026-03-24T07:26:44-07:00 | inspect P?/D? top-pill label block | nl -ba src/game/render.c 788-820
+2026-03-24T07:27:01-07:00 | shift D? right by ~1.5 chars in top pill | edited src/game/render.c to draw P? and D? separately with +1.5 char offset
+2026-03-24T07:31:42-07:00 | build D? spacing tweak | BUILD_DIR=mcuxsdk_ws/build_ui_dx_spacing_20260324 ./tools/build_frdmmcxn947.sh
+2026-03-24T07:32:21-07:00 | inspect state docs for D? spacing update | tail PROJECT_STATE/STATUS before patch
+2026-03-24T07:32:26-07:00 | inspect STATUS sections for insertion | head/tail STATUS.md
+2026-03-24T07:32:53-07:00 | update project docs after D? spacing build | patched docs/PROJECT_STATE.md and STATUS.md
+2026-03-24T07:32:53-07:00 | verify D? spacing render code | checked src/game/render.c split P?/D? draw with +1.5 char offset
+2026-03-24T07:33:11-07:00 | flash D? spacing tweak build | BUILD_DIR=mcuxsdk_ws/build_ui_dx_spacing_20260324 ./tools/flash_frdmmcxn947.sh
+2026-03-24T07:33:38-07:00 | update docs after flash verify | patched docs/PROJECT_STATE.md and STATUS.md to build/flash PASS for D? spacing tweak
+2026-03-24T07:33:58-07:00 | read required entry docs | cat docs/START_HERE.md docs/PROJECT_STATE.md docs/OPS_RUNBOOK.md
+2026-03-24T07:34:10-07:00 | inspect git/release pointers | git status -sb; git branch --show-current; git remote -v; cat docs/failsafe.md; ls -1 mcuxsdk_ws/build_ui_dx_spacing_20260324/*.elf
+2026-03-24T07:34:19-07:00 | locate build artifacts for dx spacing release | find mcuxsdk_ws/build_ui_dx_spacing_20260324 -maxdepth 4 -type f | rg -n '\.(elf|bin)$|edgeai_smart_pong_demo'
+2026-03-24T07:34:25-07:00 | search build directories | find . -maxdepth 5 -type d | rg 'build_ui_dx_spacing_20260324|build_ui_topbar_fix_20260324|mcuxsdk_ws/build'
+2026-03-24T07:34:33-07:00 | locate ui build directories quickly | find mcuxsdk_ws -maxdepth 1 -type d -name 'build_ui*'
+2026-03-24T07:34:38-07:00 | search build_ui directories recursively | find . -type d -name 'build_ui*'
+2026-03-24T07:34:47-07:00 | inspect dx spacing artifacts in nested build dir | ls -l mcuxsdk_ws/mcuxsdk_ws/build_ui_dx_spacing_20260324/*.elf *.bin
+2026-03-24T07:34:56-07:00 | create new failsafe/golden artifact | cp mcuxsdk_ws/mcuxsdk_ws/build_ui_dx_spacing_20260324/edgeai_smart_pong_demo_cm33_core0.elf failsafe/edgeai_smart_pong_demo_cm33_core0_20260324_073456_ui_dx_spacing_golden.elf
+2026-03-24T07:35:06-07:00 | inspect docs before release pointer patch | sed heads of docs/failsafe.md docs/PROJECT_STATE.md STATUS.md
+2026-03-24T07:35:38-07:00 | sync release docs + restore pointer | updated docs/failsafe.md, docs/PROJECT_STATE.md, STATUS.md for ui_dx_spacing golden/failsafe
+2026-03-24T07:35:45-07:00 | review release diff before commit | git diff --stat
+2026-03-24T07:35:55-07:00 | release commit/push and retag | git add -A; git commit; git push; git tag -f golden/failsafe; git push --force origin tags

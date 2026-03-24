@@ -777,30 +777,28 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
     render_fill_round_rect(dst, w, h, tile_x0, tile_y0, pill_x0, pill_y1 - 1, pill_x1, pill_y1, 0, c_pill_border);
 
     /* Icon: three short horizontal bars. */
-    int32_t ix = pill_x0 + 12;
-    int32_t icon_h = EDGEAI_UI_PILL_H / 10;
-    if (icon_h < 2) icon_h = 2;
-    int32_t icon_gap = EDGEAI_UI_PILL_H / 8;
-    if (icon_gap < 4) icon_gap = 4;
-    int32_t icon_block_h = (3 * icon_h) + (2 * icon_gap);
-    int32_t iy = pill_y0 + (EDGEAI_UI_PILL_H - icon_block_h) / 2;
+    int32_t ix = pill_x0 + 10;
+    int32_t iy = pill_y0 + 6;
     for (int i = 0; i < 3; i++)
     {
-        int32_t y = iy + i * (icon_h + icon_gap);
-        sw_render_fill_rect(dst, w, h, tile_x0, tile_y0, ix, y, ix + 20, y + icon_h - 1, c_text_dim);
+        sw_render_fill_rect(dst, w, h, tile_x0, tile_y0, ix, iy + i * 5, ix + 12, iy + i * 5 + 1, c_text_dim);
     }
 
     /* Label: P{0,1,2} D{1,2,3} */
     char players = (g->mode == kGameModeZeroPlayer) ? '0' : (g->mode == kGameModeSinglePlayer) ? '1' : '2';
     char diff = (g->difficulty < 1) ? '1' : (g->difficulty > 3) ? '3' : (char)('0' + g->difficulty);
-    /* Keep D? anchored near the help button while moving P? left toward '='. */
-    char s[12] = {'P', players, ' ', ' ', ' ', 'D', diff, 0};
+    char ptxt[4] = {'P', players, 0};
+    char dtxt[4] = {'D', diff, 0};
 
-    const int32_t scale = 3;
-    int32_t tx = EDGEAI_UI_HELP_BTN_X - edgeai_text5x7_width(scale, s) - 8;
-    if (tx < (pill_x0 + 42)) tx = pill_x0 + 42;
+    const int32_t scale = 2;
+    int32_t tx = pill_x0 + 30;
     int32_t ty = pill_y0 + (EDGEAI_UI_PILL_H - 7 * scale) / 2;
-    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx, ty, scale, s, c_text);
+    edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx, ty, scale, ptxt, c_text);
+    {
+        const int32_t char_cell = 6 * scale;
+        const int32_t dtx = tx + edgeai_text5x7_width(scale, ptxt) + char_cell + ((3 * char_cell) / 2);
+        edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, dtx, ty, scale, dtxt, c_text);
+    }
 
     /* Help icon: right-aligned inside the pill. */
     {
@@ -815,7 +813,7 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         render_fill_round_rect(dst, w, h, tile_x0, tile_y0, hx0, hy0, hx1, hy1, EDGEAI_UI_PILL_H / 2, c_help_bg);
         sw_render_line(dst, w, h, tile_x0, tile_y0, hx0, hy0 + 3, hx0, hy1 - 3, c_pill_border);
 
-        const int32_t qscale = 3;
+        const int32_t qscale = 2;
         const char *q = "?";
         int32_t qw = edgeai_text5x7_width(qscale, q);
         int32_t qx = hx0 + (EDGEAI_UI_HELP_BTN_W - qw) / 2;
