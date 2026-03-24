@@ -4,10 +4,18 @@
 - Workspace: `mcuxsdk_ws/` (created by `./tools/setup_mcuxsdk_ws.sh`)
 
 ## Last Run
-- Date: 2026-02-26
-- Result: ok (build)
-- Binary: `mcuxsdk_ws/build/edgeai_smart_pong_demo_cm33_core0.bin`
-- Flash: `west flash -d mcuxsdk_ws/build -r linkserver`
+- Date: 2026-03-24
+- Result: ok (build/flash)
+- Binary: `mcuxsdk_ws/build_speedup_20260324/edgeai_smart_pong_demo_cm33_core0.bin`
+- Flash: `BUILD_DIR=mcuxsdk_ws/build_speedup_20260324 ./tools/flash_frdmmcxn947.sh`
+- Notes (game pace 2026-03-24): increased startup serve speed by 14% so matches feel faster from first rally.
+- Notes (game pace 2026-03-24): once either side reaches `6+` points, serve pace now ramps progressively (clamped) to keep late-game rallies visually energetic.
+- Notes (visual style 2026-03-24): updated arena colors, world scaling, and HUD styling to more closely match the Infineon Smart Pong visual direction.
+- Notes (EdgeAI fairness 2026-03-24): AI-side learning selection now requires `ai_enabled`, so non-AI/manual side behavior is unaffected when EdgeAI is off.
+- Notes (EdgeAI assist 2026-03-24): removed global non-EdgeAI penalties and kept EdgeAI-only improvements with mild symmetric-mode assist so EdgeAI players still improve without changing non-AI side logic.
+- Notes (verification 2026-03-24): rebuilt and reflashed after style/fairness/pacing updates (build/flash PASS).
+- Notes (restore marker 2026-03-24): promoted style+fairness+speed firmware as Golden + Failsafe restore point.
+- Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260324_065426_style_edgeai_fairness_speedup_golden.elf`
 - Notes (persistence): match reset now explicitly reloads the learned persistence snapshot when `PERSIST` is enabled.
 - Notes (settings UI): added `SPEED++` toggle row and moved `NEW GAME` to the next row.
 - Notes (speed progression): when `SPEED++` is enabled, each side hitting `11, 22, 33, ...` raises serve-speed target by `5%` (compounding), clamped by runtime limits.

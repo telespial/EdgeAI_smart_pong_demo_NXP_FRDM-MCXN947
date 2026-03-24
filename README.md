@@ -150,6 +150,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 - Real-time NPU telemetry overlay for performance tuning
 - `SKILL` setting for side-selectable adaptive AI vs baseline ALGO (`2AI`, `AI/ALGO`, `ALGO/AI`)
 - Optional `SPEED++` progression: whenever either side reaches `11, 22, 33, ...`, serve speed target increases by `5%` (compounding) and is capped by runtime speed limits
+- Base pacing update: startup serve speed is increased and once either side reaches `6+` points, serve pace ramps progressively (clamped) to keep late-game rallies energetic
 - Settings `NEW GAME` now clears both score and `WINS` counters so bottom win values restart from `000`
 - AI-driven serve variation: each new serve can be straight or angled (single-axis/diagonal) with dynamic bias based on receiver paddle position
 
@@ -179,7 +180,7 @@ https://github.com/user-attachments/assets/fd94e3e0-a301-4cc3-8c4f-7ec1a7cc35af
 
 ## Restore Points
 - Active golden/failsafe pointer: `docs/failsafe.md`
-- Current active artifact: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_235942_match100_default_golden.elf`
+- Current active artifact: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260324_065426_style_edgeai_fairness_speedup_golden.elf`
 - Failsafe flash command:
 ```bash
 FAILSAFE_CONFIRM="$(sed -n '1p' docs/failsafe.md)" ./tools/flash_failsafe.sh

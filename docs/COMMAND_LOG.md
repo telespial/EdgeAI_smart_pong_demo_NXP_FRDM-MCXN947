@@ -4128,3 +4128,49 @@
 2026-02-27T00:01:15Z | git add README.md STATUS.md docs/BUILD_FLASH.md docs/COMMAND_LOG.md docs/failsafe.md failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_235942_match100_default_golden.elf && git commit -m "Refresh docs and promote MATCH-100 build as golden failsafe"
 2026-02-27T00:01:20Z | git push origin main
 2026-02-27T00:01:40Z | git tag -fa golden/failsafe && git push origin golden failsafe --force (move restore-point tags to 831556b)
+2026-03-06T10:36:08Z | cmd: ls -la; ls docs; rg START_HERE/PROJECT_STATE/OPS_RUNBOOK/todo | exit:0
+2026-03-06T10:36:30Z | cmd: read required project docs in order + context docs | exit:0
+2026-03-06T10:42:19Z | cmd: extract ai_build_features contract + npu hal details for model mapping | exit:0
+2026-03-24T06:26:55-07:00 | build attempt default BUILD_DIR failed due stale west source-dir mismatch
+2026-03-24T06:26:55-07:00 | inspected tools/build_frdmmcxn947.sh to confirm BUILD_DIR override path
+2026-03-24T06:26:55-07:00 | BUILD_DIR=mcuxsdk_ws/build_style_match_20260324 ./tools/build_frdmmcxn947.sh PASS
+2026-03-24T06:29:07-07:00 | cd nxp/.../EdgeAI_Smart_Pong_Demo && BUILD_DIR=mcuxsdk_ws/build_style_match_20260324 ./tools/flash_frdmmcxn947.sh
+2026-03-24T06:30:55-07:00 | sed -n 520,760 src/game/game.c
+2026-03-24T06:30:55-07:00 | rg AI/game interaction symbols in NXP Smart Pong source
+2026-03-24T06:31:09-07:00 | sed -n 1,560 src/game/ai.c
+2026-03-24T06:31:09-07:00 | sed -n 560,1320 src/game/ai.c
+2026-03-24T06:31:14-07:00 | sed -n 1,220 src/game/input.c && sed -n 150,300 src/game/physics.c
+2026-03-24T06:31:32-07:00 | nl -ba key refs in game.c ai.c input.c for EdgeAI fairness assessment
+2026-03-24T06:39:38-07:00 | BUILD_DIR=mcuxsdk_ws/build_edgeai_fairness_20260324 ./tools/build_frdmmcxn947.sh
+2026-03-24T06:40:23-07:00 | git diff -- src/game/ai.c && nl -ba key ai.c fairness lines
+2026-03-24T06:41:18-07:00 | inspect active repo | pwd && ls
+2026-03-24T06:41:32-07:00 | flash fairness build | BUILD_DIR=mcuxsdk_ws/build_edgeai_fairness_20260324 ./tools/flash_frdmmcxn947.sh
+2026-03-24T06:41:43-07:00 | inspect status/log file layout | ls -la && ls -la docs
+2026-03-24T06:41:49-07:00 | read STATUS.md | sed -n 1,260p STATUS.md
+2026-03-24T06:41:56-07:00 | attempted read missing docs/PROJECT_STATE.md | sed -n 1,220p docs/PROJECT_STATE.md (failed: file not found)
+2026-03-24T06:42:03-07:00 | inspect STATUS header for update | nl -ba STATUS.md | sed -n 1,70p
+2026-03-24T06:42:14-07:00 | update STATUS.md for fairness build+flash | edited STATUS.md Last Run and 2026-03-24 notes
+2026-03-24T06:42:20-07:00 | verify diffs for fairness/style | git status --short && git diff ai.c render.c
+2026-03-24T06:42:29-07:00 | capture line refs for report | nl -ba src/game/ai.c and STATUS.md
+2026-03-24T06:42:49-07:00 | audit ai gating references | rg ai_enabled/ai_learning_side_selected across game sources
+2026-03-24T06:43:56-07:00 | read project docs start file | sed -n 1,220p docs/START_HERE.md
+2026-03-24T06:43:56-07:00 | scan gameplay speed/score hooks | rg -n serve|speed|score in src/game
+2026-03-24T06:43:59-07:00 | inspect physics tuning/reset | sed -n 1,280p src/game/physics.c
+2026-03-24T06:44:40-07:00 | edit physics for faster startup + 6+ score pace-up | apply_patch src/game/physics.c
+2026-03-24T06:50:23-07:00 | build faster startup + 6+ pace-up | BUILD_DIR=mcuxsdk_ws/build_speedup_20260324 ./tools/build_frdmmcxn947.sh
+2026-03-24T06:50:49-07:00 | update STATUS for speed tuning build | edited STATUS.md Last Run for build_speedup_20260324
+2026-03-24T06:50:54-07:00 | capture refs for speed tuning | nl -ba physics.c and STATUS.md
+2026-03-24T06:52:21-07:00 | read build/restore docs | sed -n docs/BUILD_FLASH.md docs/failsafe.md
+2026-03-24T06:52:21-07:00 | inspect repo remotes/status/docs | git remote -v && git status --short && ls -la docs
+2026-03-24T06:53:25-07:00 | update docs framework | edited docs/START_HERE.md; added docs/PROJECT_STATE.md and docs/OPS_RUNBOOK.md
+2026-03-24T06:53:41-07:00 | flash release candidate speedup build | BUILD_DIR=mcuxsdk_ws/build_speedup_20260324 ./tools/flash_frdmmcxn947.sh
+2026-03-24T06:53:57-07:00 | locate release ELF | rg --files -g *edgeai_smart_pong_demo_cm33_core0.elf mcuxsdk_ws
+2026-03-24T06:54:07-07:00 | find build_speedup artifacts | find build_speedup_20260324 dirs/files
+2026-03-24T06:54:14-07:00 | check top-level speedup build outputs | find .../build_speedup_20260324 -maxdepth 1 -type f
+2026-03-24T06:54:20-07:00 | failed attempt to create failsafe artifact | cp from mcuxsdk_ws/build_speedup_20260324/*.elf failed (path mismatch)
+2026-03-24T06:54:26-07:00 | create golden/failsafe artifact and update pointer | cp mcuxsdk_ws/mcuxsdk_ws/build_speedup_20260324/edgeai_smart_pong_demo_cm33_core0.elf failsafe/edgeai_smart_pong_demo_cm33_core0_20260324_065426_style_edgeai_fairness_speedup_golden.elf; rewrite docs/failsafe.md
+2026-03-24T06:55:26-07:00 | sync release docs | edited STATUS.md, docs/PROJECT_STATE.md, docs/BUILD_FLASH.md, README.md
+2026-03-24T06:55:26-07:00 | catch-up log for read-only inspection commands | ran rg/sed inspections on STATUS.md, README.md, docs/BUILD_FLASH.md, docs/PROJECT_STATE.md
+2026-03-24T06:55:30-07:00 | run docs/style lint | ./tools/lint_text_style.sh
+2026-03-24T06:55:45-07:00 | review release changes | git status --short; git diff --stat
+2026-03-24T06:55:52-07:00 | release actions | git add/commit/push and move golden+failsafe tags to release commit

@@ -157,8 +157,9 @@ void render_init(render_state_t *rs)
 
     rs->cx = EDGEAI_LCD_W / 2;
     rs->cy = EDGEAI_LCD_H / 2;
-    rs->world_scale_x = 430;
-    rs->world_scale_y = 280;
+    /* Scale the 3D court to the active panel so it fills the display similarly across targets. */
+    rs->world_scale_x = (EDGEAI_LCD_W * 9) / 10;
+    rs->world_scale_y = (EDGEAI_LCD_H * 17) / 20;
     rs->persp = 1.20f;
 
     render_compute_box(rs);
@@ -224,10 +225,11 @@ static void render_draw_floor_grid(uint16_t *dst, uint32_t w, uint32_t h, int32_
 
 static void render_bg_tile(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int32_t y0, const render_state_t *rs)
 {
-    const uint16_t c_bg = sw_pack_rgb565_u8(14, 15, 16);
-    const uint16_t c_wall_dark = sw_pack_rgb565_u8(17, 18, 21);
-    const uint16_t c_wall_mid = sw_pack_rgb565_u8(27, 29, 32);
-    const uint16_t c_wall_side = sw_pack_rgb565_u8(21, 22, 25);
+    const uint16_t c_bg = sw_pack_rgb565_u8(10, 13, 18);
+    const uint16_t c_wall_dark = sw_pack_rgb565_u8(18, 23, 31);
+    const uint16_t c_wall_mid = sw_pack_rgb565_u8(33, 44, 58);
+    const uint16_t c_wall_side = sw_pack_rgb565_u8(24, 31, 41);
+    const uint16_t c_back_glow = sw_pack_rgb565_u8(46, 66, 88);
 
     sw_render_clear(dst, w, h, c_bg);
 
@@ -254,12 +256,25 @@ static void render_bg_tile(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, in
                         rs->near_corners[3], rs->near_corners[2], rs->far_corners[2], rs->far_corners[3],
                         c_wall_mid);
 
+    /* Back-wall soft glow panel to deepen perspective contrast. */
+    {
+        sw_point_t bl = rs->far_corners[0];
+        sw_point_t br = rs->far_corners[1];
+        sw_point_t tr = rs->far_corners[2];
+        sw_point_t tl = rs->far_corners[3];
+        bl.x += 26; bl.y += 20;
+        br.x -= 26; br.y += 20;
+        tr.x -= 26; tr.y -= 20;
+        tl.x += 26; tl.y -= 20;
+        sw_render_fill_quad(dst, w, h, x0, y0, bl, br, tr, tl, c_back_glow);
+    }
+
     render_draw_floor_grid(dst, w, h, x0, y0, rs);
     render_draw_center_dashes(dst, w, h, x0, y0, rs);
 
     /* Box edges: increase wall readability while keeping the monochrome style. */
-    const uint16_t c_box_edge = sw_pack_rgb565_u8(18, 19, 22);
-    const uint16_t c_box_far = sw_pack_rgb565_u8(26, 27, 31);
+    const uint16_t c_box_edge = sw_pack_rgb565_u8(88, 128, 170);
+    const uint16_t c_box_far = sw_pack_rgb565_u8(56, 79, 104);
 
     /* Far frame outline. */
     sw_render_line(dst, w, h, x0, y0, rs->far_corners[0].x, rs->far_corners[0].y, rs->far_corners[1].x, rs->far_corners[1].y, c_box_far);
@@ -274,7 +289,7 @@ static void render_bg_tile(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, in
     sw_render_line(dst, w, h, x0, y0, rs->near_corners[3].x, rs->near_corners[3].y, rs->far_corners[3].x, rs->far_corners[3].y, c_box_edge);
 
     /* Near frame outline. */
-    const uint16_t c_frame = sw_pack_rgb565_u8(10, 10, 12);
+    const uint16_t c_frame = sw_pack_rgb565_u8(18, 26, 36);
     sw_render_line(dst, w, h, x0, y0, rs->near_corners[0].x, rs->near_corners[0].y, rs->near_corners[1].x, rs->near_corners[1].y, c_frame);
     sw_render_line(dst, w, h, x0, y0, rs->near_corners[1].x, rs->near_corners[1].y, rs->near_corners[2].x, rs->near_corners[2].y, c_frame);
     sw_render_line(dst, w, h, x0, y0, rs->near_corners[2].x, rs->near_corners[2].y, rs->near_corners[3].x, rs->near_corners[3].y, c_frame);
@@ -459,30 +474,35 @@ static void render_draw_target_guides(uint16_t *dst, uint32_t w, uint32_t h, int
 static void render_draw_ball(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, int32_t y0,
                              const render_state_t *rs, const pong_ball_t *b)
 {
-    const uint16_t c_shadow0 = sw_pack_rgb565_u8(10, 10, 12);
-    const uint16_t c_shadow1 = sw_pack_rgb565_u8(16, 16, 18);
+    const uint16_t c_shadow = sw_pack_rgb565_u8(8, 10, 14);
 
-    /* Ball color ramp (speed): red -> green. */
+    /* Ball color ramp (speed): cyan -> lime -> amber. */
     float v2 = (b->vx * b->vx) + (b->vy * b->vy) + (b->vz * b->vz);
     const float vmin = 0.90f;
     const float vmax = 4.00f;
     float t = clamp01f((v2 - (vmin * vmin)) / ((vmax * vmax) - (vmin * vmin)));
-    float hue = t * 120.0f;
+    float hue = 190.0f - (t * 140.0f);
 
-    /* HSV (S=1,V=0.92) for h in [0,120]. */
-    float v = 0.92f;
+    /* HSV-like blend (S~0.92,V~0.96) for h in [50,190]. */
+    float v = 0.96f;
     float rf = 0.0f, gf = 0.0f, bf = 0.0f;
     if (hue < 60.0f)
     {
         rf = v;
         gf = v * (hue * (1.0f / 60.0f));
-        bf = 0.0f;
+        bf = v * 0.08f;
+    }
+    else if (hue < 120.0f)
+    {
+        gf = v;
+        rf = v * ((120.0f - hue) * (1.0f / 60.0f));
+        bf = v * ((hue - 60.0f) * (1.0f / 60.0f)) * 0.30f;
     }
     else
     {
-        rf = v * ((120.0f - hue) * (1.0f / 60.0f));
-        gf = v;
-        bf = 0.0f;
+        gf = v * ((190.0f - hue) * (1.0f / 70.0f));
+        bf = v;
+        rf = v * 0.18f;
     }
 
     uint8_t r = clamp_u8((int32_t)(rf * 255.0f + 0.5f));
@@ -494,6 +514,10 @@ static void render_draw_ball(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, 
         clamp_u8((int32_t)r + 40),
         clamp_u8((int32_t)g + 40),
         clamp_u8((int32_t)b8 + 40));
+    const uint16_t c_rim = sw_pack_rgb565_u8(
+        clamp_u8((int32_t)r + 22),
+        clamp_u8((int32_t)g + 22),
+        clamp_u8((int32_t)b8 + 22));
 
     int32_t sx = 0, sy = 0;
     float s = 1.0f;
@@ -506,11 +530,18 @@ static void render_draw_ball(uint16_t *dst, uint32_t w, uint32_t h, int32_t x0, 
 
     int32_t fx = 0, fy = 0;
     render_project(rs, b->x, 1.0f, b->z, &fx, &fy, NULL);
-    int32_t sh_r = r_px + (r_px / 2);
-    sw_render_filled_circle(dst, w, h, x0, y0, fx, fy, sh_r, c_shadow1);
-    sw_render_filled_circle(dst, w, h, x0, y0, fx + 1, fy + 1, sh_r - 2, c_shadow0);
+    /* Shadow size grows near floor (y -> 1) and shrinks with height (y -> 0). */
+    float floor_prox = clamp01f(b->y);
+    float sh_scale = 0.22f + (0.98f * floor_prox);
+    int32_t sh_r = (int32_t)((float)r_px * sh_scale);
+    if (sh_r < 1) sh_r = 1;
+    sw_render_filled_circle(dst, w, h, x0, y0, fx, fy, sh_r, c_shadow);
 
     sw_render_filled_circle(dst, w, h, x0, y0, sx, sy, r_px, c_ball);
+    if (r_px >= 5)
+    {
+        sw_render_filled_circle(dst, w, h, x0, y0, sx, sy, r_px - 2, c_rim);
+    }
     sw_render_filled_circle(dst, w, h, x0, y0, sx - (r_px / 3), sy - (r_px / 3), r_px / 3, c_hi);
 }
 
@@ -746,20 +777,28 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
     render_fill_round_rect(dst, w, h, tile_x0, tile_y0, pill_x0, pill_y1 - 1, pill_x1, pill_y1, 0, c_pill_border);
 
     /* Icon: three short horizontal bars. */
-    int32_t ix = pill_x0 + 10;
-    int32_t iy = pill_y0 + 6;
+    int32_t ix = pill_x0 + 12;
+    int32_t icon_h = EDGEAI_UI_PILL_H / 10;
+    if (icon_h < 2) icon_h = 2;
+    int32_t icon_gap = EDGEAI_UI_PILL_H / 8;
+    if (icon_gap < 4) icon_gap = 4;
+    int32_t icon_block_h = (3 * icon_h) + (2 * icon_gap);
+    int32_t iy = pill_y0 + (EDGEAI_UI_PILL_H - icon_block_h) / 2;
     for (int i = 0; i < 3; i++)
     {
-        sw_render_fill_rect(dst, w, h, tile_x0, tile_y0, ix, iy + i * 5, ix + 12, iy + i * 5 + 1, c_text_dim);
+        int32_t y = iy + i * (icon_h + icon_gap);
+        sw_render_fill_rect(dst, w, h, tile_x0, tile_y0, ix, y, ix + 20, y + icon_h - 1, c_text_dim);
     }
 
     /* Label: P{0,1,2} D{1,2,3} */
     char players = (g->mode == kGameModeZeroPlayer) ? '0' : (g->mode == kGameModeSinglePlayer) ? '1' : '2';
     char diff = (g->difficulty < 1) ? '1' : (g->difficulty > 3) ? '3' : (char)('0' + g->difficulty);
-    char s[8] = {'P', players, ' ', 'D', diff, 0};
+    /* Keep D? anchored near the help button while moving P? left toward '='. */
+    char s[12] = {'P', players, ' ', ' ', ' ', 'D', diff, 0};
 
-    const int32_t scale = 2;
-    int32_t tx = pill_x0 + 30;
+    const int32_t scale = 3;
+    int32_t tx = EDGEAI_UI_HELP_BTN_X - edgeai_text5x7_width(scale, s) - 8;
+    if (tx < (pill_x0 + 42)) tx = pill_x0 + 42;
     int32_t ty = pill_y0 + (EDGEAI_UI_PILL_H - 7 * scale) / 2;
     edgeai_text5x7_draw_scaled_sw(dst, w, h, tile_x0, tile_y0, tx, ty, scale, s, c_text);
 
@@ -776,7 +815,7 @@ static void render_ui(uint16_t *dst, uint32_t w, uint32_t h, int32_t tile_x0, in
         render_fill_round_rect(dst, w, h, tile_x0, tile_y0, hx0, hy0, hx1, hy1, EDGEAI_UI_PILL_H / 2, c_help_bg);
         sw_render_line(dst, w, h, tile_x0, tile_y0, hx0, hy0 + 3, hx0, hy1 - 3, c_pill_border);
 
-        const int32_t qscale = 2;
+        const int32_t qscale = 3;
         const char *q = "?";
         int32_t qw = edgeai_text5x7_width(qscale, q);
         int32_t qx = hx0 + (EDGEAI_UI_HELP_BTN_W - qw) / 2;

@@ -228,6 +228,30 @@ void physics_reset_ball(pong_game_t *g, int serve_dir)
     float serve_speed = 1.0f;
     float vlim = 1.0f;
     physics_get_tuning(g, &serve_speed, NULL, &vlim);
+
+    /* Start rallies with a little more pace to avoid a slow opening feel. */
+    serve_speed *= 1.14f;
+
+    /*
+     * Late-game pace-up:
+     * once either side reaches 6 points, increase serve speed progressively
+     * (clamped) so matches feel more intense instead of stalling visually.
+     */
+    {
+        uint16_t top_score = (g->score.left > g->score.right) ? g->score.left : g->score.right;
+        if (top_score >= 6u)
+        {
+            float late_boost = 1.12f + (0.04f * (float)(top_score - 6u));
+            late_boost = clampf(late_boost, 1.12f, 1.46f);
+            serve_speed *= late_boost;
+        }
+    }
+
+    {
+        float max_serve = vlim * 0.95f;
+        if (serve_speed > max_serve) serve_speed = max_serve;
+    }
+
     if (g->speedpp_enabled && g->speedpp_serve_speed_target > 0.0f)
     {
         float max_serve = vlim * 0.95f;

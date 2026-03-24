@@ -356,6 +356,7 @@ static const ai_learn_profile_t *ai_profile_side_const(const pong_game_t *g, boo
 static bool ai_learning_side_selected(const pong_game_t *g, bool right_side)
 {
     if (!g) return false;
+    if (!g->ai_enabled) return false;
     if (right_side)
     {
         if (!g->ai_right_active) return false;
@@ -853,12 +854,6 @@ static float ai_noise(const pong_game_t *g, bool right_side)
         default: n = 0.007f; break;
     }
 
-    /* Show clear behavior difference when NPU path is disabled. */
-    if (g && !g->ai_enabled)
-    {
-        n *= 1.7f;
-    }
-
     if (g && ai_learning_side_selected(g, right_side))
     {
         const ai_learn_profile_t *p = ai_profile_side_const(g, right_side);
@@ -869,6 +864,11 @@ static float ai_noise(const pong_game_t *g, bool right_side)
         if (g->ai_learn_mode != kAiLearnModeBoth)
         {
             n *= 0.85f;
+        }
+        else
+        {
+            /* EdgeAI ON in symmetric mode still gets a mild precision improvement. */
+            n *= 0.92f;
         }
     }
 
@@ -889,11 +889,6 @@ static float ai_max_speed(const pong_game_t *g, bool right_side)
         default: s = 1.78f; break;
     }
 
-    if (g && !g->ai_enabled)
-    {
-        s *= 0.82f;
-    }
-
     if (g && ai_learning_side_selected(g, right_side))
     {
         const ai_learn_profile_t *p = ai_profile_side_const(g, right_side);
@@ -904,6 +899,11 @@ static float ai_max_speed(const pong_game_t *g, bool right_side)
         if (g->ai_learn_mode != kAiLearnModeBoth)
         {
             s *= 1.08f;
+        }
+        else
+        {
+            /* EdgeAI ON in symmetric mode still gets a small agility boost. */
+            s *= 1.03f;
         }
     }
 

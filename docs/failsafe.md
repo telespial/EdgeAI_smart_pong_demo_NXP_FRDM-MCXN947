@@ -1,2 +1,2 @@
-failsafe/edgeai_smart_pong_demo_cm33_core0_20260226_235942_match100_default_golden.elf
-Golden + failsafe restore point: includes `MATCH` options (`11/100/1K`) with startup default `100`, hard score-cap at `999` (confetti + `30s` auto-reset), and settings `NEW GAME` reset that clears both side `WINS` counters to `000`.
+failsafe/edgeai_smart_pong_demo_cm33_core0_20260324_065426_style_edgeai_fairness_speedup_golden.elf
+Golden + failsafe restore point: includes Infineon-style visual refresh, EdgeAI fairness separation (non-AI side unaffected), and faster game pacing (startup + late-game 6+ score ramp).
