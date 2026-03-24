@@ -6,9 +6,10 @@
 ## Last Run
 - Date: 2026-03-24
 - Result: ok (build/flash)
-- Binary: `mcuxsdk_ws/mcuxsdk_ws/build_ui_dx_spacing_20260324/edgeai_smart_pong_demo_cm33_core0.bin`
-- Build: `BUILD_DIR=mcuxsdk_ws/build_ui_dx_spacing_20260324 ./tools/build_frdmmcxn947.sh`
-- Flash: `BUILD_DIR=mcuxsdk_ws/build_ui_dx_spacing_20260324 ./tools/flash_frdmmcxn947.sh`
+- Binary: `mcuxsdk_ws/mcuxsdk_ws/build_default_algo_left_edgeai_right_20260324/edgeai_smart_pong_demo_cm33_core0.bin`
+- Build: `BUILD_DIR=mcuxsdk_ws/build_default_algo_left_edgeai_right_20260324 ./tools/build_frdmmcxn947.sh`
+- Flash: `BUILD_DIR=mcuxsdk_ws/build_default_algo_left_edgeai_right_20260324 ./tools/flash_frdmmcxn947.sh`
+- Notes (default SKILL 2026-03-24): boot default now starts in `ALGO/AI` mode (left `ALGO`, right `EdgeAI`).
 - Notes (UI spacing 2026-03-24): moved `D?` right by ~1.5 character cells while keeping `?` position unchanged, creating a clearer gap between `x` (1/2/3) and `?`.
 - Notes (restore marker 2026-03-24): promoted `D?` spacing firmware as Golden + Failsafe restore point.
 - Failsafe: `failsafe/edgeai_smart_pong_demo_cm33_core0_20260324_073456_ui_dx_spacing_golden.elf`

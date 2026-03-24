@@ -4202,3 +4202,8 @@
 2026-03-24T07:35:38-07:00 | sync release docs + restore pointer | updated docs/failsafe.md, docs/PROJECT_STATE.md, STATUS.md for ui_dx_spacing golden/failsafe
 2026-03-24T07:35:45-07:00 | review release diff before commit | git diff --stat
 2026-03-24T07:35:55-07:00 | release commit/push and retag | git add -A; git commit; git push; git tag -f golden/failsafe; git push --force origin tags
+2026-03-24T10:01:43-07:00 | open project and read required docs | cat docs/START_HERE.md docs/PROJECT_STATE.md docs/OPS_RUNBOOK.md
+2026-03-24T10:02:08-07:00 | set boot default SKILL to ALGO/AI | edited src/game/game.c: g->ai_learn_mode = kAiLearnModeAlgoAi
+2026-03-24T10:02:08-07:00 | build default ALGO-left EDGEAI-right | BUILD_DIR=mcuxsdk_ws/build_default_algo_left_edgeai_right_20260324 ./tools/build_frdmmcxn947.sh
+2026-03-24T10:05:39-07:00 | flash default ALGO-left EDGEAI-right build | BUILD_DIR=mcuxsdk_ws/build_default_algo_left_edgeai_right_20260324 ./tools/flash_frdmmcxn947.sh
+2026-03-24T10:06:25-07:00 | update state docs for ALGO/AI boot default | updated docs/PROJECT_STATE.md and STATUS.md after build+flash PASS

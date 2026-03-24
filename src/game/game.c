@@ -398,7 +398,7 @@ void game_init(pong_game_t *g)
     g->persistent_learning = false;
     g->speedpp_enabled = true;
     g->target_overlay_enabled = false;
-    g->ai_learn_mode = kAiLearnModeAiAlgo;
+    g->ai_learn_mode = kAiLearnModeAlgoAi;
     g->menu_open = false;
     g->help_open = false;
     g->ui_block_touch = false;
