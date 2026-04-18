@@ -185,3 +185,7 @@ Smart Pong is a 3D-look Pong implementation for FRDM-MCXN947 with LCD-PAR-S035.
 ```bash
 FAILSAFE_CONFIRM="$(sed -n '1p' docs/failsafe.md)" ./tools/flash_failsafe.sh
 ```
+
+## License
+
+See [LICENSE](./LICENSE).
